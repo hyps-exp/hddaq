@@ -88,8 +88,7 @@ int read_device(unsigned int *data, int *len, int *event_num)
   //printf("vme01: read_device() \n");
   int ndata   = 0;
   ndata += VME_MASTER_HSIZE;
-
-#if 0  
+  
   ////////// Time Stamp
   {
     int vme_module_header_start = ndata;
@@ -101,8 +100,7 @@ int read_device(unsigned int *data, int *len, int *event_num)
     vme_module_header.m_data_size   = ndata - vme_module_header_start;
     memcpy( &data[vme_module_header_start],
 	    &vme_module_header, VME_MODULE_HSIZE*4 );
-  }
-#endif 
+  } 
  
   ////////// smp
   {
