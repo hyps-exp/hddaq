@@ -1,0 +1,7 @@
+*.[ao]
+*~
+*.swp
+Frontend/user/pro
+Frontend/bin/*
+Message/bin/*
+!.gitkeep
