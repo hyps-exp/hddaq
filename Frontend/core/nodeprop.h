@@ -13,11 +13,6 @@ enum State {
         IDLE, RUNNING, INITIAL, END
 };
 
-enum DaqMode {
-	DM_NORMAL, DM_DUMMY
-};
-
-
 struct node_prop {
 	node_prop(bool lock=true);
 	~node_prop();

@@ -11,8 +11,7 @@ FLAGS	 = $(CXXFLAGS) $(INCLUDES)
 BIN_DIR  = bin
 
 CORE_DIR = core
-CORE_OBJ = frontend.o daqthread.o controlthread.o \
-           watchdogthread.o dummydevice.o pollthread.o
+CORE_OBJ = frontend.o daqthread.o controlthread.o watchdogthread.o
 
 USER_DIR = user/pro
 USER_OBJ = $(patsubst %.cc,%.o,$(wildcard $(USER_DIR)/*.cc))

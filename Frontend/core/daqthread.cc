@@ -21,13 +21,10 @@
 #include "daqthread.h"
 #include "controlthread.h"
 #include "userdevice.h"
-#include "dummydevice.h"
-#include "pollthread.h"
 
 DaqThread::DaqThread(struct node_prop *nodeprop)
 	: kol::Thread(),
 	  m_state(INITIAL),
-	  m_daqmode(DM_NORMAL),
 	  m_event_number(0),
 	  m_event_size(0),
           m_run_number(-1),
@@ -39,25 +36,6 @@ DaqThread::~DaqThread()
 {
 	std::cerr << "DaqThread destruct" << std::endl;
 }
-
-int DaqThread::getState()
-{
-	return m_state;
-}
-int DaqThread::getDaqMode()
-{
-	return m_daqmode;
-}
-int DaqThread::setDaqMode(int mode)
-{
-	if (m_state == IDLE) {
-		m_daqmode = mode;
-		return 1;
-	} else {
-		return 0;
-	}
-}
-
 
 int DaqThread::run()
 {
@@ -94,20 +72,9 @@ int DaqThread::run()
       kol::TcpServer server(port);
       sock = server.accept();
       server.close();
+      std::cerr << "#D server accepted" << std::endl;
       
-      timeval timeoutv;
-      timeoutv.tv_sec  = 6;
-      timeoutv.tv_usec = 0;
-      sock.setsockopt(SOL_SOCKET, SO_RCVTIMEO,
-		      (char*)&timeoutv, sizeof(timeoutv));
-      
-      PollThread poller(sock, nickname, m_nodeprop);
-      poller.start();
-      
-      //std::cerr << "#D server accepted" << std::endl;
-      if (m_daqmode == DM_NORMAL) header->type = ET_NORMAL;
-      if (m_daqmode == DM_DUMMY) header->type = ET_DUMMY;
-      
+      header->type = ET_NORMAL;
       m_run_number = m_nodeprop->getRunNumber();
       header->run_number = m_run_number;
       {
@@ -117,7 +84,7 @@ int DaqThread::run()
 	msock.sendString(msg);
       }
       
-      if (m_daqmode == DM_NORMAL) status = init_device();
+      status = init_device();
       
       m_state = RUNNING;
       m_event_number = 0;
@@ -125,22 +92,12 @@ int DaqThread::run()
       
       while(m_nodeprop->getState() == RUNNING) {
 	int len;
-	poller.set_event_number(m_event_number);
-	if (m_daqmode == DM_NORMAL) {
-	  status = wait_device();
-	  if(status<0) continue; //TIMEOUT or Fast CLEAR
+	
+	status = wait_device();
+	if(status<0) continue; //TIMEOUT or Fast CLEAR
 	  
-	  status = read_device(data, &len, &m_event_number, m_run_number);
-	  if (status <= 0) {
-	    msock.sendString(MT_ERROR,
-			     "Read device err. (Timeout?)");
-	    std::cerr << "#E read device error ! "
-		      << status << std::endl;
-	  }
-	} else {
-	  status = wait_dummy();
-	  status = read_dummy(data, &len, &m_event_number);
-	}
+	status = read_device(data, &len, &m_event_number, m_run_number);
+      
 	if (status == 1) {
 	  len = len + sizeof(struct event_header)/sizeof(unsigned int);
 	  header->size = len;
@@ -159,8 +116,9 @@ int DaqThread::run()
 	}
       }//while( State() == RUNNING )
       
-      poller.join();
+      
       finalize_device();
+      sock.close();
 
     } catch (std::exception &e) {
       std::ostringstream msg;

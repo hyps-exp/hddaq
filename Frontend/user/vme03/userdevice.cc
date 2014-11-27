@@ -101,6 +101,9 @@ int read_device(unsigned int *data, int *len, int *event_num, int run_num)
   printf("vme03: read_device() RUN#%d\n",run_num);
   sleep(1);
   *len = 10;
+  //Busy off
+  *(rpv130[0].csr1) = 0x1;
+  *(rpv130[0].pulse) = 0x1;
   return 1;
   
   //for spill end trigger

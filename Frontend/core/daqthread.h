@@ -43,9 +43,7 @@ class DaqThread : public kol::Thread
 		DaqThread(struct node_prop *);
 		virtual ~DaqThread();
 		int run();
-		int getState();
-		int getDaqMode();
-		int setDaqMode(int);
+                int getState() {return m_state;};
 		int getEventNumber() {return m_event_number;};
 		int getEventSize() {return m_event_size;};
                 int getRunNumber() {return m_run_number;};
@@ -53,7 +51,6 @@ class DaqThread : public kol::Thread
 	protected:
 	private:
 		int m_state;
-		int m_daqmode;
 		int m_event_number;
 		int m_event_size;
                 int m_run_number;

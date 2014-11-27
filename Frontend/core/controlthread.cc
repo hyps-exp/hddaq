@@ -47,13 +47,6 @@ int ControlThread::ackStatus()
 	} else {
 		oss << "UNKNOWN ";
 	}
-	if (daqthread->getDaqMode() == DM_NORMAL) {
-		oss << "NORMAL ";
-	} else if (daqthread->getDaqMode() == DM_DUMMY) {
-		oss << "DUMMY ";
-	} else {
-		oss << "UNKNOWN ";
-	}
 	oss << daqthread->getEventNumber();
 	oss << " size:" << daqthread->getEventSize();
 
@@ -78,7 +71,7 @@ int ControlThread::sendEntry()
 
 int ControlThread::run()
 {
-	DaqThread *daqthread = reinterpret_cast<DaqThread *>(m_nodeprop->daq_thread);
+        //DaqThread *daqthread = reinterpret_cast<DaqThread *>(m_nodeprop->daq_thread);
 	GlobalMessageClient& msock = GlobalMessageClient::getInstance();
 
 	sendEntry();
@@ -95,34 +88,8 @@ int ControlThread::run()
 		if (messageline == "status") {
 			ackStatus();
 		}
-		if (messageline == "dummy_mode") {
-			if(daqthread->setDaqMode(DM_DUMMY)) {
-				ackStatus();
-				std::cerr << "DUMMY MODE" << std::endl;
-			} else {
-				std::ostringstream oss; 
-				oss << "Mode change fail : " << daqthread->getDaqMode();
-				std::string smessage = oss.str();
-				msock.sendString(MT_ERROR, smessage);
-
-				std::cerr << "Mode change Fail "
-					<< daqthread->getDaqMode() << std::endl;
-				
-			}
-		}
-		if (messageline == "normal_mode") {
-			if (daqthread->setDaqMode(DM_NORMAL)) {
-				ackStatus();
-				std::cerr << "NORMAL MODE" << std::endl;
-			} else {
-				std::ostringstream oss;
-				oss << "Mode change fail : " << daqthread->getDaqMode();
-				std::string smessage = oss.str();
-				msock.sendString(MT_ERROR, smessage);
-
-				std::cerr << "Mode change Fail "
-					<< daqthread->getDaqMode() << std::endl;
-			}
+		if (messageline == "anyone") {
+			sendEntry();
 		}
 		
 		int runno;
@@ -138,10 +105,6 @@ int ControlThread::run()
 		}
 		if (messageline == "stop") {
 		  m_nodeprop->setState(IDLE);
-		}
-
-		if (messageline == "anyone") {
-			sendEntry();
 		}
 		if (messageline == "fe_end") {
 		  m_nodeprop->setState(END);

@@ -1,7 +1,7 @@
 #!/bin/sh
 
-nickname=vme03
-nodeid=$((0x203))
+nickname=vme01
+nodeid=$((0x201))
 
 bin_dir=$(cd $(dirname $0); pwd)/../Frontend/bin
 echo ${bin_dir}
