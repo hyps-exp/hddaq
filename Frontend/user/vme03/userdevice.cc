@@ -23,16 +23,27 @@ int get_maxdatasize()
 }
 
 //========================================================================================
-int init_device()
+int open_device()
 {
-  //printf("vme03: init_device() \n");
-  ////////// v830
+  //called when Front-end program launches
+
+  vme_open();
+
+  ////////// v830 setting
   for(int i=0;i<V830_NUM;i++){
     *(v830[i].reset) = 0x0;
     *(v830[i].ch_enable) = 0x0; // for MEB, v830 only
     // acq mode 00: disabled (default), 01: external or from VME, 10: periodical
     *(v830[i].clr) = 0x01;
   }
+
+  return 0;
+}
+
+//========================================================================================
+int init_device()
+{
+  //called when START command comes
 
   //Busy off
   *(rpv130[0].csr1) = 0x1;
@@ -43,9 +54,19 @@ int init_device()
 //========================================================================================
 int finalize_device()
 {
-  //printf("vme03: finalize_device() \n");
+  //called when STOP command comes
   return 0;
 }
+
+//========================================================================================
+int close_device()
+{
+  //called when END command comes
+
+  vme_close();
+  return 0;
+}
+
 
 //========================================================================================
 int wait_device()
@@ -75,9 +96,12 @@ int wait_device()
 }
 
 //========================================================================================
-int read_device(unsigned int *data, int *len, int *event_num)
+int read_device(unsigned int *data, int *len, int *event_num, int run_num)
 {
-  //printf("vme03: read_device() \n");
+  printf("vme03: read_device() RUN#%d\n",run_num);
+  sleep(1);
+  *len = 10;
+  return 1;
   
   //for spill end trigger
   if(trig_flag==2){
@@ -93,6 +117,7 @@ int read_device(unsigned int *data, int *len, int *event_num)
       }
     }
     
+    //Busy off
     *(rpv130[0].csr1) = 0x1;
     *(rpv130[0].pulse) = 0x1;
     return 2;
@@ -169,21 +194,4 @@ int read_device(unsigned int *data, int *len, int *event_num)
   *(rpv130[0].csr1) = 0x1;
   *(rpv130[0].pulse) = 0x1;
   return 1;
-}
-
-
-//========================================================================================
-int open_device()
-{
-  //printf("vme03: open_device() \n");
-  vme_open();
-  return 0;
-}
-
-//========================================================================================
-int close_device()
-{
-  //printf("vme03: close_device() \n");
-  vme_close();
-  return 0;
 }

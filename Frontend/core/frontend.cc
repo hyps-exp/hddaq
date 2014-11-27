@@ -141,9 +141,7 @@ int main(int argc, char* argv[])
 
 	set_signal();
 
-	GlobalMessageClient & msock = GlobalMessageClient::getInstance(
-								       //		"localhost", g_MESSAGE_PORT_UPSTREAM, nodeid);
-								       "127.0.0.1", g_MESSAGE_PORT_UPSTREAM, nodeid);
+	GlobalMessageClient & msock = GlobalMessageClient::getInstance("localhost", g_MESSAGE_PORT_UPSTREAM, nodeid);
 
 	if (&msock == 0) {
 		std::cerr << "#E " << argv[0]
@@ -169,8 +167,8 @@ int main(int argc, char* argv[])
 	std::cerr << std::endl;
 
 	daqthread.join();
-	//controller.join();
-	//watchdog.join();
+	controller.join();
+	watchdog.join();
 
 
 	return 0;

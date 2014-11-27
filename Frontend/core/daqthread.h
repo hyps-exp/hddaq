@@ -48,6 +48,7 @@ class DaqThread : public kol::Thread
 		int setDaqMode(int);
 		int getEventNumber() {return m_event_number;};
 		int getEventSize() {return m_event_size;};
+                int getRunNumber() {return m_run_number;};
 
 	protected:
 	private:
@@ -55,6 +56,7 @@ class DaqThread : public kol::Thread
 		int m_daqmode;
 		int m_event_number;
 		int m_event_size;
+                int m_run_number;
 		struct node_prop *m_nodeprop;
 };
 

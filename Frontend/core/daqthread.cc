@@ -30,6 +30,7 @@ DaqThread::DaqThread(struct node_prop *nodeprop)
 	  m_daqmode(DM_NORMAL),
 	  m_event_number(0),
 	  m_event_size(0),
+          m_run_number(-1),
 	  m_nodeprop(nodeprop)
 {
 }
@@ -77,96 +78,112 @@ int DaqThread::run()
   GlobalMessageClient& msock = GlobalMessageClient::getInstance();
   
   ControlThread *controller  = reinterpret_cast<ControlThread *>(m_nodeprop->controller);
- 
-  open_device();
-  init_device();
- 
-  m_state=IDLE;
+  m_state=INITIAL;
   controller->ackStatus();
   
-  kol::TcpSocket sock;
+  status = open_device();
+  
+  while(m_nodeprop->getState() != END){ 
+    
+    kol::TcpSocket sock;
+  
+    m_state=IDLE;
+    controller->ackStatus();
+  
+    try {
+      kol::TcpServer server(port);
+      sock = server.accept();
+      server.close();
+      
+      timeval timeoutv;
+      timeoutv.tv_sec  = 6;
+      timeoutv.tv_usec = 0;
+      sock.setsockopt(SOL_SOCKET, SO_RCVTIMEO,
+		      (char*)&timeoutv, sizeof(timeoutv));
+      
+      PollThread poller(sock, nickname, m_nodeprop);
+      poller.start();
+      
+      //std::cerr << "#D server accepted" << std::endl;
+      if (m_daqmode == DM_NORMAL) header->type = ET_NORMAL;
+      if (m_daqmode == DM_DUMMY) header->type = ET_DUMMY;
+      
+      m_run_number = m_nodeprop->getRunNumber();
+      header->run_number = m_run_number;
+      {
+	std::ostringstream msg;
+	msg << m_nodeprop->nickname << " got RUN# = "
+	    << m_run_number;
+	msock.sendString(msg);
+      }
+      
+      if (m_daqmode == DM_NORMAL) status = init_device();
+      
+      m_state = RUNNING;
+      m_event_number = 0;
+      controller->ackStatus();
+      
+      while(m_nodeprop->getState() == RUNNING) {
+	int len;
+	poller.set_event_number(m_event_number);
+	if (m_daqmode == DM_NORMAL) {
+	  status = wait_device();
+	  if(status<0) continue; //TIMEOUT or Fast CLEAR
+	  
+	  status = read_device(data, &len, &m_event_number, m_run_number);
+	  if (status <= 0) {
+	    msock.sendString(MT_ERROR,
+			     "Read device err. (Timeout?)");
+	    std::cerr << "#E read device error ! "
+		      << status << std::endl;
+	  }
+	} else {
+	  status = wait_dummy();
+	  status = read_dummy(data, &len, &m_event_number);
+	}
+	if (status == 1) {
+	  len = len + sizeof(struct event_header)/sizeof(unsigned int);
+	  header->size = len;
+	  header->event_number = m_event_number;
+	  int clen = len * sizeof(unsigned int);
+	  m_event_size = len;
+	  
+	  sock.write(buf, clen);
+	  sock.flush();
+	  
+	  ++m_event_number;
+	}else if( status==2 ){
+	  // do not send data to event builder.
+	}else{
+	  printf("daqthread: undefined status \n");
+	}
+      }//while( State() == RUNNING )
+      
+      poller.join();
+      finalize_device();
 
-  try {
-    kol::TcpServer server(port);
-    sock = server.accept();
-    server.close();
-    
-    timeval timeoutv;
-    timeoutv.tv_sec  = 6;
-    timeoutv.tv_usec = 0;
-    sock.setsockopt(SOL_SOCKET, SO_RCVTIMEO,
-		    (char*)&timeoutv, sizeof(timeoutv));
-    
-    PollThread poller(sock, nickname, m_nodeprop);
-    poller.start();
-    
-    //std::cerr << "#D server accepted" << std::endl;
-    if (m_daqmode == DM_NORMAL) header->type = ET_NORMAL;
-    if (m_daqmode == DM_DUMMY) header->type = ET_DUMMY;
-    
-    header->run_number = m_nodeprop->getRunNumber();
-    {
+    } catch (std::exception &e) {
       std::ostringstream msg;
-      msg << m_nodeprop->nickname << " got RUN# = "
-	  << header->run_number;
-      msock.sendString(msg);
+      msg << "#D DaqThread::run main loop: "
+	  << e.what() << ", errno = " 
+	  << errno;
+      std::cerr << msg.str() << std::endl;
+      msock.sendString(MT_ERROR, msg);
+      sock.close();
     }
 
-    m_state = RUNNING;
-    m_event_number = 0;
-    controller->ackStatus();
-    
-    while(m_nodeprop->getState() == RUNNING) {
-      int len;
-      poller.set_event_number(m_event_number);
-      if (m_daqmode == DM_NORMAL) {
-	status = wait_device();
-	if(status<0) continue; //TIMEOUT or Fast CLEAR
-	
-	status = read_device(data, &len, &m_event_number);
-	if (status <= 0) {
-	  msock.sendString(MT_ERROR,
-			   "Read device err. (Timeout?)");
-	  std::cerr << "#E read device error ! "
-		    << status << std::endl;
-	}
-      } else {
-	status = wait_dummy();
-	status = read_dummy(data, &len, &m_event_number);
-      }
-      if (status == 1) {
-	len = len + sizeof(struct event_header)/sizeof(unsigned int);
-	header->size = len;
-	header->event_number = m_event_number;
-	int clen = len * sizeof(unsigned int);
-	m_event_size = len;
-	
-	sock.write(buf, clen);
-	sock.flush();
-	
-	++m_event_number;
-      }else if( status==2 ){
-        // do not send data to event builder.
-      }else{
-        printf("daqthread: undefined status \n");
-      }
-    }//while( State() == RUNNING ) 
-    poller.join();
-    
-  } catch (std::exception &e) {
-    std::ostringstream msg;
-    msg << "#D DaqThread::run main loop: "
-	<< e.what() << ", errno = " 
-	<< errno;
-    std::cerr << msg.str() << std::endl;
-    msock.sendString(MT_ERROR, msg);
-    sock.close();
-  }
+  } //while(m_nodeprop->getState() != END){ 
   
-  finalize_device();
   close_device();
-  
   delete buf;
   
+  {
+    std::ostringstream msg;
+    msg << m_nodeprop->nickname << " RUN#"
+	<< header->run_number
+        << " DaqThread end";
+    msock.sendString(msg);
+  }
+
   return 0;
 }

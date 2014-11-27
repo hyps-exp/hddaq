@@ -23,19 +23,30 @@ int get_maxdatasize()
 }
 
 //========================================================================================
-int init_device()
+int open_device()
 {
-  //printf("vme01: init_device() \n");
+  //called when Front-end program launches
+  
+  vme_open();
 
-  ////////// smp
+  ////////// smp setting
   for(int i=0;i<SMP_NUM;i++){
     *(smp[i].cmr)   = 0x40;// SMP reset
-    usleep(100);
+    usleep(1000);
     *(smp[i].snccr) = 0x02;// cnt clr
     *(smp[i].bcr)   = 0x23;// hardware switch eable
     *(smp[i].cmr)   = 0x00;// set cmr
   }
+  
+  return 0;
+}
 
+//========================================================================================
+int init_device()
+{
+  //called when START command comes
+  
+  //Busy off
   *(rpv130[0].csr1)  = 0x1;
   *(rpv130[0].pulse) = 0x1;
   return 0;
@@ -44,9 +55,19 @@ int init_device()
 //========================================================================================
 int finalize_device()
 {
-  //printf("vme01: finalize_device() \n");
+  //called when STOP command comes
   return 0;
 }
+
+//========================================================================================
+int close_device()
+{
+  //called when END command comes
+  
+  vme_close();
+  return 0;
+}
+
 
 //========================================================================================
 int wait_device()
@@ -83,9 +104,13 @@ int wait_device()
 }
 
 //========================================================================================
-int read_device(unsigned int *data, int *len, int *event_num)
+int read_device(unsigned int *data, int *len, int *event_num, int run_num)
 {
-  //printf("vme01: read_device() \n");
+  printf("vme01: read_device() RUN#%d\n",run_num);
+  sleep(1);
+  *len = 10;
+  return 1;
+
   int ndata   = 0;
   ndata += VME_MASTER_HSIZE;
   
@@ -143,22 +168,5 @@ int read_device(unsigned int *data, int *len, int *event_num)
 
   *len = ndata;
   return 1;
-}
-
-
-//========================================================================================
-int open_device()
-{
-  //printf("vme01: open_device() \n");
-  vme_open();
-  return 0;
-}
-
-//========================================================================================
-int close_device()
-{
-  //printf("vme01: close_device() \n");
-  vme_close();
-  return 0;
 }
 

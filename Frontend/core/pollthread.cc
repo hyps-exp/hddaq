@@ -38,7 +38,7 @@ int
 PollThread::run()
 {
   GlobalMessageClient& g_sock = GlobalMessageClient::getInstance();
-  while (RUNNING == m_nodeprop->getState())
+  while (m_nodeprop->getState() == RUNNING)
     {
       char buf[1];
       try 

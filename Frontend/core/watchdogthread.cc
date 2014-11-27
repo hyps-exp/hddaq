@@ -31,7 +31,7 @@ int WatchdogThread::run()
 {
   //DaqThread *daqthread  = reinterpret_cast<DaqThread *>(m_nodeprop->daq_thread);
   ControlThread *controller  = reinterpret_cast<ControlThread *>(m_nodeprop->controller);
-  while (true) {
+  while (m_nodeprop->getState() != END) {
     sleep(3);
     controller->ackStatus();
     //std::cerr << "WAN: s:" << daqthread->getState()

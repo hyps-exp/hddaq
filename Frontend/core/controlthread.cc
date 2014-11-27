@@ -83,7 +83,7 @@ int ControlThread::run()
 
 	sendEntry();
 
-	while (true) {
+	while (m_nodeprop->getState() != END) {
 		std::string messageline;
 		Message rmessage = msock.recvMessage();
 		if (msock.gcount() > 0) {
@@ -137,15 +137,18 @@ int ControlThread::run()
 		  m_nodeprop->setState(RUNNING);
 		}
 		if (messageline == "stop") {
-		  m_nodeprop->setState(END);
-		  fprintf(stderr, "#D exit by stop command\n");
+		  m_nodeprop->setState(IDLE);
 		}
 
 		if (messageline == "anyone") {
 			sendEntry();
 		}
+		if (messageline == "fe_end") {
+		  m_nodeprop->setState(END);
+		}
 		if (messageline == "fe_exit") {
-			exit(1);
+		  fprintf(stderr, "#D exit by fe_exit command\n");
+		  exit(1);
 		}
 	}
 
