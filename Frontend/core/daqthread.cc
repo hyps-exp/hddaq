@@ -95,7 +95,11 @@ int DaqThread::run()
 	
 	status = wait_device();
 	if(status<0) continue; //TIMEOUT or Fast CLEAR
-	  
+	 
+	//Time Stamp
+	time_t t = time(0);
+	header->reserve = (unsigned int)t; 
+ 
 	status = read_device(data, &len, &m_event_number, m_run_number);
       
 	if (status == 1) {

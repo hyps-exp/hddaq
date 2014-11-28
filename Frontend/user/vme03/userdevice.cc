@@ -5,14 +5,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <ctime>
 #include <unistd.h>
 
 #include "vme_v7807.h"
 
 #define MAX_DATASIZE 4*1024*1024;
 
-uint32_t t;
 int trig_flag = 0;
 
 //========================================================================================
@@ -79,17 +77,15 @@ int wait_device()
   for(int i=0;i<2000000;i++){
     reg = *(rpv130[0].rsff);
     if( (reg>>0)&0x1 ){
-      //printf("vme03: normal trigger\n");
       trig_flag = 1;
-      t = (uint32_t)time(0);
       return 0;
     }
     else if( (reg>>1)&0x1 ){
-      //printf("vme03: spill end trigger\n");
       trig_flag = 2;
       return 0;
     }
   }
+
   // TimeOut
   printf("vme03: time out \n");
   return -1;
@@ -98,13 +94,6 @@ int wait_device()
 //========================================================================================
 int read_device(unsigned int *data, int *len, int *event_num, int run_num)
 {
-  printf("vme03: read_device() RUN#%d\n",run_num);
-  sleep(1);
-  *len = 10;
-  //Busy off
-  *(rpv130[0].csr1) = 0x1;
-  *(rpv130[0].pulse) = 0x1;
-  return 1;
   
   //for spill end trigger
   if(trig_flag==2){
@@ -130,19 +119,6 @@ int read_device(unsigned int *data, int *len, int *event_num, int run_num)
   int ndata   = 0;
   ndata += VME_MASTER_HSIZE;
   
-  ////////// Time Stamp
-  {
-    int vme_module_header_start = ndata;
-    ndata += VME_MODULE_HSIZE;
-    data[ndata++] = t;
-    VME_MODULE_HEADER vme_module_header;
-    vme_module_header.m_magic       = VME_MODULE_MAGIC;
-    vme_module_header.m_vme_address = 0x12345678;
-    vme_module_header.m_data_size   = ndata - vme_module_header_start;
-    memcpy( &data[vme_module_header_start],
-	    &vme_module_header, VME_MODULE_HSIZE*4 );
-  }
-
   ////////// vme-rm
   {
     for(int i=0;i<VME_RM_NUM;i++){

@@ -5,14 +5,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <ctime>
 #include <unistd.h>
 
 #include "vme_v7807.h"
 
 #define MAX_DATASIZE 4*1024*1024;
 
-uint32_t t;
 int trig_flag = 0;
 
 //========================================================================================
@@ -81,11 +79,9 @@ int wait_device()
     reg = *(rpv130[0].rsff);
     if( (reg>>0)&0x1 ){
       trig_flag = 1;
-      t = (uint32_t)time(0);
 
       //SMP switch
       *(rpv130[0].pulse) = 0x80;
-
       for(int i=0;i<SMP_NUM;i++){
 	int status = *(smp[i].cmr);
 	printf("smp[%d]: status %x\n",i,status);
@@ -106,27 +102,9 @@ int wait_device()
 //========================================================================================
 int read_device(unsigned int *data, int *len, int *event_num, int run_num)
 {
-  printf("vme01: read_device() RUN#%d\n",run_num);
-  sleep(1);
-  *len = 10;
-  return 1;
-
   int ndata   = 0;
   ndata += VME_MASTER_HSIZE;
   
-  ////////// Time Stamp
-  {
-    int vme_module_header_start = ndata;
-    ndata += VME_MODULE_HSIZE;
-    data[ndata++] = t;
-    VME_MODULE_HEADER vme_module_header;
-    vme_module_header.m_magic       = VME_MODULE_MAGIC;
-    vme_module_header.m_vme_address = 0x12345678;
-    vme_module_header.m_data_size   = ndata - vme_module_header_start;
-    memcpy( &data[vme_module_header_start],
-	    &vme_module_header, VME_MODULE_HSIZE*4 );
-  } 
- 
   ////////// smp
   {
     for(int i=0;i<SMP_NUM;i++){
