@@ -164,12 +164,11 @@ int main(int argc, char* argv[])
 	controller.start();
 	//std::cerr << "three" << " ";
 	watchdog.start();
-	std::cerr << std::endl;
+	//std::cerr << std::endl;
 
 	daqthread.join();
+	watchdog.join();	
 	controller.join();
-	watchdog.join();
-
 
 	return 0;
 }

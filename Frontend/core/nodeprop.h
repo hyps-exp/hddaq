@@ -10,7 +10,7 @@ const int daq_port = 9000;
 #define DAQ_PORT daq_port;
 
 enum State {
-        IDLE, RUNNING, INITIAL, END
+        IDLE, RUNNING, INITIAL
 };
 
 struct node_prop {

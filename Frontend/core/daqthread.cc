@@ -61,7 +61,7 @@ int DaqThread::run()
   
   status = open_device();
   
-  while(m_nodeprop->getState() != END){ 
+  while(1){ 
     
     kol::TcpSocket sock;
   
@@ -120,7 +120,6 @@ int DaqThread::run()
 	}
       }//while( State() == RUNNING )
       
-      
       finalize_device();
       sock.close();
 
@@ -134,18 +133,10 @@ int DaqThread::run()
       sock.close();
     }
 
-  } //while(m_nodeprop->getState() != END){ 
+  } //while(1){ 
   
   close_device();
   delete buf;
   
-  {
-    std::ostringstream msg;
-    msg << m_nodeprop->nickname << " RUN#"
-	<< header->run_number
-        << " DaqThread end";
-    msock.sendString(msg);
-  }
-
   return 0;
 }

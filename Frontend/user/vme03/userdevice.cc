@@ -35,6 +35,8 @@ int open_device()
     *(v830[i].clr) = 0x01;
   }
 
+  sleep(10);
+
   return 0;
 }
 
@@ -59,8 +61,7 @@ int finalize_device()
 //========================================================================================
 int close_device()
 {
-  //called when END command comes
-
+  //never called (exit when fe_exit command comes)
   vme_close();
   return 0;
 }

@@ -42,8 +42,6 @@ int ControlThread::ackStatus()
 		oss << "RUNNING ";
         } else if (daqthread->getState() == INITIAL) {
 		oss << "INITIAL ";
-	} else if (daqthread->getState() == END) {
-		oss << "END ";
 	} else {
 		oss << "UNKNOWN ";
 	}
@@ -71,12 +69,11 @@ int ControlThread::sendEntry()
 
 int ControlThread::run()
 {
-        //DaqThread *daqthread = reinterpret_cast<DaqThread *>(m_nodeprop->daq_thread);
 	GlobalMessageClient& msock = GlobalMessageClient::getInstance();
 
 	sendEntry();
 
-	while (m_nodeprop->getState() != END) {
+	while (1) {
 		std::string messageline;
 		Message rmessage = msock.recvMessage();
 		if (msock.gcount() > 0) {
@@ -105,9 +102,6 @@ int ControlThread::run()
 		}
 		if (messageline == "stop") {
 		  m_nodeprop->setState(IDLE);
-		}
-		if (messageline == "fe_end") {
-		  m_nodeprop->setState(END);
 		}
 		if (messageline == "fe_exit") {
 		  fprintf(stderr, "#D exit by fe_exit command\n");

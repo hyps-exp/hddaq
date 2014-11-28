@@ -36,6 +36,8 @@ int open_device()
     *(smp[i].cmr)   = 0x00;// set cmr
   }
   
+  sleep(10);
+
   return 0;
 }
 
@@ -60,8 +62,7 @@ int finalize_device()
 //========================================================================================
 int close_device()
 {
-  //called when END command comes
-  
+  //never called (exit when fe_exit command comes)
   vme_close();
   return 0;
 }
