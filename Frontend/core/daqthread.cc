@@ -113,6 +113,11 @@ int DaqThread::run()
 	  sock.flush();
 	  
 	  ++m_event_number;
+	  if(m_event_number>=m_nodeprop->max_event){
+	    m_state = IDLE;
+	    controller->ackStatus();
+	    break;
+	  }
 	}else if( status==2 ){
 	  // do not send data to event builder.
 	}else{

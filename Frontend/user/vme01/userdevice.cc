@@ -11,8 +11,6 @@
 
 #define MAX_DATASIZE 4*1024*1024;
 
-int trig_flag = 0;
-
 //========================================================================================
 int get_maxdatasize()
 {
@@ -72,14 +70,12 @@ int close_device()
 int wait_device()
 {
   //printf("vme01: wait_device() \n");
-  trig_flag = 0;
-
+  
   ////////// Polling
   int reg = 0;
   for(int i=0;i<2000000;i++){
     reg = *(rpv130[0].rsff);
     if( (reg>>0)&0x1 ){
-      trig_flag = 1;
 
       //SMP switch
       *(rpv130[0].pulse) = 0x80;
