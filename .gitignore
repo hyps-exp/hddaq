@@ -1,7 +1,10 @@
-*.[ao]
+*.[ado]
 *~
+\#*\#
 *.swp
-Frontend/user/pro
+build/
+old/
+test/
 Frontend/bin/*
 Message/bin/*
 !.gitkeep

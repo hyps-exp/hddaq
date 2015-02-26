@@ -1,145 +1,129 @@
-// -*- C++ -*-
-/*
- *
- *
- */
-
+#include <iostream>
 #include <cstdlib>
-#include <cstdio>
 #include <cstring>
 #include <cerrno>
 
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-#include <exception>
-#include "kol/kolsocket.h"
 #include "kol/koltcp.h"
-#include "Message/GlobalMessageClient.h"
 
 #include "nodeprop.h"
 #include "daqthread.h"
-#include "controlthread.h"
 #include "userdevice.h"
 
-DaqThread::DaqThread(struct node_prop *nodeprop)
-	: kol::Thread(),
-	  m_state(INITIAL),
-	  m_event_number(0),
-	  m_event_size(0),
-          m_run_number(-1),
-	  m_nodeprop(nodeprop)
+static const int EV_MAGIC = 0x45564e54;
+
+struct event_header {
+  unsigned int magic;
+  unsigned int size;
+  unsigned int event_number;
+  unsigned int run_number;
+  unsigned int node_id;
+  unsigned int type;
+  unsigned int nblock;
+  unsigned int unixtime;
+};
+
+
+DaqThread::DaqThread(NodeProp& nodeprop)
+  : m_nodeprop(nodeprop)
 {
 }
 
 DaqThread::~DaqThread()
 {
-	std::cerr << "DaqThread destruct" << std::endl;
+  std::cout << "DaqThread destruct" << std::endl;
 }
 
 int DaqThread::run()
 {
-  int port = m_nodeprop->data_port;
-  const std::string nickname = m_nodeprop->nickname;
-  unsigned int *buf = new unsigned int[get_maxdatasize()/sizeof(unsigned int)];
-  unsigned int *data;
-  struct event_header *header;
-  int status;
+  m_nodeprop.setStateAck(INITIAL);
+
+  size_t event_header_size    = sizeof(struct event_header);
+  const int event_header_len  = event_header_size/sizeof(unsigned int);
+  size_t data_size            = get_maxdatasize();
+  const int data_len          = data_size/sizeof(unsigned int);
+  const int max_buf_len       = event_header_len + data_len;
   
-  header = reinterpret_cast<struct event_header *>(buf);
-  data = buf + sizeof(struct event_header)/sizeof(unsigned int);
+  unsigned int *buf           = new unsigned int[max_buf_len];
+  struct event_header *header = reinterpret_cast<struct event_header *>(buf);
+  unsigned int *data          = buf + event_header_len;
   
-  memset(header, 0, sizeof(struct event_header));
+  memset(header, 0, event_header_size);
   header->magic = EV_MAGIC;
-  header->node_id = m_nodeprop->node_id;
+  header->node_id = m_nodeprop.getNodeId();
   
-  GlobalMessageClient& msock = GlobalMessageClient::getInstance();
-  
-  ControlThread *controller  = reinterpret_cast<ControlThread *>(m_nodeprop->controller);
-  m_state=INITIAL;
-  controller->ackStatus();
-  
-  status = open_device();
-  
-  while(1){ 
-    
-    kol::TcpSocket sock;
-  
-    m_state=IDLE;
-    controller->ackStatus();
-  
-    try {
-      kol::TcpServer server(port);
-      sock = server.accept();
-      server.close();
-      std::cerr << "#D server accepted" << std::endl;
-      
-      header->type = ET_NORMAL;
-      m_run_number = m_nodeprop->getRunNumber();
-      header->run_number = m_run_number;
-      {
-	std::ostringstream msg;
-	msg << m_nodeprop->nickname << " got RUN# = "
-	    << m_run_number;
-	msock.sendString(msg);
-      }
-      
-      status = init_device();
-      
-      m_state = RUNNING;
-      m_event_number = 0;
-      controller->ackStatus();
-      
-      while(m_nodeprop->getState() == RUNNING) {
-	int len;
-	
-	status = wait_device();
-	if(status<0) continue; //TIMEOUT or Fast CLEAR
-	 
-	//Time Stamp
-	time_t t = time(0);
-	header->reserve = (unsigned int)t; 
+  kol::TcpSocket& dsock = m_nodeprop.getDataSocket();
  
-	status = read_device(data, &len, &m_event_number, m_run_number);
-      
-	if (status == 1) {
-	  len = len + sizeof(struct event_header)/sizeof(unsigned int);
-	  header->size = len;
-	  header->event_number = m_event_number;
-	  int clen = len * sizeof(unsigned int);
-	  m_event_size = len;
-	  
-	  sock.write(buf, clen);
-	  sock.flush();
-	  
-	  ++m_event_number;
-	  if(m_event_number>=m_nodeprop->max_event){
-	    m_state = IDLE;
-	    controller->ackStatus();
-	    break;
-	  }
-	}else if( status==2 ){
-	  // do not send data to event builder.
-	}else{
-	  printf("daqthread: undefined status \n");
-	}
-      }//while( State() == RUNNING )
-      
-      finalize_device();
-      sock.close();
-
-    } catch (std::exception &e) {
-      std::ostringstream msg;
-      msg << "#D DaqThread::run main loop: "
-	  << e.what() << ", errno = " 
-	  << errno;
-      std::cerr << msg.str() << std::endl;
-      msock.sendString(MT_ERROR, msg);
-      sock.close();
-    }
-
-  } //while(1){ 
+  //Use open_devide
+  int status;
+  status = open_device();
+  m_nodeprop.setStateAck(IDLE);
   
+  kol::TcpServer server( m_nodeprop.getDataPort() );
+  struct timeval tv={6,0};
+  server.setsockopt(SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+  while( m_nodeprop.getState() == IDLE ){ 
+    
+    try{
+      dsock = server.accept();
+    }catch(...){
+      std::cout << "#D waitting accept" << std::endl;
+      continue;
+    }
+    
+    std::cout << "#D server accepted" << std::endl;
+    
+    DaqMode daq_mode   = m_nodeprop.getDaqMode();
+    header->type       = daq_mode;
+    header->run_number = m_nodeprop.getRunNumber();
+    m_nodeprop.setEventNumber( 0 );
+ 
+    //User init_devide
+    status = init_device(daq_mode);
+    m_nodeprop.setStateAck(RUNNING);
+      
+    while(m_nodeprop.getState() == RUNNING) {
+      
+      //User wait_devide
+      status = wait_device(daq_mode);
+      if(status==-1) continue; //TIMEOUT or Fast CLEAR
+      
+      time_t t = time(0);
+      header->unixtime = (unsigned int)t; 
+      
+      //User read_devide
+      int len;
+      status = read_device(daq_mode,data, len);
+      if(status==-1) continue;
+      
+      len += event_header_len;
+      header->size = len;
+      m_nodeprop.setEventSize(len);
+
+      header->event_number = m_nodeprop.getEventNumber();
+      
+      int clen = len * sizeof(unsigned int);
+	  
+      try{
+	dsock.send(buf, clen, MSG_NOSIGNAL);
+	dsock.flush();
+      }catch(...){
+	m_nodeprop.sendErrorMessage("data send failure");
+	std::cout << "#E data send failed -> exit " << std::endl;
+	exit(1);
+      }
+
+      m_nodeprop.setEventNumber( header->event_number+1 );
+      
+    } //while( getState() == RUNNING )
+      
+    //User finalize_devide
+    finalize_device(daq_mode);
+    dsock.close();
+    
+  } //while( getState() == IDLE ){ 
+  
+  //User close_devide
   close_device();
   delete buf;
   

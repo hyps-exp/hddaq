@@ -52,15 +52,6 @@ MessageClient::MessageClient (const char *host, int port)
   std::cerr << "MessageClient Created\n";
 }
 
-MessageClient::MessageClient (const char *host, int port, int src_id)
-  : TcpClient(host,port), m_src_id(src_id)
-{
-  std::cerr << "MessageClient Created : host=" << host 
-	    << " port = " << port << " src_id = " << src_id << std::endl;
-    
-}
-
-
 MessageClient::~MessageClient ()
 {
    std::cerr << "MessageClient Deleted\n";
@@ -68,15 +59,14 @@ MessageClient::~MessageClient ()
 
 Message MessageClient::recvMessage ()
 {
-
-    //struct msg_fmt hdr = msg_fmt_zero;
-    struct msg_fmt hdr;
+    
     int msg_size;
     char buf[4096];
     Message msg;
 
-	memset(&hdr, 0, sizeof(struct msg_fmt));
-
+    struct msg_fmt hdr;
+    memset(&hdr, 0, sizeof(struct msg_fmt));
+    
     read ((char *) &hdr, sizeof(msg_fmt));
     if (gcount() == 0) {
 	throw kol::SocketException("MessageClient::recvMessage, gcount() = 0");

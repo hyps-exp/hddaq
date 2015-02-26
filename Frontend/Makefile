@@ -1,37 +1,31 @@
-CXX	 = g++
-CXXFLAGS = -O2 -Wall
+BIN_DIR = bin
 
-INCLUDES = -I./core -I./user -I../kol -I../Message
-LIBS	 = -L../Message/lib -lMessage \
-	   -L../kol/lib -lkol -lpthread \
-           -L/usr/lib/gef -lvme
+TARGET  = example_frontend
 
-FLAGS	 = $(CXXFLAGS) $(INCLUDES)
+all: $(addprefix $(BIN_DIR)/,$(TARGET))
 
-BIN_DIR  = bin
+$(BIN_DIR)/example_frontend:
+	$(MAKE) -C example_node;
 
-CORE_DIR = core
-CORE_OBJ = frontend.o daqthread.o controlthread.o watchdogthread.o
+$(BIN_DIR)/vme01_frontend:
+	$(MAKE) -C vme01_node;
 
-USER_DIR = user/pro
-USER_OBJ = $(patsubst %.cc,%.o,$(wildcard $(USER_DIR)/*.cc))
+$(BIN_DIR)/vme03_frontend:
+	$(MAKE) -C vme03_node;
 
+$(BIN_DIR)/vme04_frontend:
+	$(MAKE) -C vme04_node;
 
-$(BIN_DIR)/frontend: $(addprefix $(CORE_DIR)/,$(CORE_OBJ)) \
-                     $(USER_OBJ)
-	@echo Linking $@ ...
-	@$(CXX) -o $@ $^ $(LIBS)
+$(BIN_DIR)/vme05_frontend:
+	$(MAKE) -C vme05_node;
+
+$(BIN_DIR)/vme06_frontend:
+	$(MAKE) -C vme06_node;
 
 clean:
-	@echo Cleaning up ...
-	@rm -f $(BIN_DIR)/frontend
-	@rm -f $(CORE_DIR)/*.o
-	@rm -f $(USER_DIR)/*.o
-
-$(CORE_DIR)/%.o: $(CORE_DIR)/%.cc
-	@echo Compiling $< ...
-	@$(CXX) $(FLAGS) -c $< -o $@
-
-$(USER_DIR)/%.o: $(USER_DIR)/%.cc
-	@echo Compiling $< ...
-	@$(CXX) $(FLAGS) -c $< -o $@
+	$(MAKE) -C example_node clean; 
+	$(MAKE) -C vme01_node clean; 
+	$(MAKE) -C vme03_node clean; 
+	$(MAKE) -C vme04_node clean; 
+	$(MAKE) -C vme05_node clean; 
+	$(MAKE) -C vme06_node clean; 

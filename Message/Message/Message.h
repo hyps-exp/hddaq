@@ -83,12 +83,6 @@ public:
 
 private:
   msg_fmt m_fmt;
-//   int m_header;
-//   int m_length;
-//   int m_src_id;
-//   int m_dst_id;
-//   int m_seq_num;
-//   int m_type;
   std::string m_message;
   
 };

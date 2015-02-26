@@ -1,3 +1,8 @@
+/*
+ *
+ *
+ */
+
 #include <iostream>
 #include "kol/koltcp.h"
 
@@ -149,6 +154,35 @@ TcpBuffer::send_all(const unsigned char* buf, int nbytes)
   return (nbytes - nleft);
 }
 
+int
+TcpBuffer::send_all(const unsigned char* buf, int nbytes, int flag)
+{
+  int nleft = 0;
+
+  try
+  {
+    nleft = nbytes;
+    while( nleft > 0 )
+    {
+      int nsend = m_socket.send(buf, nleft, flag);
+      if( nsend <= 0 )
+      {
+        m_iostate |= badbit;
+        break;
+      }
+      nleft -= nsend;
+      buf += nsend;
+    }
+  }
+  catch(...)
+  {
+    m_iostate |= badbit;
+    m_socket.close();
+    throw;
+  }
+  return (nbytes - nleft);
+}
+
 TcpBuffer&
 TcpBuffer::read(char* buf, std::streamsize len)
 {
@@ -209,6 +243,17 @@ TcpBuffer::write(const void* buf, std::streamsize len)
 //  return n;
   flush();
   send_all(p, (int)len);
+  return *this;
+}
+
+TcpBuffer&
+TcpBuffer::send(const void* buf, std::streamsize len, int flag)
+{
+  if((buf == 0) || (len == 0))
+    return *this;
+  unsigned char* p = (unsigned char*)buf;
+  flush();
+  send_all(p, (int)len, flag);
   return *this;
 }
 
@@ -340,35 +385,35 @@ void
 TcpClient::Start(const char* host, int port)
 {
   try
-    {
-      struct sockaddr_in srvaddr;
-      struct sockaddr_in* resaddr;
-      struct addrinfo hints;
-      struct addrinfo* res;
-      int err;
-      
-      res = 0;
-      ::memset((char*)&hints, 0, sizeof(hints));
-      hints.ai_family = PF_INET;
-      hints.ai_socktype = SOCK_STREAM;
-      hints.ai_protocol = 0;
-      if((err = getaddrinfo(host, 0, &hints, &res)) != 0)
-	throw SocketException("TcpClient::getaddrinfo error: "+std::string(gai_strerror(err)));
-      //       throw SocketException("TcpClient::getaddrinfo error");
-      resaddr = (struct sockaddr_in*)res->ai_addr;
-      
-      ::memset((char*)&srvaddr, 0, sizeof(srvaddr));
-      srvaddr.sin_family = AF_INET;
-      srvaddr.sin_port = ::htons((u_short)port);
-      srvaddr.sin_addr = resaddr->sin_addr;
-      freeaddrinfo(res);
-      m_socket.connect((struct sockaddr*)&srvaddr, sizeof(srvaddr));
-    }
+  {
+    struct sockaddr_in srvaddr;
+    struct sockaddr_in* resaddr;
+    struct addrinfo hints;
+    struct addrinfo* res;
+    int err;
+
+    res = 0;
+    ::memset((char*)&hints, 0, sizeof(hints));
+    hints.ai_family = PF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = 0;
+    if((err = getaddrinfo(host, 0, &hints, &res)) != 0)
+      throw SocketException("TcpClient::getaddrinfo error: "+std::string(gai_strerror(err)));
+//       throw SocketException("TcpClient::getaddrinfo error");
+    resaddr = (struct sockaddr_in*)res->ai_addr;
+
+    ::memset((char*)&srvaddr, 0, sizeof(srvaddr));
+    srvaddr.sin_family = AF_INET;
+    srvaddr.sin_port = htons((u_short)port);
+    srvaddr.sin_addr = resaddr->sin_addr;
+    freeaddrinfo(res);
+    m_socket.connect((struct sockaddr*)&srvaddr, sizeof(srvaddr));
+  }
   catch(...)
-    {
-      m_socket.close();
-      throw;
-    }
+  {
+    m_socket.close();
+    throw;
+  }
 }
 
 TcpClient::TcpClient(const char* host, int port) :
@@ -398,8 +443,8 @@ TcpServer::Start(int port, int backlog)
   struct sockaddr_in addr;
   ::memset((char*)&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
-  addr.sin_addr.s_addr = ::htonl(INADDR_ANY);
-  addr.sin_port = ::htons((u_short)port);
+  addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  addr.sin_port = htons((u_short)port);
   if(m_socket.bind((const struct sockaddr*)&addr, sizeof(addr)) == -1)
     return;
   m_socket.listen(backlog);

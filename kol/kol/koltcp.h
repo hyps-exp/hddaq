@@ -1,7 +1,7 @@
 #ifndef MYTCP_H_INCLUDED
 #define MYTCP_H_INCLUDED
 
-#include "kol/kolsocket.h"
+#include "kolsocket.h"
 
 // 08-Jun-2007
 //  - getsockname() and getpeername() functions were added in TcpBuffer.
@@ -35,6 +35,7 @@ namespace kol
     TcpBuffer& read(char* buf, std::streamsize len);
     TcpBuffer& put(int c);
     TcpBuffer& write(const void* buf, std::streamsize len);
+    TcpBuffer& send(const void* buf, std::streamsize len, int flags);
     TcpBuffer& flush();
     virtual int shutdown(int how=SHUT_RDWR);
     int getsockname(struct sockaddr* name, socklen_t* namelen) const;
@@ -58,6 +59,7 @@ namespace kol
     void initparams();
     int recv_all(unsigned char* buf, int nbytes);
     int send_all(const unsigned char* buf, int nbytes);
+    int send_all(const unsigned char* buf, int nbytes, int flag);
   private:
     enum { bufsize = 1024 };
     enum { goodbit = 0, eofbit = 1, failbit = 2, badbit = 4 };

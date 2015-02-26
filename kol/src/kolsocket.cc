@@ -1,3 +1,8 @@
+/*
+ *
+ *
+ */
+
 #include "kol/kolsocket.h"
 #ifndef WIN32
 #include <string.h>
@@ -84,8 +89,8 @@ SockAddrIn::SockAddrIn(char* host, int port)
     if((host == 0) || host[0] == 0)
     {
       m_saddr.sin_family = AF_INET;
-      m_saddr.sin_addr.s_addr = ::htonl(INADDR_ANY);
-      m_saddr.sin_port = ::htons((u_short)port);
+      m_saddr.sin_addr.s_addr = htonl(INADDR_ANY);
+      m_saddr.sin_port = htons((u_short)port);
     }
     else
     {
@@ -99,7 +104,7 @@ SockAddrIn::SockAddrIn(char* host, int port)
       {
         resaddr = (struct sockaddr_in*)res->ai_addr;
         m_saddr.sin_family = AF_INET;
-        m_saddr.sin_port = ::htons((u_short)port);
+        m_saddr.sin_port = htons((u_short)port);
         m_saddr.sin_addr = resaddr->sin_addr;
         freeaddrinfo(res);
       }

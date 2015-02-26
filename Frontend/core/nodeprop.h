@@ -1,116 +1,69 @@
-// -*- C++ -*-
 #ifndef NODEPROP_INCLUDED
 #define NODEPROP_INCLUDED
 
-#include <kol/kolthread.h>
-
-#include <iostream>
-
-const int daq_port = 9000;
-#define DAQ_PORT daq_port;
+#include <string>
 
 enum State {
-        IDLE, RUNNING, INITIAL
+  INITIAL, IDLE, RUNNING, END
 };
 
-struct node_prop {
-	node_prop(bool lock=true);
-	~node_prop();
-
-	int getRunNumber();
-	void setRunNumber(int new_value);
-
-	int getState();
-        void setState(int new_state);
-
-	int data_port;
-	int g_state;
-	int run_number;
-	int max_event;
-	int node_id;
-	char *nickname;
-	kol::Thread *daq_thread;
-	kol::Thread *controller;
-	kol::Thread *watchdog;
-	kol::Mutex  *runno_mutex;
-	kol::Mutex  *state_mutex;
+enum DaqMode {
+  DM_NORMAL, DM_NULL, DM_DUMMY
 };
 
-inline
-node_prop::node_prop(bool lock)
-: data_port(),
-  g_state(),
-  run_number(0),
-  max_event(),
-  node_id(),
-  nickname(),
-  daq_thread(0),
-  controller(0),
-  watchdog(0),
-  runno_mutex(0),
-  state_mutex(0)
-{ 
-	if (lock) {
-		runno_mutex = new kol::Mutex;
-		runno_mutex->lock(); 
-	}
-		state_mutex = new kol::Mutex;
+namespace kol { 
+  class Mutex;
+  class TcpSocket;
 }
-
-inline
-node_prop::~node_prop()
+class GlobalMessageClient;
+class NodeProp
 {
-	if (runno_mutex) {
-		delete runno_mutex;
-		runno_mutex = 0;
-	}
-
-	if (state_mutex) {
-		delete state_mutex;
-		state_mutex = 0;
-	}
-}
-
-inline
-int node_prop::getRunNumber()
-{
-	if (runno_mutex)
-		runno_mutex->lock();
-	return run_number;
-}
-
-inline
-void node_prop::setRunNumber(int new_value)
-{
-	run_number = new_value;
-	if (runno_mutex)
-		runno_mutex->unlock();
-	return;
-}
-
-inline
-int node_prop::getState()
-{
-  int ret = 0;
-  if (state_mutex){
-    state_mutex->lock();
-    ret = g_state;
-    state_mutex->unlock();
-  }
-
-  return ret;
-}
-
-inline
-void node_prop::setState(int new_state)
-{
-  if(state_mutex){
-    state_mutex->lock();
-    g_state = new_state;
-    state_mutex->unlock();
-  }
+public:
+  NodeProp(GlobalMessageClient& msock, int nodeid, std::string nickname, int dataport);
+  ~NodeProp();
   
-  return;
-}
+  void setRunNumber(int new_value);
+  int getRunNumber();
+
+  void setState(State new_state);
+  void setStateAck(State new_state){ setState(new_state); ackStatus(); }
+  State getState();
+  
+  void setDaqMode(DaqMode new_mode);
+  DaqMode getDaqMode();
+  
+  void setEventNumber(int new_value);
+  int getEventNumber();
+
+  void setEventSize(int new_value);
+  int getEventSize();
+
+  kol::TcpSocket& getDataSocket(){ return *m_dsock; }
+
+  int getDataPort(){ return m_data_port; }
+  int getNodeId(){ return m_node_id; }
+
+  void ackStatus();
+  void sendEntry();
+  void sendNormalMessage(const char* message);
+  void sendWarningMessage(const char* message);
+  void sendErrorMessage(const char* message);
+
+  std::string recvMessage();
+
+private:
+  State m_state;
+  DaqMode m_daq_mode;
+  int m_run_number;
+  int m_node_id;
+  int m_event_number;
+  int m_event_size;
+  int m_data_port;
+  std::string m_nickname;
+  GlobalMessageClient& m_msock;
+  kol::TcpSocket* m_dsock;
+  kol::Mutex* access_mutex;
+  kol::Mutex* recv_mutex;
+};
 
 #endif

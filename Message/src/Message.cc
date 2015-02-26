@@ -1,11 +1,6 @@
 // Msg.cc
-//#include "Message/MessageClient.h"
-//#include "Message/MessageSocket.h"
 #include <iostream>
 #include "Message/Message.h"
-
-//int Message::m_header = 0x20060815;
-//int Message::m_src_id = 200;
 
 Message::Message (const std::string * message, int dst_id, int type)
   : m_fmt(),
@@ -107,12 +102,6 @@ void
 Message::setAllHeader (struct msg_fmt *hdr)
 {
   m_fmt = *hdr;
-//     m_header = hdr->header;
-//     m_length = hdr->length;
-//     m_src_id = hdr->src_id;
-//     m_dst_id = hdr->dst_id;
-//     m_seq_num = hdr->seq_num;
-//     m_type = hdr->type;
 }
 
 int
@@ -160,18 +149,6 @@ Message::getMessage ()
 void
 Message::showAll ()
 {
-/*
-    std::cout << std::endl;
-    std::cout << "header  : " << m_header << std::endl;
-    std::cout << "length  : " << m_length << std::endl;
-    std::cout << "src_id  : " << m_src_id << std::endl;
-    std::cout << "dst_id  : " << m_dst_id << std::endl;
-    std::cout << "seq_num : " << m_seq_num << std::endl;
-    std::cout << "type    : " << m_type << std::endl;
-    std::cout << "-----------------------" << std::endl;
-    std::cout << "message : " << m_message << std::endl;
-    std::cout << std::endl;
-*/
     std::cout << std::endl;
     std::cout << "header: " << std::hex << "0x" << m_fmt.header;
     std::cout << ", len: " << std::dec << m_fmt.length;

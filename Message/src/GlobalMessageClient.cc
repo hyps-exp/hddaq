@@ -71,7 +71,7 @@ GlobalMessageClient::GlobalMessageClient (const char *host, int port)
 }
 
 GlobalMessageClient::GlobalMessageClient (const char *host, int port, int node_id)
-  : MessageClient(host, port, node_id), m_node_id(node_id)
+  : MessageClient(host, port), m_node_id(node_id)
 {
 	std::cerr << "GlobalMessageClient Created : host=" << host 
 		<< " port = " << port << " node_id = " << m_node_id << std::endl;

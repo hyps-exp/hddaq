@@ -1,113 +1,79 @@
-// -*- C++ -*-
-/*
- *
- *
- */
-
-#include <cstdio>
-#include <cstdlib>
-
 #include <iostream>
 #include <string>
-#include <sstream>
-
-#include "kol/kolsocket.h"
-#include "kol/koltcp.h"
-#include "Message/GlobalMessageClient.h"
+#include <cstdlib>
+#include <cstdio>
 
 #include "controlthread.h"
 #include "nodeprop.h"
-#include "daqthread.h"
 
-ControlThread::ControlThread(struct node_prop *nodeprop)
-  :m_gstate_mutex(),
-   m_nodeprop(nodeprop)
+ControlThread::ControlThread(NodeProp& nodeprop)
+  : m_nodeprop(nodeprop)
 {
 }
 
 ControlThread::~ControlThread()
 {
-	std::cerr << "ControlThread destructed" << std::endl;
+  std::cout << "ControlThread destructed" << std::endl;
 }
-
-int ControlThread::ackStatus()
-{
-	DaqThread *daqthread  = reinterpret_cast<DaqThread *>(m_nodeprop->daq_thread);
-	GlobalMessageClient& msock = GlobalMessageClient::getInstance();
-
-	std::ostringstream oss; 
-	if (daqthread->getState() == IDLE) {
-		oss << "IDLE ";
-	} else if (daqthread->getState() == RUNNING) {
-		oss << "RUNNING ";
-        } else if (daqthread->getState() == INITIAL) {
-		oss << "INITIAL ";
-	} else {
-		oss << "UNKNOWN ";
-	}
-	oss << daqthread->getEventNumber();
-	oss << " size:" << daqthread->getEventSize();
-
-	std::string smessage = oss.str();
-	msock.sendString(MT_STATUS, smessage);
-
-	return 0;
-}
-
-int ControlThread::sendEntry()
-{
-	GlobalMessageClient & msock = GlobalMessageClient::getInstance();
-
-	std::string nickname(m_nodeprop->nickname);
-	std::string message = "ENTRY " + nickname;
-
-	msock.sendString(MT_STATUS, message);
-
-	return 0;
-}
-
 
 int ControlThread::run()
 {
-	GlobalMessageClient& msock = GlobalMessageClient::getInstance();
+  m_nodeprop.sendEntry();
 
-	sendEntry();
+  while (1) {
+    std::string messageline = m_nodeprop.recvMessage();
+    std::cout << "#D Message : " << messageline << std::endl;
+    
+    if (messageline == "status") {
+      m_nodeprop.ackStatus();
+    }
 
-	while (1) {
-		std::string messageline;
-		Message rmessage = msock.recvMessage();
-		if (msock.gcount() > 0) {
-		  messageline = rmessage.getMessage();
-		}
+    if (messageline == "anyone") {
+      m_nodeprop.sendEntry();
+    }
 
-		std::cerr << "#D Message : " << messageline << std::endl;
-		
-		if (messageline == "status") {
-			ackStatus();
-		}
-		if (messageline == "anyone") {
-			sendEntry();
-		}
-		
-		int runno;
-		if (sscanf(messageline.c_str(), "run %d", &runno) == 1) {
-			m_nodeprop->setRunNumber(runno);
-		}
-		int maxevent;
-		if (sscanf(messageline.c_str(), "maxevent %d", &maxevent) == 1) {
-			m_nodeprop->max_event = maxevent;
-		}
-		if (messageline == "start") {
-		  m_nodeprop->setState(RUNNING);
-		}
-		if (messageline == "stop") {
-		  m_nodeprop->setState(IDLE);
-		}
-		if (messageline == "fe_exit") {
-		  fprintf(stderr, "#D exit by fe_exit command\n");
-		  exit(1);
-		}
-	}
+    if (messageline == "dummy_mode") {
+      m_nodeprop.setDaqMode(DM_DUMMY);
+      m_nodeprop.ackStatus();
+    }
 
-	return 0;
+    if (messageline == "normal_mode") {
+      m_nodeprop.setDaqMode(DM_NORMAL);
+      m_nodeprop.ackStatus();
+    }
+
+    if (messageline == "start") {
+      ;
+    }
+
+    if (messageline == "stop") {
+#ifdef END_AT_STOP
+      m_nodeprop.setStateAck(END);
+      std::cout << "#D end by stop" <<std::endl;
+      m_nodeprop.sendNormalMessage("end by stop");
+#else
+      m_nodeprop.setStateAck(IDLE);
+#endif
+    }
+
+    if (messageline == "fe_end") {
+      m_nodeprop.setStateAck(END);
+      std::cout << "#D end by fe_end" <<std::endl;
+      m_nodeprop.sendNormalMessage("end by fe_end");
+    }
+
+    if (messageline == "fe_exit") {
+      std::cout << "#D exit by fe_exit" <<std::endl;
+      m_nodeprop.sendErrorMessage("exit by fe_exit");
+      exit(1);
+    }
+    
+    int runno;
+    if (sscanf(messageline.c_str(), "run %d", &runno) == 1) {
+      m_nodeprop.setRunNumber(runno);
+    }
+
+  }// while(1)
+  
+  return 0;
 }

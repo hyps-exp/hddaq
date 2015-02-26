@@ -1,36 +1,25 @@
-/*
- *
- *
- */
-
 #include <iostream>
 
-#include "kol/kolsocket.h"
-#include "kol/koltcp.h"
-#include "kol/kolthread.h"
-
 #include "watchdogthread.h"
-#include "controlthread.h"
 #include "nodeprop.h"
 
 
-WatchdogThread::WatchdogThread(struct node_prop *nodeprop)
+WatchdogThread::WatchdogThread(NodeProp& nodeprop)
   : m_nodeprop(nodeprop)
 {
 }
 
 WatchdogThread::~WatchdogThread()
 {
-  std::cerr << "WatchdogThread destructed" << std::endl;
+  std::cout << "WatchdogThread destructed" << std::endl;
 }
 
 
 int WatchdogThread::run()
 {
-  ControlThread *controller  = reinterpret_cast<ControlThread *>(m_nodeprop->controller);
   while (1) {
+    m_nodeprop.ackStatus();
     sleep(3);
-    controller->ackStatus();
   }
   
   return 0;

@@ -42,13 +42,9 @@
 class MessageClient : public kol::TcpClient {
 public:
   MessageClient (const char *host, int port);
-  MessageClient (const char *host, int port, int src_id);
   ~MessageClient ();
   int sendMessage (Message msg);
   virtual Message recvMessage ();
-
-private:
-  int m_src_id;
 
 };
 #endif

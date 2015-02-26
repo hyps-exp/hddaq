@@ -1,8 +1,6 @@
+// kolthread.cxx
+//
 #include "kol/kolthread.h"
-#include <cassert>
-#include <cstdio>
-#include <cstdlib>
-#include <cerrno>
 
 using namespace kol;
 
@@ -73,12 +71,7 @@ Semaphore::Semaphore(unsigned int value)
 #ifdef WIN32
   m_sem = ::CreateSemaphore( 0, (LONG)value, SEM_VALUE_MAX, 0 );
 #else
-  //::sem_init(&m_sem, 0, value);
-	if (::sem_init(&m_sem, 0, value) != 0) {
-		perror("sem_init");
-		assert(0);
-		exit(1);
-	};
+  ::sem_init(&m_sem, 0, value);
 #endif
 }
 
@@ -308,6 +301,7 @@ ThreadController::delthread(Thread* p)
   m_threadid = p->delthreadid();
   p->join();
   delete p;
+  p = 0;
   --m_running;
   m_mutex.unlock();
 }
