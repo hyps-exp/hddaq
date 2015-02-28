@@ -1,6 +1,6 @@
-# Makefile for Frontend/vme01_node
+# Makefile for Frontend/vme06_node
 
-TARGET	= vme01_frontend
+TARGET	= vme06_frontend
 
 CORE_DIR	= ../core
 BIN_DIR		= ../bin
@@ -12,7 +12,8 @@ CXXFLAGS	= -O2 -Wall
 INCLUDES	= -I. -I$(CORE_DIR) -I../../kol -I../../Message
 LIBS		= -L../../Message/lib -lMessage \
 			-L../../kol/lib -lkol \
-			-lpthread
+			-lpthread \
+			-lvme
 
 FLAGS		= $(CXXFLAGS) $(INCLUDES)
 

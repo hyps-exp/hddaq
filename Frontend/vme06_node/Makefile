@@ -12,7 +12,8 @@ CXXFLAGS	= -O2 -Wall
 INCLUDES	= -I. -I$(CORE_DIR) -I../../kol -I../../Message
 LIBS		= -L../../Message/lib -lMessage \
 			-L../../kol/lib -lkol \
-			-lpthread
+			-lpthread \
+			-L/usr/lib/gef -lvme
 
 FLAGS		= $(CXXFLAGS) $(INCLUDES)
 
