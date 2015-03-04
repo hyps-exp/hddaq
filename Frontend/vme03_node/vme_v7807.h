@@ -28,7 +28,7 @@ module[1]:base_address = 0x12350000 (=module[0]+map_offset)
 module[2]:base_address = 0x12360000 (=module[1]+map_offset)
 :
 (Module base address should be set in serial order by map_offset increment.)
- */
+*/
 
 //### VME-RM ##############################
 struct VME_RM_REG {

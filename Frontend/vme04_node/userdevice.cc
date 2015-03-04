@@ -95,7 +95,8 @@ int wait_device(DaqMode daq_mode)
 	}
       }
       // TimeOut
-      send_warning("vme04: wait_device() Time Out");
+      std::cout<<"wait_device() Time Out"<<std::endl;
+      //send_warning("vme04: wait_device() Time Out");
       return -1;
     }
   case DM_DUMMY:

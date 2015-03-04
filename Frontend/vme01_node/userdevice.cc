@@ -20,7 +20,7 @@ int open_device()
   for(int i=0;i<SMP_NUM;i++){
     *(smp[i].cmr)   = 0x40;// SMP reset
     usleep(1000);
-    *(smp[i].snccr) = 0x02;// cnt clr
+    *(smp[i].snccr) = 0x02;// snc clear
     *(smp[i].bcr)   = 0x23;// hardware switch eable
     *(smp[i].cmr)   = 0x00;// set cmr
   }
@@ -33,7 +33,10 @@ int init_device(DaqMode daq_mode)
   switch(daq_mode){
   case DM_NORMAL:
     {
-      *(rpv130[0].csr1)  = 0x1; // clear
+      for(int i=0;i<SMP_NUM;i++){
+	*(smp[i].snccr)    = 0x02;// snc clear
+      }
+      *(rpv130[0].csr1)  = 0x1; // io clear
       *(rpv130[0].pulse) = 0x1; // busy off
       return 0;
     }
@@ -80,7 +83,8 @@ int wait_device(DaqMode daq_mode)
 	}
       }
       // TimeOut
-      send_warning("vme01: wait_device() Time Out");
+      std::cout<<"wait_device() Time Out"<<std::endl;
+      //send_warning("vme01: wait_device() Time Out");
       return -1;
     }
   case DM_DUMMY:

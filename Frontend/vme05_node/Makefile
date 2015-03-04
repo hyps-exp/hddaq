@@ -1,6 +1,6 @@
-# Makefile for Frontend/vme06_node
+# Makefile for Frontend
 
-TARGET	= vme06_frontend
+TARGET	= vme05_frontend
 
 CORE_DIR	= ../core
 BIN_DIR		= ../bin
@@ -52,7 +52,6 @@ $(BLD_DIR)/%.o: %.cc
 
 clean:
 	@echo Cleaning up ...
-	@rm -f $(BIN_DIR)/$(TARGET)
-	@rm -f $(BLD_DIR)/*
+	@rm -rf $(BLD_DIR) $(BIN_DIR)/$(TARGET)
 
 -include $(DEPENDS)
