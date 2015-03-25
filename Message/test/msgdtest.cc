@@ -80,14 +80,14 @@ int set_signal()
 class MessageUpstreamThread:public kol::Thread
 {
 private:
-  MessageSocket *m_up_msock_p;
+	MessageSocket *m_up_msock_p;
 public:
-  MessageUpstreamThread (MessageSocket *up_msock_p,
-			 const MessageSocket& msock);
-  ~MessageUpstreamThread ();
+	MessageUpstreamThread (MessageSocket *up_msock_p,
+		const MessageSocket& msock);
+	~MessageUpstreamThread ();
 protected:
-  int run ();
-  MessageSocket m_msock;
+	int run ();
+	MessageSocket m_msock;
 };
 
 
@@ -107,8 +107,8 @@ protected:
 
 
 MessageUpstreamThread::MessageUpstreamThread (
-	 MessageSocket *up_msock_p, const MessageSocket& msock)
-         : m_up_msock_p(up_msock_p), m_msock(msock)
+	MessageSocket *up_msock_p, const MessageSocket& msock)
+	: m_msock(msock), m_up_msock_p(up_msock_p)
 {
 }
 

@@ -151,8 +151,8 @@ int main(int argc, char* argv[])
       kol::TcpServer server(port);
       kol::ThreadController control;
       kol::TcpSocket sock[100];
-      //RThread* rthread[100];
-      //SThread* sthread[100];
+      RThread* rthread[100];
+      SThread* sthread[100];
       while(1){
 	std::cout << "Server: waiting new connection...[port:"<<port<<"]"<< std::endl;
      

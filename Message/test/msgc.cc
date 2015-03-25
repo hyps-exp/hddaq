@@ -87,6 +87,9 @@ main (int argc, char **argv)
     kol::ThreadController control;
 
     try {
+	char
+	    buf[4096];
+
         MessageClient msock (SERVER_NAME, 8880);
 
 	control.post (new MessageClientRecvThread (msock));

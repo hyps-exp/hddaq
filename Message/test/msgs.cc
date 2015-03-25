@@ -124,7 +124,7 @@ int Message::m_header = 0x20060815;
 int Message::m_src_id = 500;
 */
 
-int main (int argc, char **argv)
+main (int argc, char **argv)
 {
 	int port = MSG_UP_PORT;
 
