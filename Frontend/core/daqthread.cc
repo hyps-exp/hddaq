@@ -81,6 +81,7 @@ int DaqThread::run()
     header->type       = daq_mode;
     header->run_number = m_nodeprop.getRunNumber();
     m_nodeprop.setEventNumber( 0 );
+    m_nodeprop.setEventSize( 0 );
  
     //User init_devide
     init_device(m_nodeprop);

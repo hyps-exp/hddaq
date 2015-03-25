@@ -3,8 +3,6 @@
 \#*\#
 *.swp
 build/
-old/
-test/
-Frontend/bin/*
-Message/bin/*
+bin/
+lib/
 !.gitkeep
