@@ -1,11 +1,10 @@
 #include <sstream>
 
 #include "kol/kolthread.h"
-#include "kol/koltcp.h"
-#include "Message/GlobalMessageClient.h"
 #include "nodeprop.h"
+#include "MessageHelper.h"
 
-NodeProp::NodeProp(GlobalMessageClient& msock, int nodeid, std::string nickname, int data_port)
+NodeProp::NodeProp(int nodeid, std::string nickname, int data_port)
   : m_state(INITIAL),
     m_daq_mode(DM_NORMAL),
     m_run_number(0),
@@ -13,19 +12,14 @@ NodeProp::NodeProp(GlobalMessageClient& msock, int nodeid, std::string nickname,
     m_event_number(0),
     m_event_size(0),
     m_data_port(data_port),
-    m_nickname(nickname),
-    m_msock(msock)
+    m_nickname(nickname)   
 {
   access_mutex = new kol::Mutex;
-  recv_mutex   = new kol::Mutex;
-  m_dsock      = new kol::TcpSocket;
 }
 
 NodeProp::~NodeProp()
 {
   delete access_mutex;
-  delete recv_mutex;
-  delete m_dsock;
 }
 
 void NodeProp::setRunNumber(int new_value)
@@ -110,38 +104,19 @@ void NodeProp::ackStatus()
   access_mutex->lock();
 
   switch (m_state){
-  case INITIAL:
-    oss << "INITIAL";
-    break;
-  case IDLE:
-    oss << "IDLE";
-    break;
-  case RUNNING:
-    oss << "RUNNING";
-    break;
-  case END:
-    oss << "END";
-    break;
-  default:
-    oss << "UNKNOWN";
-    break;
+  case INITIAL: oss << "INITIAL"; break;
+  case IDLE:    oss << "IDLE";    break;
+  case RUNNING: oss << "RUNNING"; break;
+  case END:     oss << "END";     break;
+  default:      oss << "UNKNOWN"; break;
   }
 
   oss << " ";
 
   switch (m_daq_mode){
-  case DM_NORMAL:
-    oss << "DM_NORMAL";
-    break;
-  case DM_NULL:
-    oss << "DM_NULL";
-    break;
-  case DM_DUMMY:
-    oss << "DM_DUMMY";
-    break;
-  default:
-    oss << "UNKNOWN";
-    break;
+  case DM_NORMAL: oss << "DM_NORMAL"; break;
+  case DM_DUMMY:  oss << "DM_DUMMY";  break;
+  default:        oss << "DM_UNKNOWN";   break;
   }
   
   oss << " run:" << m_run_number;
@@ -150,39 +125,13 @@ void NodeProp::ackStatus()
 
   access_mutex->unlock();
 
-  m_msock.sendString(MT_STATUS, oss);
+  send_status_message(oss.str());
   
   return;
 }
 
 void NodeProp::sendEntry()
 {
-  m_msock.sendString(MT_STATUS, "ENTRY " + m_nickname);
+  send_status_message("ENTRY " + m_nickname);
   return;
-}
-
-void NodeProp::sendNormalMessage(const char* message)
-{
-  m_msock.sendString(MT_NORMAL, m_nickname + ": " + message);
-  return;
-}
-
-void NodeProp::sendWarningMessage(const char* message)
-{
-  m_msock.sendString(MT_WARNING, m_nickname + ": " + message);
-  return;
-}
-
-void NodeProp::sendErrorMessage(const char* message)
-{
-  m_msock.sendString(MT_ERROR, m_nickname + ": " + message);
-  return;
-}
-
-std::string NodeProp::recvMessage()
-{
-  recv_mutex->lock();
-  Message message = m_msock.recvMessage();
-  recv_mutex->unlock();
-  return message.getMessage();
 }

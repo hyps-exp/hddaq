@@ -6,7 +6,6 @@
 #include "daqthread.h"
 #include "controlthread.h"
 #include "watchdogthread.h"
-#include "pollthread.h"
 #include "nodeprop.h"
 
 int main(int argc, char* argv[])
@@ -57,17 +56,15 @@ int main(int argc, char* argv[])
     return 0;
   }
 
-  NodeProp       nodeprop(msock, nodeid, nickname, dataport);
+  NodeProp       nodeprop(nodeid, nickname, dataport);
 
   DaqThread      daqthread(nodeprop);
   ControlThread  controller(nodeprop);
-  PollThread     poller(nodeprop);
   WatchdogThread watchdog(nodeprop);
  
-  watchdog.start();
   controller.start();
-  poller.start();
   daqthread.start();
+  watchdog.start();
   
   daqthread.join();
   return 0;

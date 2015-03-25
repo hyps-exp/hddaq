@@ -5,53 +5,60 @@
 //maximum datasize by byte unit
 static const int max_data_size = 4*1024*1024; 
 
+DaqMode g_daq_mode = DM_NORMAL;
+
 int get_maxdatasize()
 {
   return max_data_size;
 }
 
-int open_device()
+void open_device(NodeProp& nodeprop)
 {
-  return 0;
+  // update DAQ mode
+  g_daq_mode = nodeprop.getDaqMode();
+  return;
 }
 
-int init_device(DaqMode daq_mode)
+void init_device(NodeProp& nodeprop)
 {
   
-  switch(daq_mode){
+  // update DAQ mode
+  g_daq_mode = nodeprop.getDaqMode();
+
+  switch(g_daq_mode){
   case DM_NORMAL:
     {
-      return 0;
+      return;
     }
   case DM_DUMMY:
     {
-      return 0;
+      return;
     }
   default:
-    return 0;
+    return;
   }
 
 }
 
-int finalize_device(DaqMode daq_mode)
+void finalize_device(NodeProp& nodeprop)
 {
-  return 0;
+  return;
 }
 
-int close_device()
+void close_device(NodeProp& nodeprop)
 {
-  return 0;
+  return;
 }
 
 
-int wait_device(DaqMode daq_mode)
+int wait_device(NodeProp& nodeprop)
 /*
   return -1: TIMEOUT or FAST CLEAR -> continue
   return  0: TRIGGED -> go read_device
 */
 {
   
-  switch(daq_mode){
+  switch(g_daq_mode){
   case DM_NORMAL:
     {
       return 0;
@@ -68,14 +75,14 @@ int wait_device(DaqMode daq_mode)
 }
 
 
-int read_device(DaqMode daq_mode, unsigned int* data, int& len)
+int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 /*
   return -1: Do Not Send data to EV
   return  0: Send data to EV
 */
 {
   
-  switch(daq_mode){
+  switch(g_daq_mode){
   case DM_NORMAL:
     {
       len = 0;

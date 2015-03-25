@@ -5,6 +5,7 @@
 
 #include "controlthread.h"
 #include "nodeprop.h"
+#include "MessageHelper.h"
 
 ControlThread::ControlThread(NodeProp& nodeprop)
   : m_nodeprop(nodeprop)
@@ -18,10 +19,15 @@ ControlThread::~ControlThread()
 
 int ControlThread::run()
 {
+  GlobalMessageClient& msock = GlobalMessageClient::getInstance();
   m_nodeprop.sendEntry();
-
+  
   while (1) {
-    std::string messageline = m_nodeprop.recvMessage();
+    std::string messageline;
+    Message rmessage = msock.recvMessage();
+    if (msock.gcount() > 0) {
+      messageline = rmessage.getMessage();
+    }
     std::cout << "#D Message : " << messageline << std::endl;
     
     if (messageline == "status") {
@@ -50,7 +56,7 @@ int ControlThread::run()
 #ifdef END_AT_STOP
       m_nodeprop.setStateAck(END);
       std::cout << "#D end by stop" <<std::endl;
-      m_nodeprop.sendNormalMessage("end by stop");
+      send_normal_message("end by stop");
 #else
       m_nodeprop.setStateAck(IDLE);
 #endif
@@ -59,12 +65,12 @@ int ControlThread::run()
     if (messageline == "fe_end") {
       m_nodeprop.setStateAck(END);
       std::cout << "#D end by fe_end" <<std::endl;
-      m_nodeprop.sendNormalMessage("end by fe_end");
+      send_normal_message("end by fe_end");
     }
-
+    
     if (messageline == "fe_exit") {
       std::cout << "#D exit by fe_exit" <<std::endl;
-      m_nodeprop.sendErrorMessage("exit by fe_exit");
+      send_normal_message("exit by fe_exit");
       exit(1);
     }
     

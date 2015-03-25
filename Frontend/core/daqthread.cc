@@ -6,7 +6,9 @@
 #include "kol/koltcp.h"
 
 #include "nodeprop.h"
+#include "MessageHelper.h"
 #include "daqthread.h"
+#include "pollthread.h"
 #include "userdevice.h"
 
 static const int EV_MAGIC = 0x45564e54;
@@ -51,15 +53,14 @@ int DaqThread::run()
   header->magic = EV_MAGIC;
   header->node_id = m_nodeprop.getNodeId();
   
-  kol::TcpSocket& dsock = m_nodeprop.getDataSocket();
  
   //Use open_devide
-  int status;
-  status = open_device();
+  open_device(m_nodeprop);
   m_nodeprop.setStateAck(IDLE);
   
+  kol::TcpSocket dsock;
   kol::TcpServer server( m_nodeprop.getDataPort() );
-  struct timeval tv={6,0};
+  struct timeval tv={3,0};
   server.setsockopt(SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
   while( m_nodeprop.getState() == IDLE ){ 
@@ -73,19 +74,22 @@ int DaqThread::run()
     
     std::cout << "#D server accepted" << std::endl;
     
+    PollThread poller(m_nodeprop, dsock);
+    poller.start();
+
     DaqMode daq_mode   = m_nodeprop.getDaqMode();
     header->type       = daq_mode;
     header->run_number = m_nodeprop.getRunNumber();
     m_nodeprop.setEventNumber( 0 );
  
     //User init_devide
-    status = init_device(daq_mode);
+    init_device(m_nodeprop);
     m_nodeprop.setStateAck(RUNNING);
       
     while(m_nodeprop.getState() == RUNNING) {
       
       //User wait_devide
-      status = wait_device(daq_mode);
+      int status = wait_device(m_nodeprop);
       if(status==-1) continue; //TIMEOUT or Fast CLEAR
       
       time_t t = time(0);
@@ -93,7 +97,7 @@ int DaqThread::run()
       
       //User read_devide
       int len;
-      status = read_device(daq_mode,data, len);
+      status = read_device(m_nodeprop, data, len);
       if(status==-1) continue;
       
       len += event_header_len;
@@ -108,23 +112,26 @@ int DaqThread::run()
 	dsock.send(buf, clen, MSG_NOSIGNAL);
 	dsock.flush();
       }catch(...){
-	m_nodeprop.sendErrorMessage("data send failure");
+	send_fatal_message("data send failure");
 	std::cout << "#E data send failed -> exit " << std::endl;
 	exit(1);
       }
 
       m_nodeprop.setEventNumber( header->event_number+1 );
-      
+	    
     } //while( getState() == RUNNING )
-      
-    //User finalize_devide
-    finalize_device(daq_mode);
-    dsock.close();
     
+    //User finalize_devide
+    finalize_device(m_nodeprop);
+
+    
+    poller.join();
+    dsock.close();
+
   } //while( getState() == IDLE ){ 
   
   //User close_devide
-  close_device();
+  close_device(m_nodeprop);
   delete buf;
   
   return 0;

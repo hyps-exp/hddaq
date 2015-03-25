@@ -8,18 +8,17 @@ enum State {
 };
 
 enum DaqMode {
-  DM_NORMAL, DM_NULL, DM_DUMMY
+  DM_NORMAL, DM_DUMMY
 };
 
 namespace kol { 
   class Mutex;
-  class TcpSocket;
 }
-class GlobalMessageClient;
+
 class NodeProp
 {
 public:
-  NodeProp(GlobalMessageClient& msock, int nodeid, std::string nickname, int dataport);
+  NodeProp(int nodeid, std::string nickname, int dataport);
   ~NodeProp();
   
   void setRunNumber(int new_value);
@@ -38,18 +37,12 @@ public:
   void setEventSize(int new_value);
   int getEventSize();
 
-  kol::TcpSocket& getDataSocket(){ return *m_dsock; }
-
   int getDataPort(){ return m_data_port; }
   int getNodeId(){ return m_node_id; }
 
   void ackStatus();
   void sendEntry();
-  void sendNormalMessage(const char* message);
-  void sendWarningMessage(const char* message);
-  void sendErrorMessage(const char* message);
 
-  std::string recvMessage();
 
 private:
   State m_state;
@@ -60,10 +53,8 @@ private:
   int m_event_size;
   int m_data_port;
   std::string m_nickname;
-  GlobalMessageClient& m_msock;
-  kol::TcpSocket* m_dsock;
   kol::Mutex* access_mutex;
-  kol::Mutex* recv_mutex;
+  
 };
 
 #endif

@@ -18,8 +18,8 @@ WatchdogThread::~WatchdogThread()
 int WatchdogThread::run()
 {
   while (1) {
-    m_nodeprop.ackStatus();
     sleep(3);
+    m_nodeprop.ackStatus();
   }
   
   return 0;

@@ -1,6 +1,6 @@
 # Makefile for Frontend/example_node
 
-TARGET	= example_frontend
+TARGET	= feeasiroc
 
 CORE_DIR	= ../core
 BIN_DIR		= ../bin
@@ -53,6 +53,5 @@ clean:
 	@echo Cleaning up ...
 	@rm -f $(BIN_DIR)/$(TARGET)
 	@rm -f $(BLD_DIR)/*
-	@rm -f *~
 
 -include $(DEPENDS)

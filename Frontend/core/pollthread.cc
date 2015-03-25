@@ -6,10 +6,12 @@
 #include "kol/koltcp.h"
 
 #include "nodeprop.h"
+#include "MessageHelper.h"
 #include "pollthread.h"
 
-PollThread::PollThread(NodeProp& nodeprop)
-  : m_nodeprop(nodeprop)
+PollThread::PollThread(NodeProp& nodeprop, kol::TcpSocket& sock)
+  : m_nodeprop(nodeprop),
+    m_sock(sock)
 {
 }
   
@@ -21,38 +23,25 @@ PollThread::~PollThread()
 int PollThread::run()
 {
   char buf[1];
-
-  while(1){
-    
-    if( m_nodeprop.getState() != RUNNING ){
-      sleep(3);
-      continue;
-    }
-      
-    kol::TcpSocket& dsock = m_nodeprop.getDataSocket();
-      
-    while (m_nodeprop.getState() == RUNNING) {
-      
-      try
-	{
-	  dsock.read(buf, 1);
-	  
-	  if(m_nodeprop.getState() != RUNNING ) break;
-	  
-	  if (dsock.gcount() == 0){
-	    m_nodeprop.sendErrorMessage("data-path closed by peer");
-	    std::cout << "#E data-path closed by peer -> exit" << std::endl;
-	    exit(1);
-	  }
+  while (m_nodeprop.getState() == RUNNING) {    
+    try
+      {
+	m_sock.read(buf, 1);
+	
+	if(m_nodeprop.getState() != RUNNING ) break;
+	
+	if (m_sock.gcount() == 0){
+	  send_error_message("data-path closed by peer -> end");
+	  std::cout << "#E data-path closed by peer -> end" << std::endl;
+	  m_nodeprop.setStateAck(END);
+	  break;
 	}
-      catch(...)
-	{
-	  std::cout << "#D polling data socket" << std::endl;
-	}
-      
-    }
-
-  } // while(1)
+      }
+    catch(...)
+      {
+	std::cout << "#D polling data socket" << std::endl;
+      }
+  }
 
   return 0;
 }
