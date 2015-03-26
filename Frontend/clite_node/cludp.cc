@@ -160,7 +160,7 @@ int udpreg_read(int sock, char *buf, unsigned int addr, int len)
 
     rbcp = (struct rbcp_header *)buf;
     data = buf + sizeof(struct rbcp_header);	
-#if 1
+#if 0
     if (rlen > 0) {
       int i;
       printf("type: 0x%x, command: 0x%x, id: 0x%x, length: %d, address: %d",
@@ -219,7 +219,7 @@ int udpreg_write(int sock, char *data, unsigned int addr, int len)
     /* fprintf(stderr, "#D receive %d\n", rlen); */
     rbcp = (struct rbcp_header *)rbuf;
     data = rbuf + sizeof(struct rbcp_header);	
-#if 1
+#if 0
     if (rlen > 0) {
       int i;
       printf("type: 0x%x, command: 0x%x, id: 0x%x, length: 0x%x, address: 0x%x",

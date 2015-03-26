@@ -153,8 +153,11 @@ void init_device(NodeProp& nodeprop)
       clreg[0] = 0x80 | cltcp_get_finesse_act();
       clreg[1] = 0x00;
       status = udpreg_write(sockudp, clreg, CL_FCR, 1);
-      clreg[0] = 0x0 ; clreg[1] = 0x01;
-      clreg[2] = 0x00 ; clreg[3] = 0x00; clreg[4] = 0x00;
+      clreg[0] = 0x00;
+      clreg[1] = 0x01;
+      clreg[2] = 0x00;
+      clreg[3] = 0x00;
+      clreg[4] = 0x00;
       status = udpreg_write(sockudp, clreg, CL_FFTH, 4);
 
       clreg[0] = 0x80 ; clreg[1] = 0x00;
@@ -176,7 +179,7 @@ void init_device(NodeProp& nodeprop)
 	  claddr   = CL_FINESSE_ALL + addr * 4 + 3;
 	  clreg[0] = val;
 	  status   = udpreg_write(sockudp, clreg, claddr, 1);
-	  /* printf("#D all write %x %x\n", claddr, clreg[0]); */
+	  printf("#D all write %x %x\n", claddr, clreg[0]);
 	} else {
 	  for (int i = 0 ; i < 4 ; i++) {
 	    if (((slot >> i) & 0x01) == 0x1) {
@@ -203,8 +206,6 @@ void init_device(NodeProp& nodeprop)
 	std::exit(-1);
       }
 
-      // flush SiTCP buffer -----------------------------------
-      cltcp_drop_event(socktcp);
 #endif
       return;
     }
@@ -223,6 +224,9 @@ void init_device(NodeProp& nodeprop)
 void finalize_device(NodeProp& nodeprop)
 {
   printf("finalize_device\n");
+
+  // flush SiTCP buffer -----------------------------------
+  cltcp_drop_event(socktcp);
 
   udpreg_close(sockudp);
   cltcp_close(socktcp);
@@ -284,7 +288,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
       if(ndata <= 0){
 	char message[256];
 	sprintf(message,
-		"clite::read_device(%s) probably someting wrong",
+		"clite::read_device(%s) (time out ?)",
 		tcphost
 		);
 	send_warning_message(message);	

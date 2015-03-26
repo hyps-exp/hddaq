@@ -175,7 +175,7 @@ int cltcp_read(int sock, char *buf, int len)
   dp = buf;
   for (i = 0 ; i < nfinesse ; i++) {
     nread = cltcp_raw_read(sock, dp, sizeof(struct cl_header));
-    if(nread <= 0){continue;} // time out ?
+    if(nread <= 0){return-1;} // time out ?
     if (is_bigendian) rev_byteorder(dp, sizeof(struct cl_header));
     clheader = (struct cl_header *)dp;
     if (clheader->magic != CL_MAGIC) {

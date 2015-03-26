@@ -25,11 +25,13 @@ all: $(LIB_DIR)/$(LIB_TGT) \
 
 $(LIB_DIR)/$(LIB_TGT): $(addprefix $(SRC_DIR)/, $(LIB_OBJ))
 	@echo Creating $@ ...
+	@mkdir -p $(LIB_DIR)
 	@ar cr $@ $^
 	@ranlib $@ 
 
 $(BIN_DIR)/%: $(SRC_DIR)/%.o
 	@echo Linking $@ ...
+	@mkdir -p $(BIN_DIR)
 	@$(CXX) -o $@ $^ $(LIBS)
 
 $(SRC_DIR)/%.o: $(SRC_DIR)/%.cc

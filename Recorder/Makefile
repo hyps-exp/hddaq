@@ -35,6 +35,7 @@ all: $(BIN_DIR)/$(BIN_TGT)
 
 $(BIN_DIR)/$(BIN_TGT): $(addprefix $(SRC_DIR)/, $(BIN_OBJ))
 	@echo Linking $@ ...
+	@mkdir -p $(BIN_DIR)
 	@$(CXX) -o $@ $^ $(LIBS)
 
 $(SRC_DIR)/%.o: $(SRC_DIR)/%.cc

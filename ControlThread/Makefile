@@ -25,6 +25,7 @@ all: $(LIB_DIR)/$(LIB_TGT) \
 
 $(LIB_DIR)/$(LIB_TGT): $(addprefix $(SRC_DIR)/, $(LIB_OBJ))
 	@echo Creating $@ ...
+	@mkdir -p $(LIB_DIR)
 	@ar cr $@ $^
 	@ranlib $@ 
 
@@ -34,6 +35,7 @@ $(BIN_DIR)/%: $(SRC_DIR)/%.o
 
 $(SRC_DIR)/%.o: $(SRC_DIR)/%.cc
 	@echo Compiling $< ...
+	@mkdir -p $(BIN_DIR)
 	@$(CXX) $(FLAGS) -c $< -o $@
 
 clean:
