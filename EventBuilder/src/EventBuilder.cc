@@ -1,0 +1,362 @@
+// -*- C++ -*-
+/**
+ *  @file   eventbuilder.cc
+ *  @brief
+ *  @author Kazuo NAKAYOSHI <kazuo.nakayoshi@kek.jp>
+ *  @date
+ *
+ *  $Id: EventBuilder.cc,v 1.5 2012/04/27 10:48:09 igarashi Exp $
+ *  $Log: EventBuilder.cc,v $
+ *  Revision 1.5  2012/04/27 10:48:09  igarashi
+ *  debug mutex lock in EventDistributor
+ *
+ *  Revision 1.4  2012/04/13 12:04:11  igarashi
+ *  include Tomo's improvements
+ *    slowReader
+ *
+ *  Revision 1.3  2010/06/28 08:31:50  igarashi
+ *  adding C header files to accept the varied distribution compilers
+ *
+ *  Revision 1.2  2009/07/01 07:36:58  igarashi
+ *  add ANYONE/ENTRY sequence, and NodeId class
+ *
+ *  Revision 1.1.1.1  2008/05/14 15:05:43  igarashi
+ *  Network DAQ Software Prototype 1.5
+ *
+ *  Revision 1.4  2008/05/14 14:38:53  igarashi
+ *  *** empty log message ***
+ *
+ *  Revision 1.3  2008/05/13 06:41:57  igarashi
+ *  change control sequence
+ *
+ *  Revision 1.2  2008/02/27 16:24:46  igarashi
+ *  Control sequence was introduced in ConsoleThread and Eventbuilder.
+ *
+ *  Revision 1.1.1.1  2008/01/30 12:33:33  igarashi
+ *  Network DAQ Software Prototype 1.4
+ *
+ *  Revision 1.1.1.1  2007/09/21 08:50:48  igarashi
+ *  prototype-1.3
+ *
+ *  Revision 1.1.1.1  2007/03/28 07:50:17  cvs
+ *  prototype-1.2
+ *
+ *  Revision 1.2  2007/03/07 15:27:18  igarashi
+ *  change MessageClient to GlobalMessageClient
+ *
+ *  Revision 1.1.1.1  2007/01/31 13:37:53  kensh
+ *  Initial version.
+ *
+ *
+ *
+ *
+ */
+
+#include <string.h>
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <map>
+#include <stdexcept>
+
+#include "kol/koltcp.h"
+#include "ControlThread/controlThread.h"
+#include "ControlThread/GlobalInfo.h"
+#include "ControlThread/NodeId.h"
+#include "EventData/EventParam.h"
+#include "EventBuilder/readerThread.h"
+#include "EventBuilder/syncReaderThread.h"
+#include "EventBuilder/slowReaderThread.h"
+#include "EventBuilder/builderThread.h"
+#include "EventBuilder/senderThread.h"
+#include "EventBuilder/nodeInfo.h"
+#include "Message/Message.h"
+#include "Message/GlobalMessageClient.h"
+#include "EventBuilder/watchdog.h"
+#include "EventBuilder/EbControl.h"
+
+//#define USE_PARAPORT
+#ifdef  USE_PARAPORT
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <linux/ppdev.h>
+#include <linux/parport.h>
+#endif
+
+bool g_VERBOSE = false;
+
+typedef std::multimap<std::string, int, std::less<std::string> > Node_map;
+typedef Node_map::value_type node_inf;
+
+typedef std::vector<NodeInfo> Node_info;
+Node_info node_info;
+
+int get_node_inf(char * filename, Node_map *node_map)
+{
+  std::ifstream ifs(filename, std::ios::in);
+  if(!ifs) {
+    std::cerr << "Error: unable to open node-map file " << filename << std::endl;
+    return -1;
+  }
+
+  std::string line;
+
+  while (ifs.good()) {
+    getline(ifs, line, '\n');
+    std::istringstream ss(line);
+    if( (line.find('#')== std::string::npos) && (line.size() > 0)) {
+      std::string host;
+      int    port;
+      int    rb_size;
+      int    rb_len;
+      std::string flag;
+
+      ss >> host;
+      ss >> port;
+      ss >> rb_size;
+      ss >> rb_len;
+      if (!ss.eof())
+	{
+	  ss >> flag;
+// 	  std::cout << host << " needs handshake " << std::endl;
+	}
+
+      node_map->insert( node_inf(host, port));
+      NodeInfo nodeInfo(host, port, rb_size, rb_len, flag);
+      node_info.push_back(nodeInfo);
+    }
+  }
+  ifs.close();
+  return node_map->size();
+}
+
+#ifdef  USE_PARAPORT
+int open_ppdev()
+{
+  int ret = 0;
+  int fd = open("/dev/parport0", O_RDWR);
+  if(fd==-1) {
+    printf("open error?n");
+    ret = 1;
+  }
+  else 
+    ret = fd;
+  if(ioctl(fd,PPCLAIM)) {
+    printf("PPCLAIM error?n");
+    close(fd);
+    ret = 1;
+  }
+  return ret;
+}
+
+void close_ppdev(int fd)
+{
+  ioctl(fd, PPRELEASE);
+  close(fd);
+}
+#endif
+
+
+void sigpipehandler(int signum)
+{
+	fprintf(stderr, "Got SIGPIPE! %d\n", signum);
+	return;
+}
+
+int set_signal()
+{
+	struct sigaction act;
+
+	memset(&act, 0, sizeof(struct sigaction));
+	act.sa_handler = sigpipehandler;
+	act.sa_flags |= SA_RESTART;
+
+	if(sigaction(SIGPIPE, &act, NULL) != 0 ) {
+		fprintf( stderr, "sigaction(2) error!\n" );
+		return -1;
+	}
+	return 0;
+}
+
+
+
+
+int main(int argc, char* argv[])
+{
+
+  int event_buflen = max_event_len;
+  int quelen = 0;
+
+  NodeInfo nodeInfo;
+  std::vector<ReaderThread *> readers;
+  Node_map node_map;
+
+  if (argc <= 1) {
+    std::cerr << "Error: node-map filename missing" << std::endl;
+    return -1;
+  }
+	//int nodeid = g_NODE_EB;
+	//std::string nickname = "EB";
+
+	int nodeid;
+	std::string nickname = NodeId::getNodeId(NODETYPE_EB, &nodeid);
+
+	char nodemapname[128];
+	strcpy(nodemapname, "nodemap.txt");
+	for (int i = 1 ; i < argc ; i++) {
+		std::string arg = argv[i];
+		if (arg[i] != '-') {
+			strncpy(nodemapname, argv[i], 128);
+		} else {
+			bool is_match = false;
+			if (arg.substr(0, 11) == "--idnumber=") {
+				std::istringstream ssval(arg.substr(11));
+				ssval >> nodeid;
+				std::cout << "NODE ID : " << nodeid << std::endl;
+				is_match = true;
+			}
+#if 0  //2014.11.26 K.Hosomi 
+			if (arg.substr(0, 5) == "--id=") {
+				//union {char idchar[5]; int idint;};
+				char idchar[5];
+				strncpy(idchar, arg.substr(5,4).c_str(), 4);
+				for (int i = strlen(idchar) ; i < 5 ; i++) {
+					idchar[i] = '\0';
+				}
+				nodeid = *(reinterpret_cast<int *>(idchar));
+				//nodeid = idint;
+				std::cout << "NODE ID : " << nodeid << std::endl;
+				is_match = true;
+			}
+#endif //2014.11.26 K.Hosomi 
+			if (arg.substr(0, 11) == "--nickname=") {
+				nickname = arg.substr(11);
+				std::cout << "NICKNAME : " << nickname << std::endl;
+				is_match = true;
+			}
+			if (!is_match) {
+				std::cout << "unknown option " << arg << std::endl;
+			}
+		}
+	}
+
+
+
+#ifdef  USE_PARAPORT  
+	int ppdev_fd = open_ppdev();
+#endif
+
+	set_signal();
+	GlobalMessageClient& msock = GlobalMessageClient::getInstance(
+		"localhost", g_MESSAGE_PORT_UPSTREAM, nodeid);
+	GlobalInfo& gi = GlobalInfo::getInstance();
+
+	gi.nickname = nickname;
+	gi.node_id = nodeid;
+
+	//std::string mstring = "ENTRY " + nickname;
+	//msock.sendString(MT_STATUS, &mstring);
+
+  try
+  {
+    // int node_number = get_node_inf(argv[1], &node_map);
+    int node_number = get_node_inf(nodemapname, &node_map);
+    if(node_number == -1)
+      return -1;
+    std::cout << "node num: " << node_number << std::endl;
+
+//     readers = new ReaderThread * [node_number];
+    readers.resize(node_number);
+    for(int node=0; node<node_number; node++) {
+      int node_buflen = node_info[node].getRingbufSize();
+      quelen = node_info[node].getRingbufLen();
+      const std::string& flag = node_info[node].getSyncFlag();
+      if (flag.empty())
+	readers[node] = new ReaderThread(node_buflen, quelen);
+      else if (flag=="slow")
+	readers[node] = new SlowReaderThread(node_buflen, quelen);
+      
+      const char *hostname = node_info[node].getHostName().c_str();
+      int port       = node_info[node].getPortNo();
+      readers[node]->setName("** ReaderThread");
+      readers[node]->setHost(hostname, port, node);
+
+      std::cerr << "  hostname:" << node_info[node].getHostName();
+      std::cerr << "  RingBuf Size:" << node_buflen << "  RingBuf len:" << quelen << (flag.empty() ? "" : " +"+flag) << std::endl;
+
+	{
+		char messagestr[128];
+		sprintf(messagestr, "EB: node: %s, Bsize %d, Nque %d",
+			node_info[node].getHostName().c_str(),
+			node_buflen, quelen);
+		msock.sendString(messagestr);
+	}
+
+    }
+
+    BuilderThread builder(event_buflen,quelen);
+    builder.setName("## BuilderThread");
+    builder.setAllReaders(&readers[0], node_number);
+
+#ifdef  USE_PARAPORT
+    builder.setParaFd(ppdev_fd);
+#endif
+
+    SenderThread  sender(event_buflen,quelen);
+    sender.setName("== SenderThread");
+    sender.setBuilder(&builder);
+
+
+    EbControl controller;
+    controller.setSlave(&sender);
+    controller.setSlave(&builder);
+    for(int node=0; node<node_number; node++)
+      controller.setSlave(readers[node]);
+
+	gi.builder = &builder;
+	gi.sender = &sender;
+	for (int i = 0 ; i < node_number ; i++) {
+		gi.readers.push_back(readers[i]);
+	}
+	gi.state = IDLE;
+
+
+    controller.sendEntry();
+    controller.start();
+
+    sender.start();
+    for(int node=0; node < node_number; node++)
+      readers[node]->start();
+    std::cerr << "readers start" << std::endl;
+    builder.start();
+
+	WatchDog watchdog(&controller, &builder, &readers[0], node_number);
+	watchdog.start();
+
+    builder.join();
+    sender.join();
+    for(int node=0; node < node_number; node++)
+      readers[node]->join();
+    controller.join();
+  }
+  catch(...) 
+  {
+    std::cout << " @@ Eventbuilder: ERROR caught" << std::endl;
+#ifdef  USE_PARAPORT
+    close_ppdev(ppdev_fd);
+#endif
+  }
+
+#ifdef  USE_PARAPORT
+  close_ppdev(ppdev_fd);
+#endif
+
+//   delete[] readers;
+
+  std::cerr << "#D main end" << std::endl;
+
+  return 0;
+}

@@ -65,7 +65,6 @@ public:
   int sendString (int mtype, const std::string *message);
   int sendString (int mtype, const std::string &message);
   int sendString (int mtype, const std::ostringstream &message);
-  //Message recvMessage ();
 
 private:
   GlobalMessageClient (const char *host, int port);

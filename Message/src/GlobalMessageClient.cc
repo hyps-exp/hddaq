@@ -51,17 +51,13 @@
  */
 #include <iostream>
 #include <sstream>
-
-
 #include <cassert>
 
 #include "kol/kolthread.h"
 #include "Message/GlobalMessageClient.h"
 
-
 GlobalMessageClient* GlobalMessageClient::s_messageclient = 0;
 kol::Mutex GlobalMessageClient::s_mutex;
-
 
 GlobalMessageClient::GlobalMessageClient (const char *host, int port) 
   : MessageClient(host, port)
@@ -77,7 +73,6 @@ GlobalMessageClient::GlobalMessageClient (const char *host, int port, int node_i
 		<< " port = " << port << " node_id = " << m_node_id << std::endl;
     
 }
-
 
 GlobalMessageClient::~GlobalMessageClient ()
 {
@@ -218,21 +213,3 @@ int GlobalMessageClient::sendString(int mtype, const std::ostringstream& message
 	return sendString(mtype, message.str());
 }
 
-#if 0
-Message GlobalMessageClient::recvMessage ()
-{
-	Message message;
-
-#if 0
-	while(true) {
-		message = MessageClient::recvMessage();
-		if ((message.getDstId() == MD_BLOADCAST)
-			|| (message.getDstId() == m_node_id)) break;
-	}
-#elseif
-	message = MessageClient::recvMessage();
-#endif
-
-	return message;
-}
-#endif
