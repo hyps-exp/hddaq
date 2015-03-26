@@ -4,7 +4,7 @@ nickname=example
 nodeid=$((0x777))
 frontend=example_frontend
 
-bin_dir=$(cd $(dirname $0); pwd)/../../Frontend/bin
+bin_dir=$(cd $(dirname $0); pwd)/../bin
 #echo ${bin_dir}
 
 if [ $$ -ne $(pgrep -fo $0) ]; then

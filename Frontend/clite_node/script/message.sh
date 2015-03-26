@@ -1,6 +1,6 @@
 #!/bin/sh
 
-bin_dir=$(cd $(dirname $0); pwd)/../../Message/bin
+bin_dir=$(cd $(dirname $0); pwd)/../../../Message/bin
 #echo ${bin_dir}
 
 if [ $$ -ne $(pgrep -fo $0) ]; then
