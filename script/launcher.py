@@ -132,7 +132,7 @@ class App(Frame):
 
   def makebuttons(self):
 
-    self.label = Label(self, text='Data Storage Path: '+self.storage_path, fg='red', font=('Helvetica', -20, ''))
+    self.label = Label(self, text='Data Storage Path: '+self.storage_path+'\n'+'( => '+os.path.realpath(self.storage_path)+' )', fg='red', font=('Helvetica', -20, ''))
     self.label.pack(side=TOP, pady=10, fill=X) 
 
     #self.label2 = Label(self, text='')
