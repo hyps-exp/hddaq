@@ -12,7 +12,8 @@ NodeProp::NodeProp(int nodeid, std::string nickname, int data_port)
     m_event_number(0),
     m_event_size(0),
     m_data_port(data_port),
-    m_nickname(nickname)   
+    m_nickname(nickname),
+    m_argc(0)
 {
   access_mutex = new kol::Mutex;
 }
@@ -134,4 +135,14 @@ void NodeProp::sendEntry()
 {
   send_status_message("ENTRY " + m_nickname);
   return;
+}
+
+void NodeProp::setArgv(char** argv)
+{
+  m_argv.clear();
+  m_argv.resize(m_argc);
+  for(int i = 0; i<m_argc; ++i){
+    m_argv[i] = argv[i];
+    std::cout << m_argv[i] << std::endl;
+  }
 }

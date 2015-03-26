@@ -2,6 +2,7 @@
 #define NODEPROP_INCLUDED
 
 #include <string>
+#include <vector>
 
 enum State {
   INITIAL, IDLE, RUNNING, END
@@ -43,6 +44,11 @@ public:
   void ackStatus();
   void sendEntry();
 
+  void setArgc(int argc){m_argc = argc;}
+  void setArgv(char** argv);
+
+  int  getArgc(){return m_argc;}
+  std::string getArgv(int index){return m_argv[index];};
 
 private:
   State m_state;
@@ -54,6 +60,8 @@ private:
   int m_data_port;
   std::string m_nickname;
   kol::Mutex* access_mutex;
+  int m_argc;
+  std::vector<std::string> m_argv;
   
 };
 

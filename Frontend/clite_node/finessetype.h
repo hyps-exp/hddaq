@@ -1,0 +1,25 @@
+/*
+ *
+1:FINESSE 500MHz FADC
+2:FINESSE 65MHz FADC
+3:FINESSE Belle TDC
+4:FINESSE MWPC ENCODER
+5:FINESSE 500MHz FADC type2(+Reset,InputRef)
+6:FINESSE Pipeline Memory module(Belle)
+7:FINESSE 16CH MULTIHIT TDC
+8:FINESSE 32CH MULTIHIT TDC
+*/
+
+#ifndef _FINESSE_TYPE_
+#define _FINESSE_TYPE_
+
+#define FT_FADC500	1
+#define FT_FADC65	2
+#define FT_BELLETDC	3
+#define FT_ENCODER	4
+#define FT_FADC500T2	5
+#define FT_PMEMORY	6
+#define FT_16PTDC	7
+#define FT_32PTDC	7
+
+#endif

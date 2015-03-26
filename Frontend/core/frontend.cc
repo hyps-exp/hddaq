@@ -57,6 +57,8 @@ int main(int argc, char* argv[])
   }
 
   NodeProp       nodeprop(nodeid, nickname, dataport);
+  nodeprop.setArgc(argc);
+  nodeprop.setArgv(argv);
 
   DaqThread      daqthread(nodeprop);
   ControlThread  controller(nodeprop);
