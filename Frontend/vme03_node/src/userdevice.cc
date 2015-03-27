@@ -9,15 +9,16 @@ static const int max_polling   = 2000000;     //maximum count until time-out
 static const int max_try       = 100;         //maximum count to check data ready
 static const int max_data_size = 4*1024*1024; //maximum datasize by byte unit
 
+DaqMode g_daq_mode = DM_NORMAL;
+
 int get_maxdatasize()
 {
   return max_data_size;
 }
 
-int open_device()
+void open_device(NodeProp& nodeprop)
 {
   vme_open();
-
   ////////// V830
   for(int i=0;i<V830_NUM;i++){
     *(v830[i].reset)  = 0x0;
@@ -37,47 +38,47 @@ int open_device()
     *(v775[i].range)   = range;
     *(v775[i].bitset2) = ( empty_prog<<12 ) | ( common_input<<10 );
   }
-  
-  return 0;
+  return;
 }
 
-int init_device(DaqMode daq_mode)
+void init_device(NodeProp& nodeprop)
 {
-  switch(daq_mode){
+  g_daq_mode = nodeprop.getDaqMode();
+  switch(g_daq_mode){
   case DM_NORMAL:
     {
       *(rpv130[0].csr1)  = 0x1; // clear
       *(rpv130[0].pulse) = 0x1; // busy off
-      return 0;
+      return;
     }
   case DM_DUMMY:
     {
-      return 0;
+      return;
     }
   default:
-    return 0;
+    return;
   }
 }
 
-int finalize_device(DaqMode daq_mode)
+void finalize_device(NodeProp& nodeprop)
 {
-  return 0;
+  return;
 }
 
-int close_device()
+void close_device(NodeProp& nodeprop)
 {
   vme_close();
-  return 0;
+  return;
 }
 
-
-int wait_device(DaqMode daq_mode)
+int wait_device(NodeProp& nodeprop)
 /*
   return -1: TIMEOUT or FAST CLEAR -> continue
   return  0: TRIGGED -> go read_device
 */
 {
-  switch(daq_mode){
+  g_daq_mode = nodeprop.getDaqMode();
+  switch(g_daq_mode){
   case DM_NORMAL:
     {
       ////////// Polling
@@ -91,7 +92,7 @@ int wait_device(DaqMode daq_mode)
       }
       // TimeOut
       std::cout<<"wait_device() Time Out"<<std::endl;
-      //send_warning("vme03: wait_device() Time Out");
+      //send_warning_message("vme03: wait_device() Time Out");
       return -1;
     }
   case DM_DUMMY:
@@ -102,17 +103,17 @@ int wait_device(DaqMode daq_mode)
   default:
     return 0;
   }
-
 }
 
-int read_device(DaqMode daq_mode, unsigned int* data, int& len)
+int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 /*
   return -1: Do Not Send data to EV
   return  0: Send data to EV
 */
 {
-  char pbuf[256];
-  switch(daq_mode){
+  char message[256];
+  g_daq_mode = nodeprop.getDaqMode();
+  switch(g_daq_mode){
   case DM_NORMAL:
     {
       int ndata  = 0;
@@ -145,8 +146,8 @@ int read_device(DaqMode daq_mode, unsigned int* data, int& len)
 	  int status = vme_dma_read( bus_hdl, dma_hdl, 0, v830[i].addr+0x1000,
 				     V830_AM, 4*data_len, 0 );
 	  if(status!=0){
-	    sprintf(pbuf, "vme03: V830[%08llx] vme_dma_read() failed", v830[i].addr);
-	    send_error(pbuf);
+	    sprintf(message, "vme03: V830[%08llx] vme_dma_read() failed", v830[i].addr);
+	    send_error_message(message);
 	  }else{
 	    memcpy( &data[ndata], dma_buf, 4*data_len );
 	    ndata += data_len;
@@ -176,8 +177,8 @@ int read_device(DaqMode daq_mode, unsigned int* data, int& len)
 	    int data_type = ( data_buf >> 24 ) & 0x7; // 2:header, 0:data, 4:footer
 	    if(data_type==4)  break;
 	    if(k+1==data_len && data_type!=4){
-	      sprintf(pbuf, "vme03: V775[%08llx] nooooo fooooter!!!", v775[i].addr);
-	      send_error(pbuf);
+	      sprintf(message, "vme03: V775[%08llx] nooooo fooooter!!!", v775[i].addr);
+	      send_error_message(message);
 	    }
 	  }
 	  VME_MODULE_HEADER vme_module_header;
@@ -206,5 +207,4 @@ int read_device(DaqMode daq_mode, unsigned int* data, int& len)
     len = 0;
     return 0;
   }
-
 }

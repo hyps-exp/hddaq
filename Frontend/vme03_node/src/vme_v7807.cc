@@ -27,20 +27,20 @@ static int hdl_num = 0;
 
 void vme_open()
 {
-  char pbuf[256];
+  char message[256];
   //open device
   if( vme_init(&bus_hdl) ){
-    send_fatal("vme03: vme_init() failed");
+    send_fatal_message("vme03: vme_init() failed");
     std::exit(-1);
   }
   if( vme_dma_buffer_create( bus_hdl, &dma_hdl, 4*DMA_BUF_LEN, 0, NULL) ){
-    send_fatal("vme03: vme_dma_buffer_create() failed");
+    send_fatal_message("vme03: vme_dma_buffer_create() failed");
     std::exit(-1);
   }
 
   dma_buf = (uint32_t*)vme_dma_buffer_map( bus_hdl, dma_hdl, 0);
   if(!dma_buf){
-    send_fatal("vme03: vme_dma_buffer_map() failed");
+    send_fatal_message("vme03: vme_dma_buffer_map() failed");
     std::exit(-1);
   }
   //### VME_RM #################################################
@@ -50,7 +50,7 @@ void vme_open()
     if( vme_master_window_create( bus_hdl, &(mst_hdl[hdl_num]),
 				  vme_rm[0].addr, VME_RM_AM, w_size,
 				  VME_CTL_PWEN, NULL ) ){
-      send_fatal("vme03: VME_RM: vme_master_window_create() failed");
+      send_fatal_message("vme03: VME_RM: vme_master_window_create() failed");
       std::exit(-1);
     }
     void *ptr = (void*)vme_master_window_map( bus_hdl, mst_hdl[hdl_num++], 0 );
@@ -60,8 +60,8 @@ void vme_open()
       vme_rm[i].event  = (uint32_t*)ptr +offset +0x0/d32;
       vme_rm[i].spill  = (uint32_t*)ptr +offset +0x4/d32;
       vme_rm[i].serial = (uint32_t*)ptr +offset +0x8/d32;
-      sprintf(pbuf, "vme03: VME_RM  [%08llx] joined", vme_rm[i].addr);
-      send_normal(pbuf);
+      sprintf(message, "vme03: VME_RM  [%08llx] joined", vme_rm[i].addr);
+      send_normal_message(message);
     }
   }
   //### RPV130 #################################################
@@ -71,7 +71,7 @@ void vme_open()
     if( vme_master_window_create( bus_hdl, &(mst_hdl[hdl_num]),
 				  rpv130[0].addr, RPV130_AM, w_size,
 				  VME_CTL_PWEN, NULL ) ){
-      send_fatal("vme03: RPV130: vme_master_window_create() failed");
+      send_fatal_message("vme03: RPV130: vme_master_window_create() failed");
       std::exit(-1);
     }
     void *ptr = (void*)vme_master_window_map( bus_hdl, mst_hdl[hdl_num++], 0 );
@@ -86,8 +86,8 @@ void vme_open()
       rpv130[i].level   = (uint16_t*)ptr +offset +0xA/d16;
       rpv130[i].csr1    = (uint16_t*)ptr +offset +0xC/d16;
       rpv130[i].csr2    = (uint16_t*)ptr +offset +0xE/d16;
-      sprintf(pbuf, "vme03: RPV130  [%08llx] joined", rpv130[i].addr);
-      send_normal(pbuf);
+      sprintf(message, "vme03: RPV130  [%08llx] joined", rpv130[i].addr);
+      send_normal_message(message);
     }
   }
   //### V830 ###################################################
@@ -97,7 +97,7 @@ void vme_open()
     if( vme_master_window_create( bus_hdl, &(mst_hdl[hdl_num]),
 				  v830[0].addr, V830_AM, w_size,
 				  VME_CTL_PWEN, NULL )){
-      send_fatal("vme03: V830: vme_master_window_create() failed");
+      send_fatal_message("vme03: V830: vme_master_window_create() failed");
       std::exit(-1);
     }
     void *ptr = (void*)vme_master_window_map( bus_hdl, mst_hdl[hdl_num++], 0 );
@@ -115,8 +115,8 @@ void vme_open()
       v830[i].reset  = (uint16_t*)ptr +offset16 +0x1120/d16;
       v830[i].clear  = (uint16_t*)ptr +offset16 +0x1122/d16;
       v830[i].trig   = (uint16_t*)ptr +offset16 +0x1124/d16;
-      sprintf(pbuf, "vme03: V830    [%08llx] joined", v830[i].addr);
-      send_normal(pbuf);
+      sprintf(message, "vme03: V830    [%08llx] joined", v830[i].addr);
+      send_normal_message(message);
     }
   }
   //### V775 ###################################################
@@ -126,7 +126,7 @@ void vme_open()
     if( vme_master_window_create( bus_hdl, &(mst_hdl[hdl_num]),
 				  v775[0].addr, V775_AM, w_size,
 				  VME_CTL_PWEN, NULL )){
-      send_fatal("vme03: V775: vme_master_window_create() failed");
+      send_fatal_message("vme03: V775: vme_master_window_create() failed");
       std::exit(-1);
     }
     void *ptr = (void*)vme_master_window_map( bus_hdl, mst_hdl[hdl_num++], 0 );
@@ -142,8 +142,8 @@ void vme_open()
       v775[i].bitset2      = (uint16_t*)ptr +offset16 +0x1032/d16;
       v775[i].bitclr2      = (uint16_t*)ptr +offset16 +0x1034/d16;
       v775[i].range        = (uint16_t*)ptr +offset16 +0x1060/d16;
-      sprintf(pbuf, "vme03: V775    [%08llx] joined", v775[i].addr);
-      send_normal(pbuf);
+      sprintf(message, "vme03: V775    [%08llx] joined", v775[i].addr);
+      send_normal_message(message);
     }
   }
   return;
@@ -154,25 +154,25 @@ void vme_close()
   //unmap and release
   for(int i=0;i<hdl_num;i++){
     if( vme_master_window_unmap( bus_hdl, mst_hdl[i] ) ){
-      send_fatal("vme03: vme_master_window_unmap() failed");
+      send_fatal_message("vme03: vme_master_window_unmap() failed");
       std::exit(-1);
     }
     if( vme_master_window_release( bus_hdl, mst_hdl[i] ) ){
-      send_fatal("vme03: vme_master_window_release() failed");
+      send_fatal_message("vme03: vme_master_window_release() failed");
       std::exit(-1);
     }
   }
   if( vme_dma_buffer_unmap( bus_hdl, dma_hdl ) ){
-    send_fatal("vme03: vme_dma_buffer_unmap() failed");
+    send_fatal_message("vme03: vme_dma_buffer_unmap() failed");
     std::exit(-1);    
   }
   if( vme_dma_buffer_release( bus_hdl, dma_hdl ) ){
-    send_fatal("vme03: vme_dma_buffer_release() failed");
+    send_fatal_message("vme03: vme_dma_buffer_release() failed");
     std::exit(-1);
   }
   //close device
   if(vme_term(bus_hdl)){
-    send_fatal("vme03: vme_term() failed");
+    send_fatal_message("vme03: vme_term() failed");
     std::exit(-1);
   }
   return;
@@ -181,10 +181,10 @@ void vme_close()
 void check_handle_number(int handle_number)
 {
   if(handle_number>=max_hdl_num){
-    char pbuf[256];
-    sprintf(pbuf, "vme03: too many Master Windows: %d/%d",
+    char message[256];
+    sprintf(message, "vme03: too many Master Windows: %d/%d",
             handle_number, max_hdl_num);
-    send_fatal(pbuf);
+    send_fatal_message(message);
     std::exit(-1);
   }
 }

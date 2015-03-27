@@ -10,6 +10,8 @@ static const int max_polling   = 2000000;     //maximum count until time-out
 static const int max_try       = 100;         //maximum count to check data ready
 static const int max_data_size = 4*1024*1024; //maximum datasize by byte unit
 
+DaqMode g_daq_mode = DM_NORMAL;
+
 volatile int spill_flag = 0;
 
 int get_maxdatasize()
@@ -17,10 +19,9 @@ int get_maxdatasize()
   return max_data_size;
 }
 
-int open_device()
+void open_device(NodeProp& nodeprop)
 {
   vme_open();
-  
   ////////// V830
   for(int i=0;i<V830_NUM;i++){
     *(v830[i].reset)  = __bswap_16(0x00);
@@ -58,51 +59,52 @@ int open_device()
     *(tdc64m[i].window)  = __bswap_32( (search_window&0xffff) |
 				       ((mask_window&0xffff)<<16) );
   }
-
-  return 0;
+  return;
 }
 
-int init_device(DaqMode daq_mode)
+void init_device(NodeProp& nodeprop)
 {
-  switch(daq_mode){
+  g_daq_mode = nodeprop.getDaqMode();
+  switch(g_daq_mode){
   case DM_NORMAL:
     {
       *(rpv130[0].pulse) = __bswap_16(0x01);// busy off
-      return 0;
+      return;
     }
   case DM_DUMMY:
     {
-      return 0;
+      return;
     }
   default:
-    return 0;
+    return;
   }
 }
 
-int finalize_device(DaqMode daq_mode)
+void finalize_device(NodeProp& nodeprop)
 {
   for(int i=0;i<UMEM_NUM;i++){
     *(umem_reg[i].mode) = __bswap_16(0x0); // gate close
     *(umem_reg[i].clr)  = __bswap_16(0x1); // clear
   }
   *(rpv130[0].pulse) = __bswap_16(0x02); // fera clear
-  return 0;
+  return;
 }
 
-int close_device()
+void close_device(NodeProp& nodeprop)
 {
   vme_close();
-  return 0;
+  return;
 }
 
 
-int wait_device(DaqMode daq_mode)
+int wait_device(NodeProp& nodeprop)
 /*
   return -1: TIMEOUT or FAST CLEAR -> continue
   return  0: TRIGGED -> go read_device
 */
 {
-  switch(daq_mode){
+  g_daq_mode = nodeprop.getDaqMode();
+  switch(g_daq_mode){
   case DM_NORMAL:
     {
       spill_flag = 0;
@@ -124,7 +126,7 @@ int wait_device(DaqMode daq_mode)
       }
       // TimeOut
       std::cout<<"wait_device() Time Out"<<std::endl;
-      //send_warning("vme06: wait_device() Time Out");
+      //send_warning_message_message("vme06: wait_device() Time Out");
       return -1;
     }
   case DM_DUMMY:
@@ -137,23 +139,24 @@ int wait_device(DaqMode daq_mode)
   }
 }
 
-int read_device(DaqMode daq_mode, unsigned int* data, int& len)
+int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 /*
   return -1: Do Not Send data to EV
   return  0: Send data to EV
 */
 {
-  char pbuf[256];
-  switch(daq_mode){
+  char message[256];
+  g_daq_mode = nodeprop.getDaqMode();
+  switch(g_daq_mode){
   case DM_NORMAL:
     {
       switch(spill_flag){
       case 0:
-	send_error("crazyyyyyyyyyy!!!!!!!!!!");
+	send_error_message("crazyyyyyyyyyy!!!!!!!!!!");
 	break;
       case 1: ///// spill on
 	{
-	  //send_normal("spill on");
+	  //send_normal_message("spill on");
 	  int ndata      = 0;
 	  int module_num = 0;
 	  ndata += VME_MASTER_HSIZE;
@@ -189,17 +192,17 @@ int read_device(DaqMode daq_mode, unsigned int* data, int& len)
 	      if(dready==1){
 		int status = gefVmeReadDmaBuf(dma_hdl, &v830[i].addr_param, 0, 4*data_len);
 		if(status!=0){
-		  sprintf(pbuf, "vme06: V830[%08llx] gefVmeReadDmaBuf() failed -- %d",
+		  sprintf(message, "vme06: V830[%08llx] gefVmeReadDmaBuf() failed -- %d",
 			  v830[i].addr, GEF_GET_ERROR(status));
-		  send_error(pbuf);
+		  send_error_message(message);
 		}else{
 		  for(int j=0;j<data_len;j++){
 		    data[ndata++] = __bswap_32(dma_buf[j]);
 		  }
 		}
 	      }else{
-		sprintf(pbuf, "vme06: V830[%08llx] data is not ready", v830[i].addr);
-		send_warning(pbuf);
+		sprintf(message, "vme06: V830[%08llx] data is not ready", v830[i].addr);
+		send_warning_message(message);
 	      }
 #else
 	      for(int j=0;j<data_len;j++){
@@ -250,16 +253,16 @@ int read_device(DaqMode daq_mode, unsigned int* data, int& len)
 	      if(dready==1){
 #if DMA_TDC64M // DmaRead ... not supported
 		if(data_len>DMA_BUF_LEN){
-		  sprintf(pbuf, "vme06: TDC64M[%08llx] data is too much -- %d/%d",
+		  sprintf(message, "vme06: TDC64M[%08llx] data is too much -- %d/%d",
 			  tdc64m[i].addr, data_len, DMA_BUF_LEN);
-		  send_error(pbuf);
+		  send_error_message(message);
 		  data_len = DMA_BUF_LEN;
 		}
 		int status = gefVmeReadDmaBuf(dma_hdl, &tdc64m[i].addr_param, 0x4000, 4*data_len);
 		if(status!=0){
-		  sprintf(pbuf, "vme06: TDC64M[%08llx] gefVmeReadDmaBuf() failed -- %d",
+		  sprintf(message, "vme06: TDC64M[%08llx] gefVmeReadDmaBuf() failed -- %d",
 			  tdc64m[i].addr, GEF_GET_ERROR(status));
-		  send_error(pbuf);
+		  send_error_message(message);
 		}else{
 		  for(int j=0;j<data_len;j++) data[ndata++] = __bswap_32(dma_buf[j]);
 		}
@@ -269,8 +272,8 @@ int read_device(DaqMode daq_mode, unsigned int* data, int& len)
 		}		
 #endif
 	      }else{// dready!=1
-		sprintf(pbuf, "vme06: TDC64M[%08llx] data is not ready", tdc64m[i].addr);
-		send_warning(pbuf);
+		sprintf(message, "vme06: TDC64M[%08llx] data is not ready", tdc64m[i].addr);
+		send_warning_message(message);
 	      }
 	      *(tdc64m[i].str) = 0;// clear
 	      VME_MODULE_HEADER vme_module_header;
@@ -291,10 +294,10 @@ int read_device(DaqMode daq_mode, unsigned int* data, int& len)
 	  return 0;
 	}
       case 2: ///// spill off
-	send_normal("spill off \n");
+	send_normal_message("spill off \n");
 	break;
       default:
-	send_error("crazyyyyyyyyyy!!!!!!!!!!");
+	send_error_message("crazyyyyyyyyyy!!!!!!!!!!");
 	break;
       }
     }
@@ -307,6 +310,5 @@ int read_device(DaqMode daq_mode, unsigned int* data, int& len)
     len = 0;
     return 0;
   }
-  
 }
 

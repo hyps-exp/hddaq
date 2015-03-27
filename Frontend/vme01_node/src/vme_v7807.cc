@@ -24,19 +24,19 @@ static int hdl_num = 0;
 
 void vme_open()
 {
-  char pbuf[256];
+  char message[256];
   //open device
   if( vme_init(&bus_hdl) ){
-    send_fatal("vme01: vme_init() failed");
+    send_fatal_message("vme01: vme_init() failed");
     std::exit(-1);
   }
   if( vme_dma_buffer_create( bus_hdl, &dma_hdl, 4*DMA_BUF_LEN, 0, NULL) ){
-    send_fatal("vme01: vme_dma_buffer_create() failed");
+    send_fatal_message("vme01: vme_dma_buffer_create() failed");
     std::exit(-1);
   }
   dma_buf = (uint32_t*)vme_dma_buffer_map( bus_hdl, dma_hdl, 0);
   if(!dma_buf){
-    send_fatal("vme01: vme_dma_buffer_map() failed");
+    send_fatal_message("vme01: vme_dma_buffer_map() failed");
     std::exit(-1);
   }
   //### RPV130 #################################################
@@ -46,7 +46,7 @@ void vme_open()
     if( vme_master_window_create( bus_hdl, &(mst_hdl[hdl_num]),
 				  rpv130[0].addr, RPV130_AM, w_size,
 				  VME_CTL_PWEN, NULL ) ){
-      send_fatal("vme01: RPV130: vme_master_window_create() failed");
+      send_fatal_message("vme01: RPV130: vme_master_window_create() failed");
       std::exit(-1);
     }
     void *ptr = (void*)vme_master_window_map( bus_hdl, mst_hdl[hdl_num++], 0 );
@@ -61,8 +61,8 @@ void vme_open()
       rpv130[i].level   = (uint16_t*)ptr +offset +0xA/d16;
       rpv130[i].csr1    = (uint16_t*)ptr +offset +0xC/d16;
       rpv130[i].csr2    = (uint16_t*)ptr +offset +0xE/d16;
-      sprintf(pbuf, "vme01: RPV130  [%08llx] joined", rpv130[i].addr);
-      send_normal(pbuf);
+      sprintf(message, "vme01: RPV130  [%08llx] joined", rpv130[i].addr);
+      send_normal_message(message);
     }
   }
   //### SMP ###################################################
@@ -72,7 +72,7 @@ void vme_open()
     if( vme_master_window_create( bus_hdl, &(mst_hdl[hdl_num]),
 				  smp[0].addr, SMP_AM, w_size,
 				  VME_CTL_PWEN, NULL )){
-      send_fatal("vme01: SMP: vme_master_window_create() failed");
+      send_fatal_message("vme01: SMP: vme_master_window_create() failed");
       std::exit(-1);
     }
     void *ptr = (void*)vme_master_window_map( bus_hdl, mst_hdl[hdl_num++], 0 );
@@ -84,8 +84,8 @@ void vme_open()
       smp[i].dsr   = (uint32_t*)ptr +offset32 +0x18000c/d32;
       smp[i].enr   = (uint32_t*)ptr +offset32 +0x180010/d32;
       smp[i].bcr   = (uint32_t*)ptr +offset32 +0x180014/d32;
-      sprintf(pbuf, "vme01: SMP     [%08llx] joined", smp[i].addr);
-      send_normal(pbuf);
+      sprintf(message, "vme01: SMP     [%08llx] joined", smp[i].addr);
+      send_normal_message(message);
     }
   }
   return;
@@ -96,25 +96,25 @@ void vme_close()
   //unmap and release
   for(int i=0;i<hdl_num;i++){
     if( vme_master_window_unmap( bus_hdl, mst_hdl[i] ) ){
-      send_fatal("vme01: vme_master_window_unmap() failed");
+      send_fatal_message("vme01: vme_master_window_unmap() failed");
       std::exit(-1);
     }
     if( vme_master_window_release( bus_hdl, mst_hdl[i] ) ){
-      send_fatal("vme01: vme_master_window_release() failed");      
+      send_fatal_message("vme01: vme_master_window_release() failed");      
       std::exit(-1);
     }
   }
   if ( vme_dma_buffer_unmap( bus_hdl, dma_hdl ) ){
-    send_fatal("vme01: vme_dma_buffer_unmap() failed");
+    send_fatal_message("vme01: vme_dma_buffer_unmap() failed");
     std::exit(-1);
   }
   if ( vme_dma_buffer_release( bus_hdl, dma_hdl ) ){
-    send_fatal("vme01: vme_dma_buffer_release() failed");
+    send_fatal_message("vme01: vme_dma_buffer_release() failed");
     std::exit(-1);
   }
   //close device
   if( vme_term(bus_hdl) ){
-    send_fatal("vme01: vme_term() failed");
+    send_fatal_message("vme01: vme_term() failed");
     std::exit(-1);
   }
   return;
@@ -126,10 +126,10 @@ void busy_off()
 void check_handle_number(int handle_number)
 {
   if(handle_number>=max_hdl_num){
-    char pbuf[256];
-    sprintf(pbuf, "vme01: too many Master Windows: %d/%d",
+    char message[256];
+    sprintf(message, "vme01: too many Master Windows: %d/%d",
             handle_number, max_hdl_num);
-    send_fatal(pbuf);
+    send_fatal_message(message);
     std::exit(-1);
   }
 }

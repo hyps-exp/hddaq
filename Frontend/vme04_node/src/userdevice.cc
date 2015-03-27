@@ -10,12 +10,14 @@ static const int max_polling   = 2000000;     //maximum count until time-out
 static const int max_try       = 100;         //maximum count to check data ready
 static const int max_data_size = 4*1024*1024; //maximum datasize by byte unit
 
+DaqMode g_daq_mode = DM_NORMAL;
+
 int get_maxdatasize()
 {
   return max_data_size;
 }
 
-int open_device()
+void open_device(NodeProp& nodeprop)
 {
   vme_open();
   
@@ -44,45 +46,47 @@ int open_device()
 				       ((mask_window&0xffff)<<16) );
   }
 
-  return 0;
+  return;
 }
 
-int init_device(DaqMode daq_mode)
+void init_device(NodeProp& nodeprop)
 {
-  switch(daq_mode){
+  g_daq_mode = nodeprop.getDaqMode();
+  switch(g_daq_mode){
   case DM_NORMAL:
     {
       *(rpv130[0].csr1)  = __bswap_16(0x01); // clear
       *(rpv130[0].pulse) = __bswap_16(0x01); // busy off
-      return 0;
+      return;
     }
   case DM_DUMMY:
     {
-      return 0;
+      return;
     }
   default:
-    return 0;
+    return;
   }
 }
 
-int finalize_device(DaqMode daq_mode)
+void finalize_device(NodeProp& nodeprop)
 {
-  return 0;
+  return;
 }
 
-int close_device()
+void close_device(NodeProp& nodeprop)
 {
   vme_close();
-  return 0;
+  return;
 }
 
-int wait_device(DaqMode daq_mode)
+int wait_device(NodeProp& nodeprop)
 /*
   return -1: TIMEOUT or FAST CLEAR -> continue
   return  0: TRIGGED -> go read_device
 */
 {
-  switch(daq_mode){
+  g_daq_mode = nodeprop.getDaqMode();
+  switch(g_daq_mode){
   case DM_NORMAL:
     {
       ////////// Polling
@@ -96,7 +100,7 @@ int wait_device(DaqMode daq_mode)
       }
       // TimeOut
       std::cout<<"wait_device() Time Out"<<std::endl;
-      //send_warning("vme04: wait_device() Time Out");
+      //send_warning_message("vme04: wait_device() Time Out");
       return -1;
     }
   case DM_DUMMY:
@@ -109,14 +113,15 @@ int wait_device(DaqMode daq_mode)
   }
 }
 
-int read_device(DaqMode daq_mode, unsigned int* data, int& len)
+int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 /*
   return -1: Do Not Send data to EV
   return  0: Send data to EV
 */
 {
-  char pbuf[256];
-  switch(daq_mode){
+  char message[256];
+  g_daq_mode = nodeprop.getDaqMode();
+  switch(g_daq_mode){
   case DM_NORMAL:
     {
       int ndata      = 0;
@@ -154,17 +159,17 @@ int read_device(DaqMode daq_mode, unsigned int* data, int& len)
 	  if(dready==1){
 	    int status = gefVmeReadDmaBuf(dma_hdl, &v792[i].addr_param, 0, 4*data_len);
 	    if(status!=0){
-	      sprintf(pbuf, "vme04: V792[%08llx] gefVmeReadDmaBuf() failed -- %d",
+	      sprintf(message, "vme04: V792[%08llx] gefVmeReadDmaBuf() failed -- %d",
 		      v792[i].addr, GEF_GET_ERROR(status));
-	      send_error(pbuf);
+	      send_error_message(message);
 	    }else{
 	      for(int j=0;j<data_len;j++){
 		data[ndata++] = __bswap_32(dma_buf[j]);
 	      }
 	    }
 	  }else{
-	    sprintf(pbuf, "vme04: V792[%08llx] data is not ready", v792[i].addr );
-	    send_warning(pbuf);
+	    sprintf(message, "vme04: V792[%08llx] data is not ready", v792[i].addr );
+	    send_warning_message(message);
 	  }
 #else
 	  for(int j=0;j<data_len;j++){
@@ -195,16 +200,16 @@ int read_device(DaqMode daq_mode, unsigned int* data, int& len)
 	  if(dready==1){
 #if DMA_TDC64M // DmaRead ... not supported yet
 	    if(data_len>DMA_BUF_LEN){
-	      sprintf(pbuf, "vme04: TDC64M[%08llx] data_len is too much -- %d/%d",
+	      sprintf(message, "vme04: TDC64M[%08llx] data_len is too much -- %d/%d",
 		      tdc64m[i].addr, data_len, DMA_BUF_LEN);
-	      send_error(pbuf);
+	      send_error_message(message);
 	      data_len = DMA_BUF_LEN;
 	    }
 	    int status = gefVmeReadDmaBuf(dma_hdl, &tdc64m[i].addr_param, 0x4000, 4*data_len);
 	    if(status!=0){
-	      sprintf(pbuf, "vme04: TDC64M[%08llx] gefVmeReadDmaBuf() failed -- %d",
+	      sprintf(message, "vme04: TDC64M[%08llx] gefVmeReadDmaBuf() failed -- %d",
 		      tdc64m[i].addr, GEF_GET_ERROR(status));
-	      send_error(pbuf);
+	      send_error_message(message);
 	    }else{
 	      for(int j=0;j<data_len;j++) data[ndata++] = __bswap_32(dma_buf[j]);
 	    }
@@ -212,8 +217,8 @@ int read_device(DaqMode daq_mode, unsigned int* data, int& len)
 	    for(int j=0;j<data_len;j++) data[ndata++] = __bswap_32(tdc64m[i].data_buf[j]);
 #endif
 	  }else{// dready!=1
-	    sprintf(pbuf, "vme04: TDC64M[%08llx] data is not ready", tdc64m[i].addr );
-	    send_warning(pbuf);
+	    sprintf(message, "vme04: TDC64M[%08llx] data is not ready", tdc64m[i].addr );
+	    send_warning_message(message);
 	  }
 	  *(tdc64m[i].str) = 0;// clear
 	  VME_MODULE_HEADER vme_module_header;

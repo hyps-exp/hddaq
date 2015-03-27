@@ -7,15 +7,16 @@ static const int max_polling   = 2000000;     //maximum count until time-out
 static const int max_try       = 100;         //maximum count to check data ready
 static const int max_data_size = 4*1024*1024; //maximum datasize by byte unit
 
+DaqMode g_daq_mode = DM_NORMAL;
+
 int get_maxdatasize()
 {
   return max_data_size;
 }
 
-int open_device()
+void open_device(NodeProp& nodeprop)
 {
   vme_open();
-
   ////////// SMP
   for(int i=0;i<SMP_NUM;i++){
     *(smp[i].cmr)   = 0x40;// SMP reset
@@ -24,13 +25,13 @@ int open_device()
     *(smp[i].bcr)   = 0x23;// hardware switch eable
     *(smp[i].cmr)   = 0x00;// set cmr
   }
-
-  return 0;
+  return;
 }
 
-int init_device(DaqMode daq_mode)
+void init_device(NodeProp& nodeprop)
 {
-  switch(daq_mode){
+  g_daq_mode = nodeprop.getDaqMode();
+  switch(g_daq_mode){
   case DM_NORMAL:
     {
       for(int i=0;i<SMP_NUM;i++){
@@ -38,36 +39,37 @@ int init_device(DaqMode daq_mode)
       }
       *(rpv130[0].csr1)  = 0x1; // io clear
       *(rpv130[0].pulse) = 0x1; // busy off
-      return 0;
+      return;
     }
   case DM_DUMMY:
     {
-      return 0;
+      return;
     }
   default:
-    return 0;
+    return;
   }
 }
 
-int finalize_device(DaqMode daq_mode)
+void finalize_device(NodeProp& nodeprop)
 {
-  return 0;
+  return;
 }
 
-int close_device()
+void close_device(NodeProp& nodeprop)
 {
   vme_close();
-  return 0;
+  return;
 }
 
 
-int wait_device(DaqMode daq_mode)
+int wait_device(NodeProp& nodeprop)
 /*
   return -1: TIMEOUT or FAST CLEAR -> continue
   return  0: TRIGGED -> go read_device
 */
 {
-  switch(daq_mode){
+  g_daq_mode = nodeprop.getDaqMode();
+  switch(g_daq_mode){
   case DM_NORMAL:
     {
       ////////// Polling
@@ -84,7 +86,7 @@ int wait_device(DaqMode daq_mode)
       }
       // TimeOut
       std::cout<<"wait_device() Time Out"<<std::endl;
-      //send_warning("vme01: wait_device() Time Out");
+      //send_warning_message("vme01: wait_device() Time Out");
       return -1;
     }
   case DM_DUMMY:
@@ -99,14 +101,15 @@ int wait_device(DaqMode daq_mode)
 }
 
 
-int read_device(DaqMode daq_mode, unsigned int* data, int& len)
+int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 /*
   return -1: Do Not Send data to EV
   return  0: Send data to EV
 */
 {
-  char pbuf[256];
-  switch(daq_mode){
+  char message[256];
+  g_daq_mode = nodeprop.getDaqMode();
+  switch(g_daq_mode){
   case DM_NORMAL:
     {
       int ndata = 0;
@@ -122,10 +125,10 @@ int read_device(DaqMode daq_mode, unsigned int* data, int& len)
 	  int data_len = dsize/4;
 	  if( evnum==1 && data_len>0 ){
 	    if(data_len>DMA_BUF_LEN){// in this case, a decode will be failed
-	      sprintf(pbuf, "vme01: SMP[%08llx] data_len is too much: %d/%d",
+	      sprintf(message, "vme01: SMP[%08llx] data_len is too much: %d/%d",
 		      smp[i].addr, data_len, DMA_BUF_LEN);
-	      //send_warning(pbuf);
-	      send_fatal(pbuf);
+	      //send_warning_message(message);
+	      send_fatal_message(message);
 	      std::exit(-1);
 	    }
 	    int status = vme_dma_read( bus_hdl, dma_hdl, 0, smp[i].addr,
@@ -135,14 +138,14 @@ int read_device(DaqMode daq_mode, unsigned int* data, int& len)
 	      memcpy( &data[ndata], dma_buf, 4*data_len );
 	      ndata += data_len;
 	    }else{
-	      sprintf(pbuf, "vme01: SMP[%08llx] vme_dma_read() failed", smp[i].addr);
-	      send_fatal(pbuf);
+	      sprintf(message, "vme01: SMP[%08llx] vme_dma_read() failed", smp[i].addr);
+	      send_fatal_message(message);
 	      std::exit(-1);
 	    }
 	  }else{
-	    sprintf(pbuf, "vme01: SMP[%08llx] invalid data!!! [event:%d] [data_len:%d]",
+	    sprintf(message, "vme01: SMP[%08llx] invalid data!!! [event:%d] [data_len:%d]",
 		    smp[i].addr, evnum, data_len);
-	    send_fatal(pbuf);
+	    send_fatal_message(message);
 	    std::exit(-1);
 	  }
 	  VME_MODULE_HEADER vme_module_header;
@@ -170,5 +173,4 @@ int read_device(DaqMode daq_mode, unsigned int* data, int& len)
     len = 0;
     return 0;
   }
-
 }

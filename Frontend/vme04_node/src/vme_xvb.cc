@@ -29,19 +29,19 @@ static int hdl_num = 0;
 
 void vme_open()
 {
-  int status=0;
-  char pbuf[256];
+  int status = 0;
+  char message[256];
   //open device
   status = gefVmeOpen(&bus_hdl);
   if(status!=GEF_STATUS_SUCCESS){
-    sprintf(pbuf, "vme04: gefVmeOpen() failed -- %d", GEF_GET_ERROR(status));
-    send_fatal(pbuf);
+    sprintf(message, "vme04: gefVmeOpen() failed -- %d", GEF_GET_ERROR(status));
+    send_fatal_message(message);
     std::exit(-1);
   }
   status = gefVmeAllocDmaBuf(bus_hdl, 4*DMA_BUF_LEN, &dma_hdl, (GEF_MAP_PTR*)&dma_buf);
   if(status!=GEF_STATUS_SUCCESS){
-    sprintf(pbuf, "vme04: gefVmeAllocDmaBuf() failed -- %d", GEF_GET_ERROR(status));
-    send_fatal(pbuf);
+    sprintf(message, "vme04: gefVmeAllocDmaBuf() failed -- %d", GEF_GET_ERROR(status));
+    send_fatal_message(message);
     std::exit(-1);
   }
   //### VME_RM #################################################
@@ -65,14 +65,14 @@ void vme_open()
     GEF_UINT32 w_size = VME_RM_MAP_SIZE*VME_RM_NUM;
     status = gefVmeCreateMasterWindow(bus_hdl, &vme_rm[0].addr_param, w_size, &mst_hdl[hdl_num]);
     if(status!=GEF_STATUS_SUCCESS){
-      sprintf(pbuf, "vme04: VME_RM: gefVmeCreateMasterWindow() failed -- %d", GEF_GET_ERROR(status));
-      send_fatal(pbuf);
+      sprintf(message, "vme04: VME_RM: gefVmeCreateMasterWindow() failed -- %d", GEF_GET_ERROR(status));
+      send_fatal_message(message);
       std::exit(-1);
     }
     status = gefVmeMapMasterWindow(mst_hdl[hdl_num], 0, w_size, &map_hdl[hdl_num], &ptr);
     if(status!=GEF_STATUS_SUCCESS){
-      sprintf(pbuf, "vme04: VME_RM: gefVmeMapMasterWindow() failed -- %d", GEF_GET_ERROR(status));
-      send_fatal(pbuf);
+      sprintf(message, "vme04: VME_RM: gefVmeMapMasterWindow() failed -- %d", GEF_GET_ERROR(status));
+      send_fatal_message(message);
       std::exit(-1);
     }
     hdl_num++;
@@ -82,8 +82,8 @@ void vme_open()
       vme_rm[i].event  = (GEF_UINT32*)ptr +offset32 +0x0/d32;
       vme_rm[i].spill  = (GEF_UINT32*)ptr +offset32 +0x4/d32;
       vme_rm[i].serial = (GEF_UINT32*)ptr +offset32 +0x8/d32;
-      sprintf(pbuf, "vme04: VME_RM  [%08llx] joined", vme_rm[i].addr);
-      send_normal(pbuf);
+      sprintf(message, "vme04: VME_RM  [%08llx] joined", vme_rm[i].addr);
+      send_normal_message(message);
     }
   }
   //### RPV130 #################################################
@@ -107,14 +107,14 @@ void vme_open()
     GEF_UINT32 w_size = RPV130_MAP_SIZE*RPV130_NUM;
     status = gefVmeCreateMasterWindow(bus_hdl, &rpv130[0].addr_param, w_size, &mst_hdl[hdl_num]);
     if(status!=GEF_STATUS_SUCCESS){
-      sprintf(pbuf, "vme04: RPV130: gefVmeCreateMasterWindow() failed -- %d", GEF_GET_ERROR(status));
-      send_fatal(pbuf);
+      sprintf(message, "vme04: RPV130: gefVmeCreateMasterWindow() failed -- %d", GEF_GET_ERROR(status));
+      send_fatal_message(message);
       std::exit(-1);
     }
     status = gefVmeMapMasterWindow(mst_hdl[hdl_num], 0, w_size, &map_hdl[hdl_num], &ptr);
     if(status!=GEF_STATUS_SUCCESS){
-      sprintf(pbuf, "vme04: RPV130: gefVmeMapMasterWindow() failed -- %d", GEF_GET_ERROR(status));
-      send_fatal(pbuf);
+      sprintf(message, "vme04: RPV130: gefVmeMapMasterWindow() failed -- %d", GEF_GET_ERROR(status));
+      send_fatal_message(message);
       std::exit(-1);
     }
     hdl_num++;
@@ -129,8 +129,8 @@ void vme_open()
       rpv130[i].level   = (GEF_UINT16*)ptr +offset16 +0xA/d16;
       rpv130[i].csr1    = (GEF_UINT16*)ptr +offset16 +0xC/d16;
       rpv130[i].csr2    = (GEF_UINT16*)ptr +offset16 +0xE/d16;
-      sprintf(pbuf, "vme04: RPV130  [%08llx] joined", rpv130[i].addr);
-      send_normal(pbuf);
+      sprintf(message, "vme04: RPV130  [%08llx] joined", rpv130[i].addr);
+      send_normal_message(message);
     }
   }
   //### V792 #################################################
@@ -154,14 +154,14 @@ void vme_open()
     GEF_UINT32 w_size = V792_MAP_SIZE * V792_NUM;
     status = gefVmeCreateMasterWindow(bus_hdl, &v792[0].addr_param, w_size, &mst_hdl[hdl_num]);
     if(status!=GEF_STATUS_SUCCESS){
-      sprintf(pbuf, "vme04: V792: gefVmeCreateMasterWindow() failed -- %d", status);
-      send_fatal(pbuf);
+      sprintf(message, "vme04: V792: gefVmeCreateMasterWindow() failed -- %d", status);
+      send_fatal_message(message);
       std::exit(-1);
     }
     status = gefVmeMapMasterWindow(mst_hdl[hdl_num], 0, w_size, &map_hdl[hdl_num], &ptr);
     if(status!=GEF_STATUS_SUCCESS){
-      sprintf(pbuf, "vme04: V792: gefVmeMapMasterWindow() failed -- %d", GEF_GET_ERROR(status));
-      send_fatal(pbuf);
+      sprintf(message, "vme04: V792: gefVmeMapMasterWindow() failed -- %d", GEF_GET_ERROR(status));
+      send_fatal_message(message);
       std::exit(-1);
     }
     hdl_num++;
@@ -177,8 +177,8 @@ void vme_open()
       v792[i].bitset2  = (GEF_UINT16*)ptr +offset16 +0x1032/d16;
       v792[i].bitclr2  = (GEF_UINT16*)ptr +offset16 +0x1034/d16;
       v792[i].iped     = (GEF_UINT16*)ptr +offset16 +0x1060/d16;
-      sprintf(pbuf, "vme04: V792    [%08llx] joined", v792[i].addr);
-      send_normal(pbuf);
+      sprintf(message, "vme04: V792    [%08llx] joined", v792[i].addr);
+      send_normal_message(message);
     }
   }
   //### TDC64M #################################################
@@ -202,14 +202,14 @@ void vme_open()
     GEF_UINT32 w_size = TDC64M_MAP_SIZE * TDC64M_NUM;
     status = gefVmeCreateMasterWindow(bus_hdl, &tdc64m[0].addr_param, w_size, &mst_hdl[hdl_num]);
     if(status!=GEF_STATUS_SUCCESS){
-      sprintf(pbuf, "vme04: TDC64M: gefVmeCreateMasterWindow() failed -- %d", GEF_GET_ERROR(status));
-      send_fatal(pbuf);
+      sprintf(message, "vme04: TDC64M: gefVmeCreateMasterWindow() failed -- %d", GEF_GET_ERROR(status));
+      send_fatal_message(message);
       std::exit(-1);
     }
     status = gefVmeMapMasterWindow(mst_hdl[hdl_num], 0, w_size, &map_hdl[hdl_num], &ptr);
     if(status!=GEF_STATUS_SUCCESS){
-      sprintf(pbuf, "vme04: TDC64M: gefVmeMapMasterWindow() failed, status: %d \n", status);
-      send_fatal(pbuf);
+      sprintf(message, "vme04: TDC64M: gefVmeMapMasterWindow() failed, status: %d \n", status);
+      send_fatal_message(message);
       std::exit(-1);
     }
     hdl_num++;
@@ -223,8 +223,8 @@ void vme_open()
       tdc64m[i].enable2  = (GEF_UINT32*)ptr +offset32 +0x0C/d32;
       tdc64m[i].window   = (GEF_UINT32*)ptr +offset32 +0x10/d32;
       tdc64m[i].evnum    = (GEF_UINT32*)ptr +offset32 +0x14/d32;
-      sprintf(pbuf, "vme04: TDC64M  [%08llx] joined", tdc64m[i].addr);
-      send_normal(pbuf);
+      sprintf(message, "vme04: TDC64M  [%08llx] joined", tdc64m[i].addr);
+      send_normal_message(message);
     }
   }
 }
@@ -232,33 +232,33 @@ void vme_open()
 void vme_close()
 {
   int status = 0;
-  char pbuf[256];
+  char message[256];
   //unmap and release
   status = gefVmeFreeDmaBuf( dma_hdl );
   if(status!=GEF_STATUS_SUCCESS){
-    sprintf(pbuf, "vme04: gefVmeFreeDmaBuf() failed -- %d \n", GEF_GET_ERROR(status));
-    send_fatal(pbuf);
+    sprintf(message, "vme04: gefVmeFreeDmaBuf() failed -- %d \n", GEF_GET_ERROR(status));
+    send_fatal_message(message);
     std::exit(-1);
   }
   for(int i=0;i<hdl_num;i++){
     status = gefVmeUnmapMasterWindow( map_hdl[i] );
     if(status!=GEF_STATUS_SUCCESS){
-      sprintf(pbuf, "vme04: gefVmeUnmapMasterWindow() failed -- %d", GEF_GET_ERROR(status));
-      send_fatal(pbuf);
+      sprintf(message, "vme04: gefVmeUnmapMasterWindow() failed -- %d", GEF_GET_ERROR(status));
+      send_fatal_message(message);
       std::exit(-1);
     }
     status = gefVmeReleaseMasterWindow( mst_hdl[i] );
     if(status!=GEF_STATUS_SUCCESS){
-      sprintf(pbuf, "vme04: gefVmeReleaseMasterWindow() failed -- %d", GEF_GET_ERROR(status));
-      send_fatal(pbuf);
+      sprintf(message, "vme04: gefVmeReleaseMasterWindow() failed -- %d", GEF_GET_ERROR(status));
+      send_fatal_message(message);
       std::exit(-1);
     }
   }
   //close device
   status = gefVmeClose(bus_hdl);
   if(status!=GEF_STATUS_SUCCESS){
-    sprintf(pbuf, "vme04: gefVmeClose() failed -- %d", GEF_GET_ERROR(status));
-    send_fatal(pbuf);
+    sprintf(message, "vme04: gefVmeClose() failed -- %d", GEF_GET_ERROR(status));
+    send_fatal_message(message);
     std::exit(-1);
   }
 }
@@ -266,10 +266,10 @@ void vme_close()
 void check_handle_number(int handle_number)
 {
   if(handle_number>=max_hdl_num){
-    char pbuf[256];
-    sprintf(pbuf, "vme04: too many Master Windows -- %d/%d",
+    char message[256];
+    sprintf(message, "vme04: too many Master Windows -- %d/%d",
 	    handle_number, max_hdl_num);
-    send_fatal(pbuf);
+    send_fatal_message(message);
     std::exit(-1);
   }
 }
