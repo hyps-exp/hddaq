@@ -4,7 +4,7 @@ nickname=vme04
 nodeid=$((0x204))
 frontend=vme04_frontend
 
-bin_dir=$(cd $(dirname $0); pwd)/../bin
+bin_dir=$(cd $(dirname $0); pwd -P)/../bin
 #echo ${bin_dir}
 
 if [ $$ -ne $(pgrep -fo $0) ]; then

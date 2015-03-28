@@ -23,13 +23,16 @@ void open_device(NodeProp& nodeprop)
   for(int i=0;i<V830_NUM;i++){
     *(v830[i].reset)  = 0x0;
     *(v830[i].enable) = 0x0;  // for MEB, v830 only
-    *(v830[i].clr)    = 0x01; // [acq mode] 00: disabled (default)
-                              //            01: external or from VME
-                              //            10: periodical
+    ///// acq mode
+    // 00: disabled (default)
+    // 01: external or from VME
+    // 10: periodical
+    uint32_t acq_mode = 0x01;
+    *(v830[i].clr)    = acq_mode;
   }
   ////////// V775
   int range = 0xff;     // 0x18-0xff, range: 1200-140[ns]
-  int common_input = 0; // 0:common start, 1:common stop
+  int common_input = 1; // 0:common start, 1:common stop
   int empty_prog   = 1; // 0: if data is empty, no header and footer
                         // 1: add header and footer always
   for(int i=0;i<V775_NUM;i++){
@@ -47,7 +50,7 @@ void init_device(NodeProp& nodeprop)
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-      *(rpv130[0].csr1)  = 0x1; // clear
+      *(rpv130[0].csr1)  = 0x1; // io clear
       *(rpv130[0].pulse) = 0x1; // busy off
       return;
     }
@@ -143,14 +146,24 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	  ndata += VME_MODULE_HSIZE;
 	  int data_len = 32;
 #if DMA_V830
-	  int status = vme_dma_read( bus_hdl, dma_hdl, 0, v830[i].addr+0x1000,
-				     V830_AM, 4*data_len, 0 );
-	  if(status!=0){
-	    sprintf(message, "vme03: V830[%08llx] vme_dma_read() failed", v830[i].addr);
-	    send_error_message(message);
+	  int dready   = 0;
+	  for(int j=0;j<max_try;j++){
+	    dready = (*(v830[i].clr))&0x1;
+	    if(dready==1) break;
+	  }
+	  if(dready==1){
+	    int status = vme_dma_read( bus_hdl, dma_hdl, 0, v830[i].addr+0x1000,
+				       V830_AM, 4*data_len, 0 );
+	    if(status!=0){
+	      sprintf(message, "vme03: V830[%08llx] vme_dma_read() failed", v830[i].addr);
+	      send_error_message(message);
+	    }else{
+	      memcpy( &data[ndata], dma_buf, 4*data_len );
+	      ndata += data_len;
+	    }
 	  }else{
-	    memcpy( &data[ndata], dma_buf, 4*data_len );
-	    ndata += data_len;
+	    sprintf(message, "vme03: V830[%08llx] data is not ready", v830[i].addr);
+	    send_warning_message(message);
 	  }
 #else
 	  for(int j=0; j<data_len; j++){
@@ -159,7 +172,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 #endif
 	  VME_MODULE_HEADER vme_module_header;
 	  init_vme_module_header( &vme_module_header, v830[i].addr,
-				   ndata - vme_module_header_start );
+				  ndata - vme_module_header_start );
 	  memcpy( &data[vme_module_header_start],
 		  &vme_module_header, VME_MODULE_HSIZE*4 );
 	  module_num++;
@@ -171,15 +184,25 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	  int vme_module_header_start = ndata;
 	  ndata += VME_MODULE_HSIZE;
 	  int data_len = 34;
-	  for(int k=0;k<data_len;k++){
-	    uint32_t data_buf = *(v775[i].data_buf);
-	    data[ndata++] = data_buf;
-	    int data_type = ( data_buf >> 24 ) & 0x7; // 2:header, 0:data, 4:footer
-	    if(data_type==4)  break;
-	    if(k+1==data_len && data_type!=4){
-	      sprintf(message, "vme03: V775[%08llx] nooooo fooooter!!!", v775[i].addr);
-	      send_error_message(message);
+	  int dready   = 0;
+          for(int j=0;j<max_try;j++){
+            dready = *(v775[i].str1)&0x1;
+            if(dready==1) break;
+          }
+	  if(dready==1){
+	    for(int k=0;k<data_len;k++){
+	      uint32_t data_buf = *(v775[i].data_buf);
+	      data[ndata++] = data_buf;
+	      int data_type = (data_buf>>24)&0x7; // 2:header, 0:data, 4:footer
+	      if(data_type==4)  break;
+	      if(k+1==data_len && data_type!=4){
+		sprintf(message, "vme03: V775[%08llx] nooooo fooooter!!!", v775[i].addr);
+		send_warning_message(message);
+	      }
 	    }
+	  }else{
+	    sprintf(message, "vme03: V775[%08llx] data is not ready", v775[i].addr );
+            send_warning_message(message);
 	  }
 	  VME_MODULE_HEADER vme_module_header;
 	  init_vme_module_header( &vme_module_header, v775[i].addr,

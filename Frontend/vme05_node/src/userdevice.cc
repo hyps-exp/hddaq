@@ -21,20 +21,22 @@ void open_device(NodeProp& nodeprop)
 {
   vme_open();
   ////////// V792
+  int iped[] = { 180, 135, 135, 175 };
   for(int i=0;i<V792_NUM;i++){
     *(v792[i].bitset1) = __bswap_16(0x80);
     *(v792[i].bitclr1) = __bswap_16(0x80);
-    *(v792[i].iped)    = __bswap_16(0xff); // 0x0-0xff
+    *(v792[i].iped)    = __bswap_16(iped[i]); // 0x0-0xff
   }
   ////////// TDC64M
   uint32_t reset         = 1; // clear local event counter
-  uint32_t dynamic_range = 7; // 0-7, 2^n[us]
-  uint32_t edge_mode     = 1; // 0:leading 1:leading&trailing
+  uint32_t dynamic_range = 1; // 0-7, 2^n[us]
+  uint32_t edge_mode     = 0; // 0:leading 1:leading&trailing
   uint32_t module_id     = 0; // 5bit, 0-511
-  uint32_t search_window = 0x3E80; // 8ns unit, 0x0-0x3E80(0-128us)
+  uint32_t search_window = 400/8; // 400ns
+  //uint32_t search_window = 0x3E80; // 8ns unit, 0x0-0x3E80(0-128us)
   uint32_t mask_window   = 0x0; // 8ns unit, 0x0-0x3E80(0-128us)
   for(int i=0;i<TDC64M_NUM;i++){
-    module_id = i;
+    module_id = i + 51;
     *(tdc64m[i].ctr) = __bswap_32( (reset&0x1 ) |
 				   ((dynamic_range&0x7)<<1) |
 				   ((edge_mode&0x1)<<4) |
@@ -43,6 +45,7 @@ void open_device(NodeProp& nodeprop)
     *(tdc64m[i].enable2) = __bswap_32(0xffffffff);
     *(tdc64m[i].window)  = __bswap_32( (search_window&0xffff) |
 				       ((mask_window&0xffff)<<16) );
+    *(tdc64m[i].str) = 0;// tdc64m clear
   }
   return;
 }
@@ -53,7 +56,7 @@ void init_device(NodeProp& nodeprop)
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-      *(rpv130[0].csr1)  = __bswap_16(0x01); // clear
+      *(rpv130[0].csr1)  = __bswap_16(0x01); // io clear
       *(rpv130[0].pulse) = __bswap_16(0x01); // busy off
       return;
     }
@@ -92,7 +95,7 @@ int wait_device(NodeProp& nodeprop)
       for(int i=0;i<max_polling;i++){
 	reg = __bswap_16(*(rpv130[0].rsff));
 	if( (reg>>0)&0x1 ){
-	  *(rpv130[0].csr1)  = __bswap_16(0x01); // clear
+	  *(rpv130[0].csr1)  = __bswap_16(0x01); // io clear
 	  return 0;
 	}
       }
@@ -148,13 +151,13 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	  int vme_module_header_start = ndata;
 	  ndata += VME_MODULE_HSIZE;
 	  int data_len = 34;
-#if DMA_V792
 	  int dready   = 0;
 	  for(int j=0;j<max_try;j++){
 	    dready = __bswap_16(*(v792[i].str1))&0x1;
 	    if(dready==1) break;
 	  }
 	  if(dready==1){
+#if DMA_V792
 	    int status = gefVmeReadDmaBuf(dma_hdl, &v792[i].addr_param, 0, 4*data_len);
 	    if(status!=0){
 	      sprintf(message, "vme05: V792[%08llx] gefVmeReadDmaBuf() failed -- %d",
@@ -165,15 +168,15 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 		data[ndata++] = __bswap_32(dma_buf[j]);
 	      }
 	    }
-	  }else{
-	    sprintf(message, "vme05: V792[%08llx] data is not ready", v792[i].addr );
-	    send_warning_message(message);
-	  }
 #else
 	  for(int j=0;j<data_len;j++){
 	    data[ndata++] = __bswap_32(*(v792[i].addr+j));
 	  }
 #endif
+	  }else{
+	    sprintf(message, "vme05: V792[%08llx] data is not ready", v792[i].addr );
+	    send_warning_message(message);
+	  }
 	  VME_MODULE_HEADER vme_module_header;
 	  init_vme_module_header( &vme_module_header,v792[i].addr,
 				  ndata - vme_module_header_start );
@@ -188,7 +191,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	  int vme_module_header_start = ndata;
 	  ndata += VME_MODULE_HSIZE;
 	  int data_len = 0;
-	  int dready = 0;
+	  int dready   = 0;
 	  for(int j=0;j<max_try;j++){
 	    uint32_t buf32 = __bswap_32(*(tdc64m[i].str));
 	    data_len = buf32 & 0xfff;
@@ -212,13 +215,15 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	      for(int j=0;j<data_len;j++) data[ndata++] = __bswap_32(dma_buf[j]);
 	    }
 #else
-	    for(int j=0;j<data_len;j++) data[ndata++] = __bswap_32(tdc64m[i].data_buf[j]);
+	    for(int j=0;j<data_len;j++){
+	      data[ndata++] = __bswap_32(tdc64m[i].data_buf[j]);
+	    }
 #endif
-	  }else{// dready!=1
+	  }else{
 	    sprintf(message, "vme05: TDC64M[%08llx] data is not ready", tdc64m[i].addr );
 	    send_warning_message(message);
 	  }
-	  *(tdc64m[i].str) = 0;// clear
+	  *(tdc64m[i].str) = 0;// tdc64m clear
 	  VME_MODULE_HEADER vme_module_header;
 	  init_vme_module_header( &vme_module_header, tdc64m[i].addr,
 				  ndata - vme_module_header_start );
@@ -245,4 +250,5 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
     len = 0;
     return 0;
   }
+
 }

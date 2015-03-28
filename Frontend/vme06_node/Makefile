@@ -14,7 +14,7 @@ INCLUDES	= -I. -I$(CORE_DIR) -I../../kol -I../../Message
 LIBS		= -L../../Message/lib -lMessage \
 			-L../../kol/lib -lkol \
 			-lpthread \
-			-L/usr/lib/gef -lvme
+			-L/usr/lib/gef -lvme -lz
 
 FLAGS		= $(CXXFLAGS) $(INCLUDES)
 

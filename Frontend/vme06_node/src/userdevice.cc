@@ -12,7 +12,13 @@ static const int max_data_size = 4*1024*1024; //maximum datasize by byte unit
 
 DaqMode g_daq_mode = DM_NORMAL;
 
-volatile int spill_flag = 0;
+////////// for spill-off
+#include <zlib.h>
+#include <sys/stat.h>
+enum { init, spill_on, spill_off };
+volatile int spill_flag = init;
+std::string  off_data_name;
+gzFile      *off_data_file;
 
 int get_maxdatasize()
 {
@@ -27,10 +33,10 @@ void open_device(NodeProp& nodeprop)
     *(v830[i].reset)  = __bswap_16(0x00);
     *(v830[i].enable) = __bswap_16(0x00); // for MEB, v830 only
     ///// acq_mode
-    uint32_t acq_mode = 0x01;
     // 00: disabled (default)
     // 01: external or from VME
     // 10: periodical
+    uint32_t acq_mode = 0x01;
     *(v830[i].clr)    = __bswap_16(acq_mode);
   }
   ////////// CAMAC(FERA)
@@ -42,22 +48,23 @@ void open_device(NodeProp& nodeprop)
     *(umem_reg[i].mode)  = __bswap_16(0x1); // gate open
   }
   ////////// TDC64M
-  uint32_t reset         = 1; // clear local event counter
-  uint32_t dynamic_range = 7; // 0-7, 2^n[us]
-  uint32_t edge_mode     = 0; // 0:leading 1:leading&trailing
-  uint32_t module_id     = 0; // 5bit, 0-511
-  uint32_t search_window = 0x3E80; // 8ns unit, 0x0-0x3E80(0-128us)
-  uint32_t mask_window   = 0x0;    // 8ns unit, 0x0-0x3E80(0-128us)
+  uint32_t reset           = 1;                 // clear local event counter
+  uint32_t dynamic_range[] = { 3, 7 };          // 0-7, 2^n[us]
+  uint32_t edge_mode       = 0;                 // 0:leading 1:leading&trailing
+  uint32_t module_id       = 0;                 // 5bit, 0-511
+  uint32_t search_window[] = { 0x3E8, 0x3E80 }; // 8ns unit, 0x0-0x3E80(0-128us)
+  uint32_t mask_window[]   = { 0x0, 0x0 };      // 8ns unit, 0x0-0x3E80(0-128us)
   for(int i=0;i<TDC64M_NUM;i++){
-    module_id = i;
+    module_id = i + 61;
     *(tdc64m[i].ctr) = __bswap_32( (reset&0x1 ) |
-				   ((dynamic_range&0x7)<<1) |
+				   ((dynamic_range[i]&0x7)<<1) |
 				   ((edge_mode&0x1)<<4) |
 				   ((module_id&0x1f)<<5) );
     *(tdc64m[i].enable1) = __bswap_32(0xffffffff);
     *(tdc64m[i].enable2) = __bswap_32(0xffffffff);
-    *(tdc64m[i].window)  = __bswap_32( (search_window&0xffff) |
-				       ((mask_window&0xffff)<<16) );
+    *(tdc64m[i].window)  = __bswap_32( (search_window[i]&0xffff) |
+				       ((mask_window[i]&0xffff)<<16) );
+    *(tdc64m[i].str) = 0;// tdc64m clear    
   }
   return;
 }
@@ -68,7 +75,13 @@ void init_device(NodeProp& nodeprop)
   switch(g_daq_mode){
   case DM_NORMAL:
     {
+      *(rpv130[0].csr1)  = __bswap_16(0x01);// io clear
       *(rpv130[0].pulse) = __bswap_16(0x01);// busy off
+      off_data_name = "test.dat.gz";
+      off_data_file = (gzFile *)gzopen(off_data_name.c_str(), "wb6");
+      char message[256];
+      sprintf(message, "vme06: create spill off data file: %s", off_data_name.c_str());
+      send_normal_message(message);
       return;
     }
   case DM_DUMMY:
@@ -87,6 +100,11 @@ void finalize_device(NodeProp& nodeprop)
     *(umem_reg[i].clr)  = __bswap_16(0x1); // clear
   }
   *(rpv130[0].pulse) = __bswap_16(0x02); // fera clear
+  gzclose(off_data_file);
+  chmod(off_data_name.c_str(), S_IRUSR | S_IRGRP | S_IROTH );
+  char message[256];
+  sprintf(message, "vme06: close spill off data file: %s", off_data_name.c_str());
+  send_normal_message(message);
   return;
 }
 
@@ -107,22 +125,22 @@ int wait_device(NodeProp& nodeprop)
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-      spill_flag = 0;
+      spill_flag = init;
       ////////// Polling
       int reg = 0;
       for(int i=0;i<max_polling;i++){
 	reg = __bswap_16(*(rpv130[0].rsff));
 	///// spill on
 	if( (reg>>0)&0x1 ){
-	  spill_flag = 1;
-	  *(rpv130[0].csr1)  = __bswap_16(0x01);// clear
+	  spill_flag = spill_on;
+	  *(rpv130[0].csr1)  = __bswap_16(0x01);// io clear
 	  return 0;
 	}
 	///// spill off
-	if( (reg>>1)&0x1 ){
-	  spill_flag = 2;
-	  return 0;
-	}
+	// if( (reg>>1)&0x1 ){
+	//   spill_flag = spill_off;
+	//   return 0;
+	// }
       }
       // TimeOut
       std::cout<<"wait_device() Time Out"<<std::endl;
@@ -151,10 +169,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
   case DM_NORMAL:
     {
       switch(spill_flag){
-      case 0:
-	send_error_message("crazyyyyyyyyyy!!!!!!!!!!");
-	break;
-      case 1: ///// spill on
+      case spill_on:
 	{
 	  //send_normal_message("spill on");
 	  int ndata      = 0;
@@ -275,7 +290,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 		sprintf(message, "vme06: TDC64M[%08llx] data is not ready", tdc64m[i].addr);
 		send_warning_message(message);
 	      }
-	      *(tdc64m[i].str) = 0;// clear
+	      *(tdc64m[i].str) = 0;// tdc64m clear
 	      VME_MODULE_HEADER vme_module_header;
 	      init_vme_module_header( &vme_module_header, tdc64m[i].addr,
 				      ndata - vme_module_header_start );
@@ -293,11 +308,11 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	  len = ndata;
 	  return 0;
 	}
-      case 2: ///// spill off
-	send_normal_message("spill off \n");
+      case spill_off:
+	send_normal_message("vme06: spill off");
 	break;
       default:
-	send_error_message("crazyyyyyyyyyy!!!!!!!!!!");
+	send_error_message("vme06: crazyyyyyyyyyy!!!!!!!!!!");
 	break;
       }
     }
