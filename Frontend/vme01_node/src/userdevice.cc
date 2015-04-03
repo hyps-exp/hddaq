@@ -68,7 +68,6 @@ int wait_device(NodeProp& nodeprop)
   return  0: TRIGGED -> go read_device
 */
 {
-  g_daq_mode = nodeprop.getDaqMode();
   switch(g_daq_mode){
   case DM_NORMAL:
     {
@@ -108,7 +107,6 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 */
 {
   char message[256];
-  g_daq_mode = nodeprop.getDaqMode();
   switch(g_daq_mode){
   case DM_NORMAL:
     {
