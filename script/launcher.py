@@ -3,8 +3,6 @@
 import sys
 import os
 import signal
-import select
-import commands
 import subprocess
 from struct import *
 from Tkinter import *
