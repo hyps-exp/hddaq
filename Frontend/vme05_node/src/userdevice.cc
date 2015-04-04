@@ -32,7 +32,7 @@ void open_device(NodeProp& nodeprop)
   uint32_t dynamic_range = 1; // 0-7, 2^n[us]
   uint32_t edge_mode     = 0; // 0:leading 1:leading&trailing
   uint32_t module_id     = 0; // 5bit, 0-511
-  uint32_t search_window = 400/8; // 400ns
+  uint32_t search_window = 2000/8; // 2us
   //uint32_t search_window = 0x3E80; // 8ns unit, 0x0-0x3E80(0-128us)
   uint32_t mask_window   = 0x0; // 8ns unit, 0x0-0x3E80(0-128us)
   for(int i=0;i<TDC64M_NUM;i++){
@@ -45,7 +45,7 @@ void open_device(NodeProp& nodeprop)
     *(tdc64m[i].enable2) = __bswap_32(0xffffffff);
     *(tdc64m[i].window)  = __bswap_32( (search_window&0xffff) |
 				       ((mask_window&0xffff)<<16) );
-    *(tdc64m[i].str) = 0;// tdc64m clear
+    *(tdc64m[i].str) = 0;// tdc64m clear    
   }
   return;
 }
@@ -196,7 +196,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	    uint32_t buf32 = __bswap_32(*(tdc64m[i].str));
 	    data_len = buf32 & 0xfff;
 	    dready   = (buf32>>12) & 0x1;
-	    if(dready==1) break;
+	    if(dready==1 && data_len>0) break;
 	  }
 	  if(dready==1){
 #if DMA_TDC64M // DmaRead ... not supported yet
