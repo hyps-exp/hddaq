@@ -2,7 +2,6 @@
 
 import os
 
-command = 'python -B launcher.py tmpdata'
+command = './launcher.py ./tmpdata'
 
 os.system(command)
-
