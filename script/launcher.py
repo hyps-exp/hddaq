@@ -16,6 +16,11 @@ class ChildProc(Frame):
     self.cmd    = cmd
     self.arg    = arg
     
+    if (len(self.arg) > 0) :
+      self.execmd = daqtop+self.cmd+' '+self.arg
+    else :
+      self.execmd = daqtop+self.cmd
+
     self.__make_button()
     
   def __make_button(self):
@@ -32,20 +37,19 @@ class ChildProc(Frame):
     self.stop_button.grid(row=0, column=3, padx=4)
     
   def start(self):
-    execmd = daqtop+self.cmd+' '+self.arg
-    subprocess.Popen(execmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.Popen(self.execmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     self.status_label.config(text='RUNNING', fg='green')
     self.start_button.config(state=DISABLED)
     self.stop_button.config(state=NORMAL)
     
   def stop(self):
-    subprocess.Popen(['pkill','-f','.*/'+self.cmd], stdout=subprocess.PIPE)
+    subprocess.Popen(['pkill','-fx',self.execmd], stdout=subprocess.PIPE)
     self.status_label.config(text='DEAD', fg='black')
     self.start_button.config(state=NORMAL)
     self.stop_button.config(state=DISABLED)
 
   def check_process_status(self):
-    p = subprocess.Popen(['pgrep','-f','.*/'+self.cmd], stdout=subprocess.PIPE)
+    p = subprocess.Popen(['pgrep','-fx',self.execmd], stdout=subprocess.PIPE)
     out = p.communicate()[0][0:-1]
     if( len(out) > 0 ) : 
       self.status_label.config(text='RUNNING', fg='green')
