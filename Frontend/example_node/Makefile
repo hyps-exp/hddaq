@@ -3,7 +3,8 @@
 TARGET	= example_frontend
 
 CORE_DIR	= ../core
-BIN_DIR		= ../bin
+SRC_DIR		= src
+BIN_DIR		= bin
 BLD_DIR 	= build
 
 CXX		= g++
@@ -22,7 +23,7 @@ FLAGS		= $(CXXFLAGS) $(INCLUDES)
 
 CORE_SRC	= $(notdir $(wildcard $(CORE_DIR)/*.cc))
 CORE_OBJ	= $(CORE_SRC:.cc=.o)
-USER_SRC	= $(wildcard *.cc)
+USER_SRC	= $(notdir $(wildcard $(SRC_DIR)/*.cc))
 USER_OBJ	= $(USER_SRC:.cc=.o)
 
 SOURCES		= $(CORE_SRC) $(USER_SRC)
@@ -44,7 +45,7 @@ $(BLD_DIR)/%.o: $(CORE_DIR)/%.cc
 	@mkdir -p $(BLD_DIR)
 	@$(CXX) $(FLAGS) -MMD -c $< -o $@
 
-$(BLD_DIR)/%.o: %.cc
+$(BLD_DIR)/%.o: $(SRC_DIR)/%.cc
 	@echo Compiling $< ...
 	@mkdir -p $(BLD_DIR)
 	@$(CXX) $(FLAGS) -MMD -c $< -o $@
@@ -53,6 +54,6 @@ clean:
 	@echo Cleaning up ...
 	@rm -f $(BIN_DIR)/$(TARGET)
 	@rm -f $(BLD_DIR)/*
-	@rm -f *~
+	@rm -f $(SRC_DIR)/*~ *~
 
 -include $(DEPENDS)

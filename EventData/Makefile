@@ -1,3 +1,5 @@
+# Makefile for EventData
+
 CXX      = g++
 CXXFLAGS = -O2 -Wall
 
@@ -9,6 +11,7 @@ FLAGS    = $(CXXFLAGS) $(INCLUDES)
 
 LIB_DIR = lib
 BIN_DIR = bin
+BLD_DIR = build
 SRC_DIR = src
 
 BIN_TGT =
@@ -16,27 +19,34 @@ BIN_OBJ =
 LIB_TGT = libEventData.a
 LIB_OBJ = EventBuffer.o
 
+SOURCES   = $(notdir $(wildcard $(SRC_DIR)/*.cc))
+DEPENDS   = $(addprefix $(BLD_DIR)/, $(SOURCES:.cc=.d))
+
 ###Stopping make delete intermediate files
 .SECONDARY:
 
 all: $(LIB_DIR)/$(LIB_TGT)
 
-$(LIB_DIR)/$(LIB_TGT): $(addprefix $(SRC_DIR)/, $(LIB_OBJ))
+$(LIB_DIR)/$(LIB_TGT): $(addprefix $(BLD_DIR)/, $(LIB_OBJ))
 	@echo Creating $@ ...
 	@mkdir -p $(LIB_DIR)
 	@ar cr $@ $^
 	@ranlib $@ 
 
-$(BIN_DIR)/%: $(SRC_DIR)/%.o
+$(BIN_DIR)/%: $(BLD_DIR)/%.o
 	@echo Linking $@ ...
+	@mkdir -p $(BIN_DIR)
 	@$(CXX) -o $@ $^ $(LIBS)
 
-$(SRC_DIR)/%.o: $(SRC_DIR)/%.cc
+$(BLD_DIR)/%.o: $(SRC_DIR)/%.cc
 	@echo Compiling $< ...
-	@$(CXX) $(FLAGS) -c $< -o $@
+	@mkdir -p $(BLD_DIR)
+	@$(CXX) $(FLAGS) -MMD -c $< -o $@
 
 clean:
 	@echo Cleaning up ...
 	@rm -f $(LIB_DIR)/*
 	@rm -f $(BIN_DIR)/*
-	@rm -f $(SRC_DIR)/*.o
+	@rm -f $(BLD_DIR)/*
+
+-include $(DEPENDS)

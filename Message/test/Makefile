@@ -9,33 +9,32 @@ LIBS	  = -L../lib -lMessage \
             -lpthread
 
 FLAGS     = $(CXXFLAGS) $(INCLUDES)
-
 BIN_DIR   = bin
-TMP_DIR   = tmp
+BLD_DIR   = build
 
 BIN_TGT   = msgs msgc msgtest msgdtest msgd_dummy
 
 SOURCES   = $(wildcard *.cc)
-DEPENDS   = $(addprefix $(TMP_DIR)/, $(SOURCES:.cc=.d))
+DEPENDS   = $(addprefix $(BLD_DIR)/, $(SOURCES:.cc=.d))
 
 ###Stopping make delete intermediate files
 .SECONDARY:
 
 all: $(addprefix $(BIN_DIR)/, $(BIN_TGT))
 
-$(BIN_DIR)/%: $(TMP_DIR)/%.o
+$(BIN_DIR)/%: $(BLD_DIR)/%.o
 	@echo Linking $@ ...
 	@mkdir -p $(BIN_DIR)
 	@$(CXX) -o $@ $^ $(LIBS)
 
-$(TMP_DIR)/%.o: %.cc
+$(BLD_DIR)/%.o: %.cc
 	@echo Compiling $< ...
-	@mkdir -p $(TMP_DIR)
+	@mkdir -p $(BLD_DIR)
 	@$(CXX) $(FLAGS) -MMD -c $< -o $@
 
 clean:
 	@echo Cleaning up ...
 	@rm -f $(BIN_DIR)/*
-	@rm -f $(TMP_DIR)/*
+	@rm -f $(BLD_DIR)/*
 
 -include $(DEPENDS)
