@@ -179,7 +179,7 @@ int cltcp_read(int sock, char *buf, int len)
     if (is_bigendian) rev_byteorder(dp, sizeof(struct cl_header));
     clheader = (struct cl_header *)dp;
     if (clheader->magic != CL_MAGIC) {
-      char message[256];
+      char message[400];
       fprintf(stderr, "MAGIC Error :");
       sprintf(message, "%04x %04x %04x %04x",
 	      clheader->magic, clheader->key,

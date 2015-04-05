@@ -49,7 +49,7 @@ void open_device(NodeProp& nodeprop)
   socktcp = cltcp_open(tcphost, tcpport);
   if (socktcp <= 0) {
     perror("cltcp_open");
-    char message[256];
+    char message[400];
     sprintf(message,
 	    "clite::open_device cltcp_open error (%s)",
 	    tcphost
@@ -134,7 +134,7 @@ void init_device(NodeProp& nodeprop)
       sockudp = udpreg_open(udphost, udpport);
       if (sockudp <= 0) {
 	perror("udpreg_open");
-	char message[256];
+	char message[400];
 	sprintf(message,
 		"clite::open_device udpreg_open error (%s)",
 		udphost
@@ -197,7 +197,7 @@ void init_device(NodeProp& nodeprop)
       socktcp = cltcp_open(tcphost, tcpport);
       if (socktcp <= 0) {
 	perror("cltcp_open");
-	char message[256];
+	char message[400];
 	sprintf(message,
 		"clite::open_device cltcp_open error (%s)",
 		tcphost
@@ -286,7 +286,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
       ndata = cltcp_read(socktcp, buf, max_data_size);
       len = ndata/sizeof(unsigned int);
       if(ndata <= 0){
-	char message[256];
+	char message[400];
 	sprintf(message,
 		"clite::read_device(%s) (time out ?)",
 		tcphost
