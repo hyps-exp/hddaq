@@ -69,6 +69,7 @@ int ControlThread::run()
     }
     
     if (messageline == "fe_exit") {
+      m_nodeprop.setStateAck(END);
       std::cout << "#D exit by fe_exit" <<std::endl;
       send_normal_message("exit by fe_exit");
       exit(1);
