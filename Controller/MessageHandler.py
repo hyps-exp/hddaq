@@ -8,18 +8,27 @@ import Message
 
 class MessageHandler():
     def __init__(self, ip_address, port):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            self.sock.connect((ip_address, port))
-        except:
-            print 'MessageHandler: connection faild to '+str(ip_address)+':'+str(port)
-            sys.exit()
-            
-        self.reader_q = Queue.Queue()
+        
+        self.ip_address = ip_address
+        self.port = port
 
+        self.sock_status = False
+
+        self.reader_q = Queue.Queue()
         reader_thread = threading.Thread(target=self.__read_message)
         reader_thread.setDaemon(True)
         reader_thread.start()
+
+    def connect(self):
+        try:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.connect((self.ip_address, self.port))
+            self.sock_status = True
+            print 'connect'
+        except:
+            self.sock.close()
+            print 'MessageHandler: connection faild to '+str(self.ip_address)+':'+str(self.port)
+            #sys.exit()
 
     def send_message(self, line):
         seq_num = 1
@@ -44,16 +53,32 @@ class MessageHandler():
 
     def __read_message(self):
         while 1 :
-            header = self.sock.recv(Message.header_size)
-            if len(header) == Message.header_size :
-                magic, length, src_id, dst_id, seq_num, ms_type = struct.unpack('IIIIII', header) 
-                body_len = length - Message.header_size
+
+            if (self.sock_status == True) :
                 
-                if magic == Message.magic and body_len > 0 :
-                    body = self.sock.recv(body_len)
-                    now  = time.time()
-                    self.reader_q.put((now, ms_type, src_id, body))
+                try:
+                    header = self.sock.recv(Message.header_size)
+                    if len(header) == Message.header_size :
+                        magic, length, src_id, dst_id, seq_num, ms_type = struct.unpack('IIIIII', header) 
+                        body_len = length - Message.header_size
+                        
+                        if magic == Message.magic and body_len > 0 :
+                            body = self.sock.recv(body_len)
+                            now  = time.time()
+                            self.reader_q.put((now, ms_type, src_id, body))
+                            
+                    elif len(header) == 0 :
+                        self.sock.close()
+                        self.sock_status = False
+
+                except:
+                    self.sock.close()
+                    self.sock_status = False
                     
+            else :
+                time.sleep(1)
+                self.connect()
+   
     
 if __name__ == '__main__':
     
