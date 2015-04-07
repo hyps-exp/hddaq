@@ -20,9 +20,9 @@ void open_device(NodeProp& nodeprop)
   ////////// SMP
   for(int i=0;i<SMP_NUM;i++){
     *(smp[i].cmr)   = 0x40;// SMP reset
-    usleep(1000);
+    usleep(10000);
     *(smp[i].snccr) = 0x02;// snc clear
-    *(smp[i].bcr)   = 0x23;// hardware switch eable
+    *(smp[i].bcr)   = 0x23;// hardware switch enable
     *(smp[i].cmr)   = 0x00;// set cmr
   }
   return;
@@ -35,7 +35,7 @@ void init_device(NodeProp& nodeprop)
   case DM_NORMAL:
     {
       for(int i=0;i<SMP_NUM;i++){
-	*(smp[i].snccr)    = 0x02;// snc clear
+	*(smp[i].snccr) = 0x02; // snc clear
       }
       *(rpv130[0].csr1)  = 0x1; // io clear
       *(rpv130[0].pulse) = 0x1; // busy off
@@ -68,6 +68,7 @@ int wait_device(NodeProp& nodeprop)
   return  0: TRIGGED -> go read_device
 */
 {
+  //char message[256];
   switch(g_daq_mode){
   case DM_NORMAL:
     {
@@ -76,10 +77,18 @@ int wait_device(NodeProp& nodeprop)
       for(int i=0;i<max_polling;i++){
 	reg = *(rpv130[0].rsff);
 	if( (reg>>0)&0x1 ){
-	  //SMP switch
-	  *(rpv130[0].pulse) = 0x80;
-	  *(rpv130[0].csr1)  = 0x1; // io clear
-	  *(rpv130[0].pulse) = 0x1; // busy off
+#if 0
+	  for(int j=0;j<SMP_NUM;j++){
+	    int seq_busy;
+	    do {
+	      uint32_t buf32 = *(smp[j].cmr);
+	      seq_busy = (buf32>>5)&0x1;
+	    }while(seq_busy==1);
+	  }		
+#endif
+	  *(rpv130[0].pulse) = 0xfc; // SMP switch
+	  *(rpv130[0].csr1)  = 0x1;  // io clear
+	  *(rpv130[0].pulse) = 0x1;  // busy off
 	  return 0;
 	}
       }
@@ -125,22 +134,23 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	    sprintf(message, "vme01: SMP[%08llx] invalid data!!! (event:%d, data_len:%d)",
 		    smp[i].addr, evnum, data_len);
 	    send_fatal_message(message);
-	    std::exit(-1);
-	  }
-	  if(data_len>DMA_BUF_LEN){// in this case, a decode will be failed
-	    sprintf(message, "vme01: SMP[%08llx] data_len is too much: %d/%d",
-		    smp[i].addr, data_len, DMA_BUF_LEN);
-	    send_warning_message(message);
+	    std::exit(EXIT_FAILURE);
 	  }else{
-	    int status = vme_dma_read( bus_hdl, dma_hdl, 0, smp[i].addr,
-				       SMP_AM, 4*data_len, 0 );
-	    if(status==0){
-	      data[ndata++] = 0x0;  //compatibility for privious data format
-	      memcpy( &data[ndata], dma_buf, 4*data_len );
-	      ndata += data_len;
-	    }else{
-	      sprintf(message, "vme01: SMP[%08llx] vme_dma_read() failed", smp[i].addr);
+	    if(data_len>DMA_BUF_LEN){
+	      sprintf(message, "vme01: SMP[%08llx] data_len is too much: %d/%d",
+		      smp[i].addr, data_len, DMA_BUF_LEN);
 	      send_warning_message(message);
+	    }else{
+	      int status = vme_dma_read( bus_hdl, dma_hdl, 0, smp[i].addr,
+					 SMP_AM, 4*data_len, 0 );
+	      if(status==0){
+		data[ndata++] = 0x0;  //compatibility for privious data format
+		memcpy( &data[ndata], dma_buf, 4*data_len );
+		ndata += data_len;
+	      }else{
+		sprintf(message, "vme01: SMP[%08llx] vme_dma_read() failed", smp[i].addr);
+		send_warning_message(message);
+	      }
 	    }
 	  }
 	  VME_MODULE_HEADER vme_module_header;

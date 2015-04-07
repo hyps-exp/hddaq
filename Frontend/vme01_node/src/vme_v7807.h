@@ -52,6 +52,7 @@ struct SMP_REG{
   uint64_t addr;
   volatile uint32_t *cmr;   // (R/W) command (CMR;W)/ status (STAR;R) register
   volatile uint32_t *snccr; // (R/W) serial number counter control register
+  volatile uint32_t *sncr;  // (R)   serial number counter register
   volatile uint32_t *dsr;   // (R)   data size register
   volatile uint32_t *enr;   // (R)   event number register
   volatile uint32_t *bcr;   // (R/W) buffer control register

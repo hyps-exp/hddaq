@@ -21,10 +21,14 @@ void open_device(NodeProp& nodeprop)
 {
   vme_open();
   ////////// V792
+  uint32_t overflow_suppression = 1; // 0:enable 1:disable
+  uint32_t zero_suppression     = 1; // 0:enable 1:disable
   int iped[] = { 180, 135, 135, 175 };
   for(int i=0;i<V792_NUM;i++){
     *(v792[i].bitset1) = __bswap_16(0x80);
     *(v792[i].bitclr1) = __bswap_16(0x80);
+    *(v792[i].bitset2) = __bswap_16( (overflow_suppression&0x1)<<3 |
+				     (zero_suppression&0x1)<<4 );
     *(v792[i].iped)    = __bswap_16(iped[i]); // 0x0-0xff
   }
   ////////// TDC64M
