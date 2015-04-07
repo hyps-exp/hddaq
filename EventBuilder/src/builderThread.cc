@@ -474,7 +474,7 @@ int BuilderThread::active_loop()
 		eheader->run_number = run_number;
 		eheader->type = 0;
 		eheader->nblock = m_node_num;
-		eheader->reserve = 0;
+		eheader->reserve = (unsigned int)time(0);
 
 		int total_frag_len = 0;
 		readers = m_readers;
