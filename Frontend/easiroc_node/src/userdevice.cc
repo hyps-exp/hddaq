@@ -17,7 +17,7 @@
 static const int max_data_size = 4*1024*1024; 
 DaqMode g_daq_mode = DM_NORMAL;
 
-#define EVSLIP_PREVENTION 1
+#define EVSLIP_PREVENTION 0
 
 static const int SiTCP_PORT = 24;
 std::string ip;
@@ -58,7 +58,7 @@ void open_device(NodeProp& nodeprop)
   ifs >> ip;
   ifs.close();
 
-  char message[200];
+  char message[400];
   while(0 > (sock = ConnectSocket(ip.c_str() ) )){
     sprintf(message,"EASIROC(%s)::open_device : Connection fail", ip.c_str());
     send_error_message(message);
@@ -75,7 +75,7 @@ void init_device(NodeProp& nodeprop)
   // update DAQ mode
   g_daq_mode = nodeprop.getDaqMode();
 
-  char message[200];
+  char message[400];
   //  event_num = 0;
 
   switch(g_daq_mode){
@@ -170,7 +170,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	int event_num     = nodeprop.getEventNumber();
 	int event_tag     = (int)*(data +2) & 0x1;
 	int event_counter = (int)((*(data +2)>>16) & 0xffff);
-	char message[200];
+	char message[400];
 
 	if((event_num & 0xfff) != event_counter){
 	  sprintf(message, "EASIROC(%s)::read_device : Event slip (Local)", ip.c_str());
@@ -250,7 +250,7 @@ int ConnectSocket(const char *ip)
 
 int init_easiroc()
 {
-  char message[200];
+  char message[400];
 
   fprintf(stdout, "init_easiroc\n");
 
@@ -260,8 +260,8 @@ int init_easiroc()
   // slow controll EASIROC ------------------------------------------------
   PrepareSC();
   TransmitSC(sock);
-  //  PrepareReadSC();
-  //  TransmitReadSC(sock);
+  PrepareReadSC();
+  TransmitReadSC(sock);
 
   // select DAQ mode ------------------------------------------------------
   {
@@ -289,7 +289,7 @@ int receive(int sock, char* data_buf, unsigned int *ReadLength){
   unsigned int revd_size = 0;
   int tmp_returnVal      = 0;
 
-  char message[200];
+  char message[400];
 
   while(revd_size < *ReadLength){
     tmp_returnVal = recv(sock, data_buf +revd_size, *ReadLength -revd_size, 0);
@@ -517,7 +517,7 @@ int Event_Cycle(int socket, unsigned int* event_buffer){
   // Header read
   if( 0 > ret){return -1;}
 
-  char message[200];
+  char message[400];
 
   if(0xFFFFEA0C != *(event_buffer)){
     // fatal DAQ errer
