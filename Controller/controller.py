@@ -236,6 +236,7 @@ class Controller(Frame):
         self.btrigon.config(state=DISABLED)
         self.bstop.config(state=DISABLED)
         self.trigoff_command()
+        time.sleep(1)
         msgh.send_message('stop\0')
         self.write_run_comment('STOP  ')
         

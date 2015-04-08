@@ -15,6 +15,8 @@ class ChildProc(Frame):
     self.name   = name
     self.cmd    = cmd
     self.arg    = arg
+
+    self.devnull = open(os.devnull, 'w')
     
     if (len(self.arg) > 0) :
       self.execmd = daqtop+self.cmd+' '+self.arg
@@ -37,13 +39,13 @@ class ChildProc(Frame):
     self.stop_button.grid(row=0, column=3, padx=4)
     
   def start(self):
-    subprocess.Popen(self.execmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.Popen(self.execmd, shell=True, stdout=self.devnull, stderr=self.devnull)    
     self.status_label.config(text='RUNNING', fg='green')
     self.start_button.config(state=DISABLED)
     self.stop_button.config(state=NORMAL)
     
   def stop(self):
-    subprocess.Popen(['pkill','-fx',self.execmd], stdout=subprocess.PIPE)
+    subprocess.Popen(['pkill','-fx',self.execmd], stdout=self.devnull, stderr=self.devnull)
     self.status_label.config(text='DEAD', fg='black')
     self.start_button.config(state=NORMAL)
     self.stop_button.config(state=DISABLED)
@@ -69,6 +71,8 @@ class ControllerProc(Frame):
     self.arg    = arg
     self.child  = None
 
+    self.devnull = open(os.devnull, 'w')
+
     self.__make_button()
     
   def __make_button(self):
@@ -85,7 +89,7 @@ class ControllerProc(Frame):
     
   def start(self):
     execmd = 'python -B '+daqtop+self.arg
-    self.child = subprocess.Popen(execmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    self.child = subprocess.Popen(execmd, shell=True, stdout=self.devnull, stderr=self.devnull)
     self.status_label.config(text='RUNNING', fg='green')
     self.start_button.config(state=DISABLED)
     self.stop_button.config(state=NORMAL)

@@ -16,7 +16,7 @@ void write_spill_off(gzFile gzfile, unsigned int* data, int& len,
   eb_node_header[k_node_id]      = EB_NODE_ID;
   eb_node_header[k_event_type]   = 0;
   eb_node_header[k_nblocks]      = 1;
-  eb_node_header[k_unix_time]     = (unsigned int)t;
+  eb_node_header[k_unix_time]    = (unsigned int)t;
   gzwrite(gzfile, (char*)eb_node_header, FE_NODE_HSIZE*sizeof(unsigned int));
   
   unsigned int vme06_node_header[FE_NODE_HSIZE];
@@ -27,7 +27,7 @@ void write_spill_off(gzFile gzfile, unsigned int* data, int& len,
   vme06_node_header[k_node_id]      = VME06_NODE_ID;
   vme06_node_header[k_event_type]   = 0;
   vme06_node_header[k_nblocks]      = 0;
-  vme06_node_header[k_unix_time]     = (unsigned int)t;
+  vme06_node_header[k_unix_time]    = (unsigned int)t;
   gzwrite(gzfile, (char*)vme06_node_header, FE_NODE_HSIZE*sizeof(unsigned int));
 
   gzwrite(gzfile, (char*)data, len*sizeof(unsigned int));

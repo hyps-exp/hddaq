@@ -81,6 +81,7 @@ void vme_open()
       int offset32 = SMP_MAP_SIZE/d32*i;
       smp[i].cmr   = (uint32_t*)ptr +offset32 +0x180000/d32;
       smp[i].snccr = (uint32_t*)ptr +offset32 +0x180004/d32;
+      smp[i].sncr  = (uint32_t*)ptr +offset32 +0x180008/d32;
       smp[i].dsr   = (uint32_t*)ptr +offset32 +0x18000c/d32;
       smp[i].enr   = (uint32_t*)ptr +offset32 +0x180010/d32;
       smp[i].bcr   = (uint32_t*)ptr +offset32 +0x180014/d32;

@@ -17,6 +17,7 @@ DaqMode g_daq_mode = DM_NORMAL;
 volatile int spill_flag = k_init;
 std::string  off_data_name;
 gzFile      *off_data_file;
+int off_event_number;
 
 int get_maxdatasize()
 {
@@ -100,6 +101,7 @@ void init_device(NodeProp& nodeprop)
 	sprintf(message, "vme06: create spill off data file: %s", off_data_name.c_str());
       }
       send_normal_message(message);
+      off_event_number = 0;
       return;
     }
   case DM_DUMMY:
@@ -331,7 +333,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	return 0;
       case k_spill_off:
       	write_spill_off(off_data_file, data, len,
-      			nodeprop.getRunNumber(), nodeprop.getEventNumber());
+      			nodeprop.getRunNumber(), off_event_number++);
       	*(rpv130[0].pulse) = __bswap_16(0x02);// spill off busy off
       	return -1;// return to wait_device()
       default:
