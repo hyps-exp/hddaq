@@ -9,11 +9,11 @@
 //vme module list
 const int VME_RM_NUM = 1;
 const int RPV130_NUM = 1;
-const int V830_NUM   = 2;
+const int V830_NUM   = 3;
 const int V775_NUM   = 1;
 VME_RM_REG vme_rm[VME_RM_NUM] = { { 0xfc000000 } };
 RPV130_REG rpv130[RPV130_NUM] = { { 0x00008ff0 } };
-V830_REG   v830[V830_NUM]     = { { 0x20000000 }, { 0x20010000 } };
+V830_REG   v830[V830_NUM]     = { { 0x20000000 }, { 0x20010000 }, { 0x20020000 } };
 V775_REG   v775[V775_NUM]     = { { 0xBD020000 } };
 
 //global variables
