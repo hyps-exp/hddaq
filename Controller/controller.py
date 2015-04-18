@@ -59,6 +59,7 @@ class Controller(Frame):
         #control flags
         self.daq_state =-1
         self.daq_start_flag = 0
+        self.daq_stop_flag = 0
         self.daq_auto_restart_flag = 0
         self.master_controller_flag = 0
 
@@ -233,21 +234,24 @@ class Controller(Frame):
         self.master_controller_flag = 1
 
     def stop_command(self):
-        self.btrigon.config(state=DISABLED)
         self.bstop.config(state=DISABLED)
         self.trigoff_command()
+        self.btrigon.config(state=DISABLED)
+        self.daq_stop_flag = 1
+        self.master.update()
         time.sleep(1)
         msgh.send_message('stop\0')
         self.write_run_comment('STOP  ')
         
-
     def trigon_command(self):
         self.btrigon.config(fg='black', bg='green', state=DISABLED)
+        self.btrigoff.config(state=NORMAL)
         MTMController.trig_on()
         self.write_run_comment('G_ON  ')
         self.set_trig_state('ON')
         
     def trigoff_command(self):
+        self.btrigon.config(fg='black', bg='#d9d9d9', state=NORMAL)
         self.btrigoff.config(state=DISABLED)
         MTMController.trig_off()
         self.write_run_comment('G_OFF ')
@@ -376,6 +380,8 @@ class Controller(Frame):
             elif(state == 'OFF'):
                 self.btrigon.config(fg='black', bg='#d9d9d9', state=NORMAL)
                 self.btrigoff.config(state=DISABLED)
+            if(self.daq_stop_flag == 1):
+                self.btrigon.config(state=DISABLED)
 
     def update_status_window(self):
         self.sttext.config(state=NORMAL)
@@ -408,8 +414,11 @@ class Controller(Frame):
             self.btrigon.config(state=DISABLED)
             self.btrigoff.config(state=DISABLED)
             self.maxevent_e.config(state=NORMAL)
+            self.daq_stop_flag = 0
+
             #master flag is changed here for logging messages which come after stop command 
             if( self.master_controller_flag == 1 ) : self.master_controller_flag = 0
+            
 
         # RUNNING state
         elif( self.daq_state == StatusList.S_RUNNING ):
