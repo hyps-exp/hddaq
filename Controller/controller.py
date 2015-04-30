@@ -88,7 +88,7 @@ class Controller(Frame):
         menubar.add_cascade(label='Options',menu=menu5)
                #space
         menubar.add_cascade(state=DISABLED,label='                                         ')
-        menubar.add_cascade(state=DISABLED,label='                                          ')
+        menubar.add_cascade(state=DISABLED,label='                                         ')
                #space
         menubar.add_cascade(label='Force control',menu=menu6)
 
@@ -216,7 +216,7 @@ class Controller(Frame):
         sbsttext.pack(side=LEFT, fill=Y)
 
 # Button Command definitions
-    def start_command(self):
+    def start_command(self, mode="manual"):
         self.bstart.config(state=DISABLED)
         self.increment_runno()
         msgh.send_message('run ' + str(self.get_runno()) + '\0')
@@ -225,36 +225,41 @@ class Controller(Frame):
         
         maxevent = self.maxevent_e.get()
         self.set_maxevent(maxevent)
+        
+        if(mode=="auto"): self.write_run_comment('START*')
+        else            : self.write_run_comment('START ')
 
-        self.write_run_comment('START ')
         self.set_starttime( time.strftime('%Y %m/%d %H:%M:%S') )
         
         MTMController.mtm_reset()
         self.daq_start_flag = 1
         self.master_controller_flag = 1
 
-    def stop_command(self):
+    def stop_command(self, mode="manual"):
         self.bstop.config(state=DISABLED)
-        self.trigoff_command()
+        self.trigoff_command("auto")
         self.btrigon.config(state=DISABLED)
         self.daq_stop_flag = 1
         self.master.update()
         time.sleep(1)
         msgh.send_message('stop\0')
-        self.write_run_comment('STOP  ')
+        if(mode=="auto"): self.write_run_comment('STOP* ')
+        else            : self.write_run_comment('STOP  ')
         
-    def trigon_command(self):
+    def trigon_command(self, mode="manual"):
         self.btrigon.config(fg='black', bg='green', state=DISABLED)
         self.btrigoff.config(state=NORMAL)
         MTMController.trig_on()
-        self.write_run_comment('G_ON  ')
+        if(mode=="auto"): self.write_run_comment('G_ON* ')
+        else            : self.write_run_comment('G_ON  ')
         self.set_trig_state('ON')
         
-    def trigoff_command(self):
+    def trigoff_command(self, mode="manual"):
         self.btrigon.config(fg='black', bg='#d9d9d9', state=NORMAL)
         self.btrigoff.config(state=DISABLED)
         MTMController.trig_off()
-        self.write_run_comment('G_OFF ')
+        if(mode=="auto"): self.write_run_comment('G_OFF*')
+        else            : self.write_run_comment('G_OFF ')
         self.set_trig_state('OFF')
         
     def clean_list_command(self):
@@ -433,7 +438,7 @@ class Controller(Frame):
             if( self.daq_start_flag == 1 ):
                 self.daq_start_flag = 0
                 if (self.auto_trig_on.get() == 1):
-                    self.trigon_command()
+                    self.trigon_command("auto")
                 else:
                     self.set_trig_state('OFF')
                     self.btrigon.config(state=NORMAL)
@@ -494,15 +499,17 @@ class Controller(Frame):
         #Check event number stop and auto restart flag
         #(only for the master controller that issued start command)
         if( self.daq_state == StatusList.S_RUNNING and self.master_controller_flag == 1 ):
-            if ( int(status.dist_evnum) >= int(self.maxevent_e.get()) ):
-                self.stop_command()
+            maxevent = int(self.maxevent_e.get())
+            current  = int(status.dist_evnum)
+            if ( current >= maxevent and maxevent != -1 ):
+                self.stop_command("auto")
                 if( self.auto_restart.get()==1 ): self.daq_auto_restart_flag=1
                     
         #Auto restart
         if( self.daq_state == StatusList.S_IDLE ):
             if( self.daq_auto_restart_flag==1 ):
                 self.daq_auto_restart_flag=0
-                self.start_command()
+                self.start_command("auto")
 
         #500ms repetition
         self.after(500, self.updater)
