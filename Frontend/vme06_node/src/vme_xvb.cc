@@ -8,16 +8,18 @@
 
 //vme module list
 const int VME_RM_NUM = 1;
+const int RST_FLAG_NUM = 1;
 const int RPV130_NUM = 1;
 const int V830_NUM   = 2;
 const int UMEM_NUM   = 1;
 const int TDC64M_NUM = 2;
-VME_RM_REG vme_rm[VME_RM_NUM] = { { 0xFF030000 } };
-RPV130_REG rpv130[RPV130_NUM] = { { 0x0000E010 } };
-V830_REG   v830[V830_NUM]     = { { 0xCD010000 }, { 0xCD020000 } };
-UMEM_REG   umem_reg[UMEM_NUM] = { { 0x00D10000 } };
-UMEM_DAT   umem_dat[UMEM_NUM] = { { 0xD1000000 } };
-TDC64M_REG tdc64m[TDC64M_NUM] = { { 0x45000000 }, { 0x46000000 } };
+VME_RM_REG vme_rm[VME_RM_NUM]       = { { 0xFF030000 } };
+RST_FLAG_REG rst_flag[RST_FLAG_NUM] = { { 0xFF000000 } };
+RPV130_REG rpv130[RPV130_NUM]       = { { 0x0000E010 } };
+V830_REG   v830[V830_NUM]           = { { 0xCD010000 }, { 0xCD020000 } };
+UMEM_REG   umem_reg[UMEM_NUM]       = { { 0x00D10000 } };
+UMEM_DAT   umem_dat[UMEM_NUM]       = { { 0xD1000000 } };
+TDC64M_REG tdc64m[TDC64M_NUM]       = { { 0x45000000 }, { 0x46000000 } };
 
 //global variables
 GEF_VME_DMA_HDL  dma_hdl;
@@ -85,6 +87,48 @@ void vme_open()
       vme_rm[i].spill  = (GEF_UINT32*)ptr +offset32 +0x4/d32;
       vme_rm[i].serial = (GEF_UINT32*)ptr +offset32 +0x8/d32;
       sprintf(message, "vme06: VME_RM  [%08llx] joined", vme_rm[i].addr);
+      send_normal_message(message);
+    }
+  }
+  //### RST_FLAG #################################################
+  {
+    check_handle_number(hdl_num);
+    for(int i=0;i<RST_FLAG_NUM;i++){
+      GEF_VME_ADDR addr_param = {
+	0x00000000,                     //upoper
+	rst_flag[i].addr & 0xffffffff,  //lower
+	RST_FLAG_AM,                    //addr_space
+	GEF_VME_2ESST_RATE_INVALID,     //vme_2esst_rate
+	GEF_VME_ADDR_MODE_DEFAULT,      //addr_mode
+	GEF_VME_TRANSFER_MODE_SCT,      //transfer_mode
+	GEF_VME_BROADCAST_ID_DISABLE,   //broadcast_id
+	GEF_VME_TRANSFER_MAX_DWIDTH_32, //transfer_max_dwidth
+	GEF_VME_WND_EXCLUSIVE           //flags
+      };
+      rst_flag[i].addr_param = addr_param;
+    }
+    GEF_MAP_PTR ptr;
+    GEF_UINT32 w_size = RST_FLAG_MAP_SIZE * RST_FLAG_NUM;
+    status = gefVmeCreateMasterWindow(bus_hdl, &rst_flag[0].addr_param, w_size, &mst_hdl[hdl_num]);
+    if(status!=GEF_STATUS_SUCCESS){
+      sprintf(message, "vme06: RST_FLAG: gefVmeCreateMasterWindow() failed -- %d", GEF_GET_ERROR(status));
+      send_fatal_message(message);
+      std::exit(-1);
+    }
+    status = gefVmeMapMasterWindow(mst_hdl[hdl_num], 0, w_size, &map_hdl[hdl_num], &ptr);
+    if(status!=GEF_STATUS_SUCCESS){
+      sprintf(message, "vme06: RST_FLAG: gefVmeMapMasterWindow() failed -- %d", GEF_GET_ERROR(status));
+      send_fatal_message(message);
+      std::exit(-1);
+    }
+    hdl_num++;
+    for(int i=0;i<RST_FLAG_NUM;i++){
+      int d32 = 0x4;
+      int offset32 = RST_FLAG_MAP_SIZE/d32*i;
+      rst_flag[i].flag   = (GEF_UINT32*)ptr +offset32 +0x0/d32;
+      rst_flag[i].clear  = (GEF_UINT32*)ptr +offset32 +0x4/d32;
+      rst_flag[i].serial = (GEF_UINT32*)ptr +offset32 +0x8/d32;
+      sprintf(message, "vme06: RST_FLAG[%08llx] joined", rst_flag[i].addr);
       send_normal_message(message);
     }
   }

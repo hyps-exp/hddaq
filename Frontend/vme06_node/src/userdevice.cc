@@ -55,7 +55,7 @@ void open_device(NodeProp& nodeprop)
   uint32_t search_window[] = { 0x3E8, 0x3E80 }; // 8ns unit, 0x0-0x3E80(0-128us)
   uint32_t mask_window[]   = { 0x0, 0x0 };      // 8ns unit, 0x0-0x3E80(0-128us)
   for(int i=0;i<TDC64M_NUM;i++){
-    module_id = i + 61;
+    module_id = i +20;
     *(tdc64m[i].ctr) = __bswap_32( (reset&0x1 ) |
 				   ((dynamic_range[i]&0x7)<<1) |
 				   ((edge_mode&0x1)<<4) |
@@ -84,8 +84,6 @@ void init_device(NodeProp& nodeprop)
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-      *(rpv130[0].csr1)  = __bswap_16(0x01);// io clear
-      *(rpv130[0].pulse) = __bswap_16(0x03);// spill on/off busy off
       
       ////////// spill off
       char name[256];
@@ -102,6 +100,11 @@ void init_device(NodeProp& nodeprop)
       }
       send_normal_message(message);
       off_event_number = 0;
+     
+      *(rst_flag[0].clear) = __bswap_16(0x0); // clear reset flag register
+      
+      *(rpv130[0].csr1)  = __bswap_16(0x01);// io clear
+      *(rpv130[0].pulse) = __bswap_16(0x03);// spill on/off busy off
       return;
     }
   case DM_DUMMY:
@@ -213,66 +216,22 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	  module_num++;
 	}
       }
-      ////////// V830
-      if(spill_flag==k_spill_on){
-	for(int i=0;i<V830_NUM;i++){
+      ////////// RST_FLAG
+      if(spill_flag==k_spill_off){
+	for(int i=0;i<RST_FLAG_NUM;i++){
 	  int vme_module_header_start = ndata;
 	  ndata += VME_MODULE_HSIZE;
-	  int data_len = 32;
-#if DMA_V830
-	  int dready   = 0;
-	  for(int j=0;j<max_try;j++){
-	    dready = __bswap_16(*(v830[i].clr))&0x1;
-	    if(dready==1) break;
-	  }
-	  if(dready==1){
-	    int status = gefVmeReadDmaBuf(dma_hdl, &v830[i].addr_param, 0, 4*data_len);
-	    if(status!=0){
-	      sprintf(message, "vme06: V830[%08llx] gefVmeReadDmaBuf() failed -- %d",
-		      v830[i].addr, GEF_GET_ERROR(status));
-	      send_error_message(message);
-		}else{
-	      for(int j=0;j<data_len;j++){
-		data[ndata++] = __bswap_32(dma_buf[j]);
-	      }
-	    }
-	  }else{
-	    sprintf(message, "vme06: V830[%08llx] data is not ready", v830[i].addr);
-	    send_warning_message(message);
-	  }
-#else
-	  for(int j=0;j<data_len;j++){
-	    data[ndata++] = __bswap_32(*(v830[i].counter[j]));
-	  }
-#endif
+	  data[ndata++] = __bswap_32(*(rst_flag[i].flag));
+	  *(rst_flag[0].clear) = __bswap_16(0x0); // clear reset flag register
 	  VME_MODULE_HEADER vme_module_header;
-	  init_vme_module_header( &vme_module_header, v830[i].addr,
+	  init_vme_module_header( &vme_module_header, rst_flag[i].addr,
 				  ndata - vme_module_header_start );
 	  memcpy( &data[vme_module_header_start],
 		  &vme_module_header, VME_MODULE_HSIZE*4 );
 	  module_num++;
 	}
       }
-      ////////// UMEM
-      if(spill_flag==k_spill_on || spill_flag==k_spill_off){
-	for(int i=0;i<UMEM_NUM;i++){
-	  int vme_module_header_start = ndata;
-	  ndata += VME_MODULE_HSIZE;
-	  *(umem_reg[i].mode) = __bswap_16(0x0); // gate close
-	  uint32_t data_len = __bswap_16(*(umem_reg[i].addl));
-	  for(uint32_t j=0;j<data_len;j++){
-	    data[ndata++] = __bswap_32(umem_dat[i].data_buf[j]);
-	  }
-	  *(umem_reg[i].clr)  = __bswap_16(0x1); // clear
-	  *(umem_reg[i].mode) = __bswap_16(0x1); // gate open
-	  VME_MODULE_HEADER vme_module_header;
-	  init_vme_module_header( &vme_module_header, umem_dat[i].addr,
-				  ndata - vme_module_header_start );
-	  memcpy( &data[vme_module_header_start],
-		  &vme_module_header, VME_MODULE_HSIZE*4 );
-	  module_num++;
-	}//for(i)
-      }
+
       ////////// TDC64M
       if(spill_flag==k_spill_on){
 	for(int i=0;i<TDC64M_NUM;i++){
@@ -314,6 +273,68 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	  *(tdc64m[i].str) = 0;// tdc64m clear
 	  VME_MODULE_HEADER vme_module_header;
 	  init_vme_module_header( &vme_module_header, tdc64m[i].addr,
+				  ndata - vme_module_header_start );
+	  memcpy( &data[vme_module_header_start],
+		  &vme_module_header, VME_MODULE_HSIZE*4 );
+	  module_num++;
+	}//for(i)
+      }
+
+      ////////// V830
+      if(spill_flag==k_spill_on){
+	for(int i=0;i<V830_NUM;i++){
+	  int vme_module_header_start = ndata;
+	  ndata += VME_MODULE_HSIZE;
+	  int data_len = 32;
+#if DMA_V830
+	  int dready   = 0;
+	  for(int j=0;j<max_try;j++){
+	    dready = __bswap_16(*(v830[i].clr))&0x1;
+	    if(dready==1) break;
+	  }
+	  if(dready==1){
+	    int status = gefVmeReadDmaBuf(dma_hdl, &v830[i].addr_param, 0, 4*data_len);
+	    if(status!=0){
+	      sprintf(message, "vme06: V830[%08llx] gefVmeReadDmaBuf() failed -- %d",
+		      v830[i].addr, GEF_GET_ERROR(status));
+	      send_error_message(message);
+		}else{
+	      for(int j=0;j<data_len;j++){
+		data[ndata++] = __bswap_32(dma_buf[j]);
+	      }
+	    }
+	  }else{
+	    sprintf(message, "vme06: V830[%08llx] data is not ready", v830[i].addr);
+	    send_warning_message(message);
+	  }
+#else
+	  for(int j=0;j<data_len;j++){
+	    data[ndata++] = __bswap_32(*(v830[i].counter[j]));
+	  }
+#endif
+	  VME_MODULE_HEADER vme_module_header;
+	  init_vme_module_header( &vme_module_header, v830[i].addr,
+				  ndata - vme_module_header_start );
+	  memcpy( &data[vme_module_header_start],
+		  &vme_module_header, VME_MODULE_HSIZE*4 );
+	  module_num++;
+	}
+      }
+
+      ////////// UMEM
+      if(spill_flag==k_spill_on || spill_flag==k_spill_off){
+	for(int i=0;i<UMEM_NUM;i++){
+	  int vme_module_header_start = ndata;
+	  ndata += VME_MODULE_HSIZE;
+	  *(umem_reg[i].mode) = __bswap_16(0x0); // gate close
+	  uint32_t data_len = __bswap_16(*(umem_reg[i].addl));
+	  for(uint32_t j=0;j<data_len;j++){
+	    data[ndata++] = __bswap_32(umem_dat[i].data_buf[j]);
+	  }
+	  *(umem_reg[i].clr)  = __bswap_16(0x1); // clear
+	  *(umem_reg[i].mode) = __bswap_16(0x1); // gate open
+	  VME_MODULE_HEADER vme_module_header;
+	  init_vme_module_header( &vme_module_header, umem_dat[i].addr,
 				  ndata - vme_module_header_start );
 	  memcpy( &data[vme_module_header_start],
 		  &vme_module_header, VME_MODULE_HSIZE*4 );
