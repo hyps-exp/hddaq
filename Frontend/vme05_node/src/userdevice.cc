@@ -23,7 +23,8 @@ void open_device(NodeProp& nodeprop)
   ////////// V792
   uint32_t overflow_suppression = 1; // 0:enable 1:disable
   uint32_t zero_suppression     = 1; // 0:enable 1:disable
-  int iped[] = { 180, 135, 135, 175 };
+  int iped[] = { 255, 185, 185, 255 };
+  //int iped[] = { 180, 135, 135, 175 };
   for(int i=0;i<V792_NUM;i++){
     *(v792[i].bitset1) = __bswap_16(0x80);
     *(v792[i].bitclr1) = __bswap_16(0x80);
@@ -40,7 +41,7 @@ void open_device(NodeProp& nodeprop)
   //uint32_t search_window = 0x3E80; // 8ns unit, 0x0-0x3E80(0-128us)
   uint32_t mask_window   = 0x0; // 8ns unit, 0x0-0x3E80(0-128us)
   for(int i=0;i<TDC64M_NUM;i++){
-    module_id = i + 51;
+    module_id = i +10;
     *(tdc64m[i].ctr) = __bswap_32( (reset&0x1 ) |
 				   ((dynamic_range&0x7)<<1) |
 				   ((edge_mode&0x1)<<4) |
@@ -149,46 +150,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	  module_num++;
 	}
       }
-      ////////// V792
-      {
-	for(int i=0;i<V792_NUM;i++){
-	  int vme_module_header_start = ndata;
-	  ndata += VME_MODULE_HSIZE;
-	  int data_len = 34;
-	  int dready   = 0;
-	  for(int j=0;j<max_try;j++){
-	    dready = __bswap_16(*(v792[i].str1))&0x1;
-	    if(dready==1) break;
-	  }
-	  if(dready==1){
-#if DMA_V792
-	    int status = gefVmeReadDmaBuf(dma_hdl, &v792[i].addr_param, 0, 4*data_len);
-	    if(status!=0){
-	      sprintf(message, "vme05: V792[%08llx] gefVmeReadDmaBuf() failed -- %d",
-		      v792[i].addr, GEF_GET_ERROR(status));
-	      send_error_message(message);
-	    }else{
-	      for(int j=0;j<data_len;j++){
-		data[ndata++] = __bswap_32(dma_buf[j]);
-	      }
-	    }
-#else
-	  for(int j=0;j<data_len;j++){
-	    data[ndata++] = __bswap_32(*(v792[i].addr+j));
-	  }
-#endif
-	  }else{
-	    sprintf(message, "vme05: V792[%08llx] data is not ready", v792[i].addr );
-	    send_warning_message(message);
-	  }
-	  VME_MODULE_HEADER vme_module_header;
-	  init_vme_module_header( &vme_module_header,v792[i].addr,
-				  ndata - vme_module_header_start );
-	  memcpy( &data[vme_module_header_start],
-		  &vme_module_header, VME_MODULE_HSIZE*4 );
-	  module_num++;
-	}//for(i)
-      }
+
       ////////// TDC64M
       {
 	for(int i=0;i<TDC64M_NUM;i++){
@@ -237,6 +199,47 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	}//for(i)
       }
 
+      ////////// V792
+      {
+	for(int i=0;i<V792_NUM;i++){
+	  int vme_module_header_start = ndata;
+	  ndata += VME_MODULE_HSIZE;
+	  int data_len = 34;
+	  int dready   = 0;
+	  for(int j=0;j<max_try;j++){
+	    dready = __bswap_16(*(v792[i].str1))&0x1;
+	    if(dready==1) break;
+	  }
+	  if(dready==1){
+#if DMA_V792
+	    int status = gefVmeReadDmaBuf(dma_hdl, &v792[i].addr_param, 0, 4*data_len);
+	    if(status!=0){
+	      sprintf(message, "vme05: V792[%08llx] gefVmeReadDmaBuf() failed -- %d",
+		      v792[i].addr, GEF_GET_ERROR(status));
+	      send_error_message(message);
+	    }else{
+	      for(int j=0;j<data_len;j++){
+		data[ndata++] = __bswap_32(dma_buf[j]);
+	      }
+	    }
+#else
+	  for(int j=0;j<data_len;j++){
+	    data[ndata++] = __bswap_32(*(v792[i].addr+j));
+	  }
+#endif
+	  }else{
+	    sprintf(message, "vme05: V792[%08llx] data is not ready", v792[i].addr );
+	    send_warning_message(message);
+	  }
+	  VME_MODULE_HEADER vme_module_header;
+	  init_vme_module_header( &vme_module_header,v792[i].addr,
+				  ndata - vme_module_header_start );
+	  memcpy( &data[vme_module_header_start],
+		  &vme_module_header, VME_MODULE_HSIZE*4 );
+	  module_num++;
+	}//for(i)
+      }
+      
       VME_MASTER_HEADER vme_master_header;
       init_vme_master_header( &vme_master_header, ndata, module_num );
       memcpy( &data[0], &vme_master_header, VME_MASTER_HSIZE*4 );

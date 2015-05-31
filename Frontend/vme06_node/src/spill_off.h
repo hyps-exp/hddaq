@@ -8,8 +8,8 @@
 void write_spill_off(gzFile gzfile, unsigned int* data, int& len,
 		     int run_number, int event_number);
 
-static const std::string off_data_dir = "/misc/data3/subdata_e13/spill_off/bench";
-//static const std::string off_data_dir = "/misc/data3/subdata_e13/spill_off/data";
+//static const std::string off_data_dir = "/misc/data3/subdata_e13/spill_off/bench";
+static const std::string off_data_dir = "/misc/data3/subdata_e13/spill_off/data";
 
 enum e_spill_flag
   {

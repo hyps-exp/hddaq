@@ -44,6 +44,20 @@ struct VME_RM_REG{
 extern const int VME_RM_NUM;
 extern struct VME_RM_REG vme_rm[];
 
+//### RST_FLAG #############################
+struct RST_FLAG_REG{
+  uint64_t addr;
+  GEF_VME_ADDR addr_param;
+  volatile GEF_UINT32 *flag;
+  volatile GEF_UINT32 *clear;
+  volatile GEF_UINT32 *serial;
+};
+
+#define RST_FLAG_AM       GEF_VME_ADDR_SPACE_A32
+#define RST_FLAG_MAP_SIZE 0x10000
+extern const int RST_FLAG_NUM;
+extern struct RST_FLAG_REG rst_flag[];
+
 //### RPV-130 #############################
 struct RPV130_REG{
   uint64_t addr;
