@@ -1,0 +1,89 @@
+finesse_act  0xf
+finesse_type 0xf 32PTDC
+
+# ptdc all clear
+reg 0xf 0x01 0xff
+
+# ptdc enable ch [7:0]   (front-panel [8:15])
+reg 0xf 0x02 0xff
+# ptdc enable ch [15:8]  (front-panel [0:7])
+reg 0xf 0x03 0xff
+# ptdc enable ch [23:16] (front-panel [24:31])
+reg 0xf 0x04 0xff
+# ptdc enable ch [31:24] (front-panel [16:23])
+reg 0xf 0x05 0xff
+
+# ptdc time window low
+reg 0xf 0x06 0x01
+# ptdc time window high
+reg 0xf 0x07 0x03
+
+# ptdc fifo length
+reg 0xf 0x08 0xff
+
+#_______________________________________________________________________________
+# finesse_act <slot (hex)>
+#
+# description:
+#   <slot> specify the slots to be activated in bit-pattern as follows
+#     value - slot to be activated
+#     0x01  - slot A
+#     0x02  - slot B
+#     0x04  - slot C
+#     0x08  - slot D
+#
+#     sum of these values is also allowed
+#     e.g. 0x0f = 0x01 | 0x02 | 0x04 | 0x08 
+
+#_______________________________________________________________________________
+# finesse_type <slot (hex)> <type (string)>
+#
+# description:
+#   <slot> 
+#     (same as finesse_act)
+#   <type>
+#      value   
+#      ENCODER - 32 ch 100 MHz multi-sampling encoder
+#      32PTDC  - 32 ch pipeline TDC (or FPGA TDC)
+
+#_______________________________________________________________________________
+# reg <slot (hex)> <address (hex)> <val (hex)>
+#
+# description:
+#   <slot>    
+#     (same as finesse_act)
+#   <address>
+#     register address to write (see below) 
+#   <val>    
+#     value to write on the register specified by <address>
+
+
+#_______________________________________________________________________________
+# register          address
+# ENCODER_CLR       0x00
+# ENCODER_TEST2     0x01
+# ENCODER_OFFSET    0x02
+# ENCODER_LENGTH    0x03
+# ENCODER_STATUS    0x04
+# ENCODER_EVTAG     0x05
+# ENCODER_EVCOUNTER 0x06
+
+# register                    address
+#
+# F32PTDC_CONTROL1            0x01
+# MSB 
+# [15:15] [14:9] [8:8] [7:4] [3:3] [2:0]
+# [2:0]   N/A
+# [3:3]   FIFO reset
+# [7:4]   N/A
+# [8:8]   test trigger input
+# [14:9]  N/A
+# [15:15] all reset
+#
+# F32PTDC_ENABLE_CH_0         0x02
+# F32PTDC_ENABLE_CH_1         0x03
+# F32PTDC_ENABLE_CH_2         0x04
+# F32PTDC_ENABLE_CH_3         0x05
+# F32PTDC_TIME_WINDOW_L       0x06
+# F32PTDC_TIME_WINDOW_H       0x07
+# F32PTDC_FIFO_LENGTH         0x08

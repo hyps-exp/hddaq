@@ -1,9 +1,14 @@
 #!/bin/sh
 
-bin_dir=$(cd $(dirname $0); pwd)
+./msgd.sh > /dev/null 2>/dev/null &
+sleep 1
 
-${bin_dir}/message.sh >/dev/null 2>/dev/null &
+for i in $(seq 1 14)
+do
+    nip=`echo "$i + 30" | bc`
+    nport=`echo "$i -1 + 9000" | bc`
+    ./frontend.sh 192.168.1.$nip 192.168.2.$nip clite$i 1$nip $nport > /dev/null 2>/dev/null &
+#    ./frontend.sh 192.168.1.$nip 192.168.2.$nip clite$i 1$nip $nport &
+done
 
-sleep 1;
-
-${bin_dir}/frontend.sh >/dev/null 2>/dev/null &
+exit 0

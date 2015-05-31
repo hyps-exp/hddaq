@@ -115,7 +115,7 @@ int cltcp_open(char *hostname, int port)
 
   // Time out
   struct timeval tv;
-  tv.tv_sec  = 3;
+  tv.tv_sec  = 6;
   tv.tv_usec = 0;
   setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(tv));
 
