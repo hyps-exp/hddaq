@@ -9,12 +9,12 @@
 //vme module list
 const int VME_RM_NUM = 1;
 const int RPV130_NUM = 1;
-const int V792_NUM   = 4;
+// const int V792_NUM   = 4;
 const int TDC64M_NUM = 2;
 VME_RM_REG vme_rm[VME_RM_NUM] = { { 0xFF010000 } };
 RPV130_REG rpv130[RPV130_NUM] = { { 0x0000E020 } };
-V792_REG   v792[V792_NUM]     = { { 0xAD010000 }, { 0xAD020000 },
-				  { 0xAD030000 }, { 0xAD040000 } };
+// V792_REG   v792[V792_NUM]     = { { 0xAD010000 }, { 0xAD020000 },
+// 				  { 0xAD030000 }, { 0xAD040000 } };
 TDC64M_REG tdc64m[TDC64M_NUM] = { { 0x41000000 }, { 0x42000000 } };
 
 //global variables
@@ -134,19 +134,20 @@ void vme_open()
     }
   }
   //### V792 #################################################
+  /*
   {
     check_handle_number(hdl_num);
     for(int i=0;i<V792_NUM;i++){
       GEF_VME_ADDR addr_param = {
-	0x00000000,                     //upoper
-	v792[i].addr & 0xffffffff,      //lower
-	V792_AM,                        //addr_space
-	GEF_VME_2ESST_RATE_INVALID,     //vme_2esst_rate
-	GEF_VME_ADDR_MODE_DEFAULT,      //addr_mode
-	GEF_VME_TRANSFER_MODE_BLT,      //transfer_mode
-	GEF_VME_BROADCAST_ID_DISABLE,   //broadcast_id
-	GEF_VME_TRANSFER_MAX_DWIDTH_32, //transfer_max_dwidth
-	GEF_VME_WND_EXCLUSIVE           //flags
+  	0x00000000,                     //upoper
+  	v792[i].addr & 0xffffffff,      //lower
+  	V792_AM,                        //addr_space
+  	GEF_VME_2ESST_RATE_INVALID,     //vme_2esst_rate
+  	GEF_VME_ADDR_MODE_DEFAULT,      //addr_mode
+  	GEF_VME_TRANSFER_MODE_BLT,      //transfer_mode
+  	GEF_VME_BROADCAST_ID_DISABLE,   //broadcast_id
+  	GEF_VME_TRANSFER_MAX_DWIDTH_32, //transfer_max_dwidth
+  	GEF_VME_WND_EXCLUSIVE           //flags
       };
       v792[i].addr_param = addr_param;
     }
@@ -181,6 +182,7 @@ void vme_open()
       send_normal_message(message);
     }
   }
+  */
   //### TDC64M #################################################
   {
     check_handle_number(hdl_num);

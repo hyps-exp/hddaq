@@ -59,7 +59,7 @@ struct RPV130_REG{
 };
 
 #define RPV130_AM       GEF_VME_ADDR_SPACE_A16
-#define RPV130_MAP_SIZE 0x100
+#define RPV130_MAP_SIZE 0x1000
 extern const int RPV130_NUM;
 extern struct RPV130_REG rpv130[];
 

@@ -13,13 +13,13 @@ const int RPV130_NUM = 1;
 const int V830_NUM   = 2;
 const int UMEM_NUM   = 1;
 const int TDC64M_NUM = 2;
-VME_RM_REG vme_rm[VME_RM_NUM]       = { { 0xFF030000 } };
+VME_RM_REG   vme_rm[VME_RM_NUM]     = { { 0xFF030000 } };
 RST_FLAG_REG rst_flag[RST_FLAG_NUM] = { { 0xFF000000 } };
-RPV130_REG rpv130[RPV130_NUM]       = { { 0x0000E010 } };
-V830_REG   v830[V830_NUM]           = { { 0xCD010000 }, { 0xCD020000 } };
-UMEM_REG   umem_reg[UMEM_NUM]       = { { 0x00D10000 } };
-UMEM_DAT   umem_dat[UMEM_NUM]       = { { 0xD1000000 } };
-TDC64M_REG tdc64m[TDC64M_NUM]       = { { 0x45000000 }, { 0x46000000 } };
+RPV130_REG   rpv130[RPV130_NUM]     = { { 0x0000E010 } };
+V830_REG     v830[V830_NUM]         = { { 0xCD010000 }, { 0xCD020000 } };
+UMEM_REG     umem_reg[UMEM_NUM]     = { { 0x00D10000 } };
+UMEM_DAT     umem_dat[UMEM_NUM]     = { { 0xD1000000 } };
+TDC64M_REG   tdc64m[TDC64M_NUM]     = { { 0x45000000 }, { 0x46000000 } };
 
 //global variables
 GEF_VME_DMA_HDL  dma_hdl;
