@@ -14,7 +14,7 @@ INCLUDES	= -I. -I$(CORE_DIR) -I../../kol -I../../Message
 LIBS		= -L../../Message/lib -lMessage \
 			-L../../kol/lib -lkol \
 			-lpthread \
-			-lvme
+			-L/usr/lib/gef -lvme
 
 FLAGS		= $(CXXFLAGS) $(INCLUDES)
 
@@ -53,8 +53,7 @@ $(BLD_DIR)/%.o: $(SRC_DIR)/%.cc
 
 clean:
 	@echo Cleaning up ...
-	@rm -f $(BIN_DIR)/$(TARGET)
-	@rm -f $(BLD_DIR)/*
-	@rm -f $(SRC_DIR)/*~ *~
+	@rm -rf $(BIN_DIR) $(BLD_DIR)
+	@find . \( -name "*~" -o -name "\#*\#" \) -exec rm -f \{\} \;
 
 -include $(DEPENDS)
