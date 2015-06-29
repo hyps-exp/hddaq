@@ -7,12 +7,12 @@
 #include "vme_xvb.h"
 
 //vme module list
-const int VME_RM_NUM = 1;
+const int VME_RM_NUM   = 1;
 const int RST_FLAG_NUM = 1;
-const int RPV130_NUM = 1;
-const int V830_NUM   = 2;
-const int UMEM_NUM   = 1;
-const int TDC64M_NUM = 2;
+const int RPV130_NUM   = 1;
+const int V830_NUM     = 2;
+const int UMEM_NUM     = 1;
+const int TDC64M_NUM   = 2;
 VME_RM_REG   vme_rm[VME_RM_NUM]     = { { 0xFF030000 } };
 RST_FLAG_REG rst_flag[RST_FLAG_NUM] = { { 0xFF000000 } };
 RPV130_REG   rpv130[RPV130_NUM]     = { { 0x0000E010 } };

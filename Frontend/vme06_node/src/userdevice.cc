@@ -94,11 +94,13 @@ void init_device(NodeProp& nodeprop)
       int status = stat(off_data_name.c_str(), &st);
       off_data_file = (gzFile *)gzopen(off_data_name.c_str(), "wb6");
       if(status==0){
-	sprintf(message, "vme06: create(overwrite) spill off data file: %s", off_data_name.c_str());
+	sprintf(message, "vme06: spill off data file already exists: %s", off_data_name.c_str());
+	send_fatal_message(message);
+	std::exit(-1);
       }else{
 	sprintf(message, "vme06: create spill off data file: %s", off_data_name.c_str());
+	send_normal_message(message);
       }
-      send_normal_message(message);
       off_event_number = 0;
      
       *(rst_flag[0].clear) = __bswap_16(0x0); // clear reset flag register

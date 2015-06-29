@@ -21,19 +21,17 @@ void open_device(NodeProp& nodeprop)
 {
   vme_open();
   ////////// V792
-  /*
-  uint32_t overflow_suppression = 1; // 0:enable 1:disable
-  uint32_t zero_suppression     = 1; // 0:enable 1:disable
-  int iped[] = { 255, 185, 185, 255 };
-  //int iped[] = { 180, 135, 135, 175 };
-  for(int i=0;i<V792_NUM;i++){
-    *(v792[i].bitset1) = __bswap_16(0x80);
-    *(v792[i].bitclr1) = __bswap_16(0x80);
-    *(v792[i].bitset2) = __bswap_16( (overflow_suppression&0x1)<<3 |
-  				     (zero_suppression&0x1)<<4 );
-    *(v792[i].iped)    = __bswap_16(iped[i]); // 0x0-0xff
-  }
-  */
+  // uint32_t overflow_suppression = 1; // 0:enable 1:disable
+  // uint32_t zero_suppression     = 1; // 0:enable 1:disable
+  // int iped[] = { 255, 185, 185, 255 };
+  // //int iped[] = { 180, 135, 135, 175 };
+  // for(int i=0;i<V792_NUM;i++){
+  //   *(v792[i].bitset1) = __bswap_16(0x80);
+  //   *(v792[i].bitclr1) = __bswap_16(0x80);
+  //   *(v792[i].bitset2) = __bswap_16( (overflow_suppression&0x1)<<3 |
+  // 				     (zero_suppression&0x1)<<4 );
+  //   *(v792[i].iped)    = __bswap_16(iped[i]); // 0x0-0xff
+  // }
   ////////// TDC64M
   uint32_t reset         = 1; // clear local event counter
   uint32_t dynamic_range = 1; // 0-7, 2^n[us]
@@ -202,47 +200,45 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
       }
 
       ////////// V792
-      /*
-      {
-	for(int i=0;i<V792_NUM;i++){
-	  int vme_module_header_start = ndata;
-	  ndata += VME_MODULE_HSIZE;
-	  int data_len = 34;
-	  int dready   = 0;
-	  for(int j=0;j<max_try;j++){
-	    dready = __bswap_16(*(v792[i].str1))&0x1;
-	    if(dready==1) break;
-	  }
-	  if(dready==1){
-#if DMA_V792
-	    int status = gefVmeReadDmaBuf(dma_hdl, &v792[i].addr_param, 0, 4*data_len);
-	    if(status!=0){
-	      sprintf(message, "vme05: V792[%08llx] gefVmeReadDmaBuf() failed -- %d",
-		      v792[i].addr, GEF_GET_ERROR(status));
-	      send_error_message(message);
-	    }else{
-	      for(int j=0;j<data_len;j++){
-		data[ndata++] = __bswap_32(dma_buf[j]);
-	      }
-	    }
-#else
-	  for(int j=0;j<data_len;j++){
-	    data[ndata++] = __bswap_32(*(v792[i].addr+j));
-	  }
-#endif
-	  }else{
-	    sprintf(message, "vme05: V792[%08llx] data is not ready", v792[i].addr );
-	    send_warning_message(message);
-	  }
-	  VME_MODULE_HEADER vme_module_header;
-	  init_vme_module_header( &vme_module_header,v792[i].addr,
-				  ndata - vme_module_header_start );
-	  memcpy( &data[vme_module_header_start],
-		  &vme_module_header, VME_MODULE_HSIZE*4 );
-	  module_num++;
-	}//for(i)
-      }
-      */
+      //       {
+      // 	for(int i=0;i<V792_NUM;i++){
+      // 	  int vme_module_header_start = ndata;
+      // 	  ndata += VME_MODULE_HSIZE;
+      // 	  int data_len = 34;
+      // 	  int dready   = 0;
+      // 	  for(int j=0;j<max_try;j++){
+      // 	    dready = __bswap_16(*(v792[i].str1))&0x1;
+      // 	    if(dready==1) break;
+      // 	  }
+      // 	  if(dready==1){
+      // #if DMA_V792
+      // 	    int status = gefVmeReadDmaBuf(dma_hdl, &v792[i].addr_param, 0, 4*data_len);
+      // 	    if(status!=0){
+      // 	      sprintf(message, "vme05: V792[%08llx] gefVmeReadDmaBuf() failed -- %d",
+      // 		      v792[i].addr, GEF_GET_ERROR(status));
+      // 	      send_error_message(message);
+      // 	    }else{
+      // 	      for(int j=0;j<data_len;j++){
+      // 		data[ndata++] = __bswap_32(dma_buf[j]);
+      // 	      }
+      // 	    }
+      // #else
+      // 	  for(int j=0;j<data_len;j++){
+      // 	    data[ndata++] = __bswap_32(*(v792[i].addr+j));
+      // 	  }
+      // #endif
+      // 	  }else{
+      // 	    sprintf(message, "vme05: V792[%08llx] data is not ready", v792[i].addr );
+      // 	    send_warning_message(message);
+      // 	  }
+      // 	  VME_MODULE_HEADER vme_module_header;
+      // 	  init_vme_module_header( &vme_module_header,v792[i].addr,
+      // 				  ndata - vme_module_header_start );
+      // 	  memcpy( &data[vme_module_header_start],
+      // 		  &vme_module_header, VME_MODULE_HSIZE*4 );
+      // 	  module_num++;
+      // 	}//for(i)
+      //       }
       
       VME_MASTER_HEADER vme_master_header;
       init_vme_master_header( &vme_master_header, ndata, module_num );

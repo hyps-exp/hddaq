@@ -43,7 +43,7 @@ struct RPV130_REG{
   volatile uint16_t *csr2;  
 };
 #define RPV130_AM   VME_A16S
-#define RPV130_MAP_SIZE  0x1000
+#define RPV130_MAP_SIZE  0x100
 extern const int RPV130_NUM;
 extern struct RPV130_REG rpv130[];
 

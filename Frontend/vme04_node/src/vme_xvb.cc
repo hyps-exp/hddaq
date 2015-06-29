@@ -134,55 +134,53 @@ void vme_open()
     }
   }
   //### V792 #################################################
-  /*
-  {
-    check_handle_number(hdl_num);
-    for(int i=0;i<V792_NUM;i++){
-      GEF_VME_ADDR addr_param = {
-  	0x00000000,                     //upoper
-  	v792[i].addr & 0xffffffff,      //lower
-  	V792_AM,                        //addr_space
-  	GEF_VME_2ESST_RATE_INVALID,     //vme_2esst_rate
-  	GEF_VME_ADDR_MODE_DEFAULT,      //addr_mode
-  	GEF_VME_TRANSFER_MODE_BLT,      //transfer_mode
-  	GEF_VME_BROADCAST_ID_DISABLE,   //broadcast_id
-  	GEF_VME_TRANSFER_MAX_DWIDTH_32, //transfer_max_dwidth
-  	GEF_VME_WND_EXCLUSIVE           //flags
-      };
-      v792[i].addr_param = addr_param;
-    }
-    GEF_MAP_PTR ptr;
-    GEF_UINT32 w_size = V792_MAP_SIZE * V792_NUM;
-    status = gefVmeCreateMasterWindow(bus_hdl, &v792[0].addr_param, w_size, &mst_hdl[hdl_num]);
-    if(status!=GEF_STATUS_SUCCESS){
-      sprintf(message, "vme04: V792: gefVmeCreateMasterWindow() failed -- %d", status);
-      send_fatal_message(message);
-      std::exit(-1);
-    }
-    status = gefVmeMapMasterWindow(mst_hdl[hdl_num], 0, w_size, &map_hdl[hdl_num], &ptr);
-    if(status!=GEF_STATUS_SUCCESS){
-      sprintf(message, "vme04: V792: gefVmeMapMasterWindow() failed -- %d", GEF_GET_ERROR(status));
-      send_fatal_message(message);
-      std::exit(-1);
-    }
-    hdl_num++;
-    for(int i=0;i<V792_NUM;i++){
-      int d16 = 0x2;
-      int d32 = 0x4;
-      int offset16    = V792_MAP_SIZE/d16*i;
-      int offset32    = V792_MAP_SIZE/d32*i;
-      v792[i].data_buf = (GEF_UINT32*)ptr +offset32;
-      v792[i].bitset1  = (GEF_UINT16*)ptr +offset16 +0x1006/d16;
-      v792[i].bitclr1  = (GEF_UINT16*)ptr +offset16 +0x1008/d16;
-      v792[i].str1     = (GEF_UINT16*)ptr +offset16 +0x100E/d16;
-      v792[i].bitset2  = (GEF_UINT16*)ptr +offset16 +0x1032/d16;
-      v792[i].bitclr2  = (GEF_UINT16*)ptr +offset16 +0x1034/d16;
-      v792[i].iped     = (GEF_UINT16*)ptr +offset16 +0x1060/d16;
-      sprintf(message, "vme04: V792    [%08llx] joined", v792[i].addr);
-      send_normal_message(message);
-    }
-  }
-  */
+  // {
+  //   check_handle_number(hdl_num);
+  //   for(int i=0;i<V792_NUM;i++){
+  //     GEF_VME_ADDR addr_param = {
+  // 	0x00000000,                     //upoper
+  // 	v792[i].addr & 0xffffffff,      //lower
+  // 	V792_AM,                        //addr_space
+  // 	GEF_VME_2ESST_RATE_INVALID,     //vme_2esst_rate
+  // 	GEF_VME_ADDR_MODE_DEFAULT,      //addr_mode
+  // 	GEF_VME_TRANSFER_MODE_BLT,      //transfer_mode
+  // 	GEF_VME_BROADCAST_ID_DISABLE,   //broadcast_id
+  // 	GEF_VME_TRANSFER_MAX_DWIDTH_32, //transfer_max_dwidth
+  // 	GEF_VME_WND_EXCLUSIVE           //flags
+  //     };
+  //     v792[i].addr_param = addr_param;
+  //   }
+  //   GEF_MAP_PTR ptr;
+  //   GEF_UINT32 w_size = V792_MAP_SIZE * V792_NUM;
+  //   status = gefVmeCreateMasterWindow(bus_hdl, &v792[0].addr_param, w_size, &mst_hdl[hdl_num]);
+  //   if(status!=GEF_STATUS_SUCCESS){
+  //     sprintf(message, "vme04: V792: gefVmeCreateMasterWindow() failed -- %d", status);
+  //     send_fatal_message(message);
+  //     std::exit(-1);
+  //   }
+  //   status = gefVmeMapMasterWindow(mst_hdl[hdl_num], 0, w_size, &map_hdl[hdl_num], &ptr);
+  //   if(status!=GEF_STATUS_SUCCESS){
+  //     sprintf(message, "vme04: V792: gefVmeMapMasterWindow() failed -- %d", GEF_GET_ERROR(status));
+  //     send_fatal_message(message);
+  //     std::exit(-1);
+  //   }
+  //   hdl_num++;
+  //   for(int i=0;i<V792_NUM;i++){
+  //     int d16 = 0x2;
+  //     int d32 = 0x4;
+  //     int offset16    = V792_MAP_SIZE/d16*i;
+  //     int offset32    = V792_MAP_SIZE/d32*i;
+  //     v792[i].data_buf = (GEF_UINT32*)ptr +offset32;
+  //     v792[i].bitset1  = (GEF_UINT16*)ptr +offset16 +0x1006/d16;
+  //     v792[i].bitclr1  = (GEF_UINT16*)ptr +offset16 +0x1008/d16;
+  //     v792[i].str1     = (GEF_UINT16*)ptr +offset16 +0x100E/d16;
+  //     v792[i].bitset2  = (GEF_UINT16*)ptr +offset16 +0x1032/d16;
+  //     v792[i].bitclr2  = (GEF_UINT16*)ptr +offset16 +0x1034/d16;
+  //     v792[i].iped     = (GEF_UINT16*)ptr +offset16 +0x1060/d16;
+  //     sprintf(message, "vme04: V792    [%08llx] joined", v792[i].addr);
+  //     send_normal_message(message);
+  //   }
+  // }
   //### TDC64M #################################################
   {
     check_handle_number(hdl_num);
