@@ -71,20 +71,25 @@ int DaqThread::run()
       std::cout << "#D waitting accept" << std::endl;
       continue;
     }
-    
     std::cout << "#D server accepted" << std::endl;
     
-    PollThread poller(m_nodeprop, dsock);
-    poller.start();
-
-    while(1){
-      if(m_nodeprop.getUpdate()){
+    int n_loop=10;
+    for(;n_loop>0;n_loop--){
+      std::cout << "#D check nodeprop" << std::endl;
+      if(m_nodeprop.getUpdate()==true){
 	m_nodeprop.setUpdate(false);
 	break;
       }
-      send_warning_message("nodeprop is not up-to-date");
-      sleep(1);
+      usleep(1000);
     }
+    if(n_loop==0){
+      send_warning_message("nodeprop is not up-to-date");
+      dsock.close();
+      continue;
+    }
+
+    PollThread poller(m_nodeprop, dsock);
+    poller.start();
 
     header->type       = m_nodeprop.getDaqMode();
     header->run_number = m_nodeprop.getRunNumber();
