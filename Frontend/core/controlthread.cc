@@ -49,7 +49,7 @@ int ControlThread::run()
     }
 
     if (messageline == "start") {
-      ;
+      m_nodeprop.setUpdate(true);
     }
 
     if (messageline == "stop") {

@@ -77,8 +77,16 @@ int DaqThread::run()
     PollThread poller(m_nodeprop, dsock);
     poller.start();
 
-    DaqMode daq_mode   = m_nodeprop.getDaqMode();
-    header->type       = daq_mode;
+    while(1){
+      if(m_nodeprop.getUpdate()){
+	m_nodeprop.setUpdate(false);
+	break;
+      }
+      send_warning_message("nodeprop is not up-to-date");
+      sleep(1);
+    }
+
+    header->type       = m_nodeprop.getDaqMode();
     header->run_number = m_nodeprop.getRunNumber();
     m_nodeprop.setEventNumber( 0 );
     m_nodeprop.setEventSize( 0 );

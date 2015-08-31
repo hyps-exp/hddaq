@@ -25,6 +25,9 @@ public:
   void setRunNumber(int new_value);
   int getRunNumber();
 
+  void setUpdate(bool new_value);
+  bool getUpdate();
+
   void setState(State new_state);
   void setStateAck(State new_state){ setState(new_state); ackStatus(); }
   State getState();
@@ -62,7 +65,7 @@ private:
   kol::Mutex* access_mutex;
   int m_argc;
   std::vector<std::string> m_argv;
-  
+  bool m_update_flag;
 };
 
 #endif

@@ -13,7 +13,8 @@ NodeProp::NodeProp(int nodeid, std::string nickname, int data_port)
     m_event_size(0),
     m_data_port(data_port),
     m_nickname(nickname),
-    m_argc(0)
+    m_argc(0),
+    m_update_flag(false)
 {
   access_mutex = new kol::Mutex;
 }
@@ -34,6 +35,21 @@ int NodeProp::getRunNumber()
 {
   access_mutex->lock();
   int ret = m_run_number;
+  access_mutex->unlock();
+  return ret;
+}
+
+void NodeProp::setUpdate(bool new_value)
+{
+  access_mutex->lock();
+  m_update_flag = new_value;
+  access_mutex->unlock();
+  return;
+}
+bool NodeProp::getUpdate()
+{
+  access_mutex->lock();
+  bool ret = m_update_flag;
   access_mutex->unlock();
   return ret;
 }
