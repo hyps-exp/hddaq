@@ -1,7 +1,7 @@
 #include"ParameterManager.hh"
-#include<cstdlib>
-#include<iostream>
-#include<sstream>
+#include <cstdlib>
+#include <iostream>
+#include <sstream>
 
 //Functions -----------------------------------------------------------------
 ParamVal ParameterManager::GetParameter(int ArrayNum, const char* Name){
@@ -118,7 +118,7 @@ void ParameterManager::SetParamArray_FromFile(std::ifstream& roFile){
       ParamVal *Value = new ParamVal[sizeNameArray];
       for(int i = 0; i<sizeNameArray; ++i){
 	linestream >> wordbuf;
-	*(Value + i) = atoi(wordbuf.c_str());
+	*(Value + i) = std::strtol(wordbuf.c_str(), NULL, 0);
       }
 
       ParamArray.push_back(Value);
