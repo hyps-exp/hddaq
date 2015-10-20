@@ -2,7 +2,7 @@
 
 #include "watchdogthread.h"
 #include "nodeprop.h"
-
+#include "unistd.h"
 
 WatchdogThread::WatchdogThread(NodeProp& nodeprop)
   : m_nodeprop(nodeprop)

@@ -1,5 +1,7 @@
 // example_node: userdevice.cc
 
+#include <unistd.h>
+
 #include "userdevice.h"
 
 //maximum datasize by byte unit
@@ -21,7 +23,6 @@ void open_device(NodeProp& nodeprop)
 
 void init_device(NodeProp& nodeprop)
 {
-  
   // update DAQ mode
   g_daq_mode = nodeprop.getDaqMode();
 
@@ -37,7 +38,6 @@ void init_device(NodeProp& nodeprop)
   default:
     return;
   }
-
 }
 
 void finalize_device(NodeProp& nodeprop)
@@ -50,14 +50,12 @@ void close_device(NodeProp& nodeprop)
   return;
 }
 
-
 int wait_device(NodeProp& nodeprop)
 /*
   return -1: TIMEOUT or FAST CLEAR -> continue
   return  0: TRIGGED -> go read_device
 */
 {
-  
   switch(g_daq_mode){
   case DM_NORMAL:
     {
@@ -71,9 +69,7 @@ int wait_device(NodeProp& nodeprop)
   default:
     return 0;
   }
-  
 }
-
 
 int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 /*
@@ -81,7 +77,6 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
   return  0: Send data to EV
 */
 {
-  
   switch(g_daq_mode){
   case DM_NORMAL:
     {
@@ -97,5 +92,4 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
     len = 0;
     return 0;
   }
-
 }
