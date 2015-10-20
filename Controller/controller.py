@@ -173,7 +173,7 @@ class Controller(Frame):
         self.runno_e.pack()
         
         fmaxevent = Frame(fbuttons)
-        lmaxevent = Label(fmaxevent, text='Maximun Events')
+        lmaxevent = Label(fmaxevent, text='Maximum Events')
         lmaxevent.pack()
         self.maxevent_e = Entry(fmaxevent, justify=RIGHT, width=12, disabledbackground='white', disabledforeground='black' )
         self.maxevent_e.insert(0,'10000000')
@@ -427,10 +427,16 @@ class Controller(Frame):
 
         # RUNNING state
         elif( self.daq_state == StatusList.S_RUNNING ):
-            if( self.master_controller_flag == 1 ):
-                self.label.config(text='DAQ: RUNNING [MASTER]', fg='green', bg='black')
+            if( status.is_recorder == 1):
+                if( self.master_controller_flag == 1 ):
+                    self.label.config(text='DAQ: RUNNING [MASTER]', fg='green', bg='black')
+                else:
+                    self.label.config(text='DAQ: RUNNING [SLAVE]', fg='green', bg='black')
             else:
-                self.label.config(text='DAQ: RUNNING [SLAVE]', fg='green', bg='black')
+                if( self.master_controller_flag == 1 ):
+                    self.label.config(text='DAQ: DUMMY RUNNING [MASTER]', fg='yellow', bg='black')
+                else:
+                    self.label.config(text='DAQ: DUMMY RUNNING [SLAVE]', fg='yellow', bg='black')
             self.bstart.config(state=DISABLED)
             self.bstop.config(state=NORMAL)
             self.maxevent_e.config(state=DISABLED)

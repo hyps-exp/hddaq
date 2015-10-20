@@ -8,6 +8,7 @@ S_IDLE       = 0
 S_RUNNING    = 1
 S_TRANSITION = 2
 
+RECD_ID = 70000
 DIST_ID = 80000
 
 class Status:
@@ -24,6 +25,7 @@ class StatusList:
         self.statuslist = []
         self.global_state = S_IDLE
         self.dist_evnum = 0
+        self.is_recorder = 0
         
     def __cmp_src_id(self, x, y):
         if x.src_id > y.src_id: return 1
@@ -66,6 +68,7 @@ class StatusList:
 
     def cleanup_list(self):
         self.statuslist = []
+        self.is_recorder = 0
 
     def make_statusline(self, istatus):        
         tmp      = istatus.nickname[0:10] 
@@ -96,6 +99,9 @@ class StatusList:
                 self.__change_status(newentry, now, body) 
                 self.statuslist.append(newentry)
                 self.statuslist.sort(self.__cmp_src_id)
+
+                if src_id == RECD_ID:  #Recorder          
+                  self.is_recorder = 1
 
             if src_id == DIST_ID:  #Event Distributor
                 sbody = body.split()
