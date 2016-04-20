@@ -1,6 +1,6 @@
 # Makefile for Frontend/easiroc_node
 
-TARGET	= feeasiroc
+TARGET	= fe_easiroc01_frontend
 
 CORE_DIR	= ../core
 SRC_DIR		= src

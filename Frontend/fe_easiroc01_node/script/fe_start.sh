@@ -1,12 +1,26 @@
 #!/bin/sh
 
-(cd /home/DAQ/hddaq/pro/Frontend/easiroc_node/script ; ./msgd.sh) > /dev/null 2> /dev/null &
+easiroc_start=0
+easiroc_end=9
+
+bin_dir=$(cd $(dirname $0); pwd -P)
+
+cd $bin_dir
+
+$bin_dir/message.sh > /dev/null 2> /dev/null &
+
 sleep 1
 
-for i in $(seq 0 9)
-  do
+for i in $(seq $easiroc_start $easiroc_end)
+do
   nodeid=`expr $((0xea00)) + $i`
-  (cd /home/DAQ/hddaq/pro/Frontend/easiroc_node/script/easiroc0$i ; ./frontend.sh $nodeid easiroc$i 900$i)  > /dev/null &#2>/dev/null &
+  nickname=easiroc`printf "%02d" $i`
+  dataport=`expr 9000 + $i`
+
+  $bin_dir/frontend.sh \
+      $nodeid \
+      $nickname \
+      $dataport > /dev/null 2>/dev/null &
 done
 
 exit 0
