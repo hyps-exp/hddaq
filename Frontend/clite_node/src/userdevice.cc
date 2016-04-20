@@ -12,8 +12,10 @@
 #include "copperlite.h"
 #include "copperliteparam.h"
 
-#define TCP_PORT	24
-#define UDP_PORT	4660
+#define SET_REGISTER 1
+
+#define TCP_PORT 24
+#define UDP_PORT 4660
 
 static int socktcp;
 static int sockudp;
@@ -112,55 +114,56 @@ void open_device(NodeProp& nodeprop)
       	std::exit(-1);
       }
 
-      // int status;
-      // static char clreg[5];
+      ///// set register from here
+#if SET_REGISTER
+      int status;
+      static char clreg[5];
+      int slot, addr;
+      int claddr;
 
-      // int slot, addr;
-      // int claddr;
+      /* clreg[0] = 0x8f ; clreg[1] = 0x00; */
+      clreg[0] = 0x80 | cltcp_get_finesse_act();
+      clreg[1] = 0x00;
+      status = udpreg_write(sockudp, clreg, CL_FCR, 1);
+      clreg[0] = 0x00;
+      clreg[1] = 0x01;
+      clreg[2] = 0x00;
+      clreg[3] = 0x00;
+      clreg[4] = 0x00;
+      status = udpreg_write(sockudp, clreg, CL_FFTH, 4);
 
-      // /* clreg[0] = 0x8f ; clreg[1] = 0x00; */
-      // clreg[0] = 0x80 | cltcp_get_finesse_act();
-      // clreg[1] = 0x00;
-      // status = udpreg_write(sockudp, clreg, CL_FCR, 1);
-      // clreg[0] = 0x00;
-      // clreg[1] = 0x01;
-      // clreg[2] = 0x00;
-      // clreg[3] = 0x00;
-      // clreg[4] = 0x00;
-      // status = udpreg_write(sockudp, clreg, CL_FFTH, 4);
+      clreg[0] = 0x80 ; clreg[1] = 0x00;
+      status = udpreg_write(sockudp, clreg, CL_RCR, 1);
+      clreg[0] = 0x00 ; clreg[1] = 0x00;
+      status = udpreg_write(sockudp, clreg, CL_RCR, 1);
+      usleep(100);
 
-      // clreg[0] = 0x80 ; clreg[1] = 0x00;
-      // status = udpreg_write(sockudp, clreg, CL_RCR, 1);
-      // clreg[0] = 0x00 ; clreg[1] = 0x00;
-      // status = udpreg_write(sockudp, clreg, CL_RCR, 1);
-      // usleep(100);
+      /*
+      	clreg[0] = 0x30 ; clreg[1] = 0x00;
+      	status = udpreg_write(sockudp, clreg, 0x60b, 1);
+      	clreg[0] = 0x30 ; clreg[1] = 0x00;
+      	status = udpreg_write(sockudp, clreg, 0x60f, 1);
+      */
 
-      // /*
-      // 	clreg[0] = 0x30 ; clreg[1] = 0x00;
-      // 	status = udpreg_write(sockudp, clreg, 0x60b, 1);
-      // 	clreg[0] = 0x30 ; clreg[1] = 0x00;
-      // 	status = udpreg_write(sockudp, clreg, 0x60f, 1);
-      // */
-
-      // clreg[1] = 0x00;
-      // while(fregque_get(&slot, &addr, &val)) {
-      // 	if (slot == 0xf) {
-      // 	  claddr   = CL_FINESSE_ALL + addr * 4 + 3;
-      // 	  clreg[0] = val;
-      // 	  status   = udpreg_write(sockudp, clreg, claddr, 1);
-      // 	  printf("#D all write %x %x\n", claddr, clreg[0]);
-      // 	} else {
-      // 	  for (int i = 0 ; i < 4 ; i++) {
-      // 	    if (((slot >> i) & 0x01) == 0x1) {
-      // 	      claddr   = CL_FINESSE + addr * 4 + i;
-      // 	      clreg[0] = val;
-      // 	      status   = udpreg_write(sockudp, clreg, claddr, 1);
-      // 	      /* printf("#D write %d %x %x\n", i, claddr, clreg[0]); */
-      // 	    }
-      // 	  } // for(i)
-      // 	} // if
-      // }// while
-
+      clreg[1] = 0x00;
+      while(fregque_get(&slot, &addr, &val)) {
+      	if (slot == 0xf) {
+      	  claddr   = CL_FINESSE_ALL + addr * 4 + 3;
+      	  clreg[0] = val;
+      	  status   = udpreg_write(sockudp, clreg, claddr, 1);
+      	  printf("#D all write %x %x\n", claddr, clreg[0]);
+      	} else {
+      	  for (int i = 0 ; i < 4 ; i++) {
+      	    if (((slot >> i) & 0x01) == 0x1) {
+      	      claddr   = CL_FINESSE + addr * 4 + i;
+      	      clreg[0] = val;
+      	      status   = udpreg_write(sockudp, clreg, claddr, 1);
+      	      /* printf("#D write %d %x %x\n", i, claddr, clreg[0]); */
+      	    }
+      	  } // for(i)
+      	} // if
+      }// while
+#endif
 
   // Connect TCP ---------------------------------------------
 #ifdef TCPOPENATOPEN
@@ -233,6 +236,7 @@ void finalize_device(NodeProp& nodeprop)
   udpreg_close(sockudp);
   cltcp_close(socktcp);
 
+  printf("finalize_device end\n");
   return;
 }
 
@@ -288,12 +292,12 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
       ndata = cltcp_read(socktcp, buf, max_data_size);
       len = ndata/sizeof(unsigned int);
       if(ndata <= 0){
-	char message[400];
-	sprintf(message,
-		"clite::read_device(%s) (time out ?)",
-		tcphost
-		);
-	send_warning_message(message);	
+	// char message[400];
+	// sprintf(message,
+	// 	"clite::read_device(%s) (time out ?)",
+	// 	tcphost
+	// 	);
+	// send_warning_message(message);	
 	return -1;
       }
 

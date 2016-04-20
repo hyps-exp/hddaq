@@ -1,6 +1,6 @@
 # Makefile for Frontend/clite_node
 
-TARGET	= fecopperlite
+TARGET	= clite_frontend
 
 CORE_DIR	= ../core
 SRC_DIR		= src
