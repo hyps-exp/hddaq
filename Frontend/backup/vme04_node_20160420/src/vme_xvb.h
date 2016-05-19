@@ -37,7 +37,6 @@ struct VME_RM_REG{
   volatile GEF_UINT32 *event;
   volatile GEF_UINT32 *spill;
   volatile GEF_UINT32 *serial;
-  volatile GEF_UINT32 *time;
 };
 
 #define VME_RM_AM       GEF_VME_ADDR_SPACE_A32
@@ -64,6 +63,24 @@ struct RPV130_REG{
 extern const int RPV130_NUM;
 extern struct RPV130_REG rpv130[];
 
+//### V792 #############################
+struct V792_REG{
+  uint64_t addr;
+  GEF_VME_ADDR addr_param;
+  volatile GEF_UINT32 *data_buf;
+  volatile GEF_UINT16 *bitset1;
+  volatile GEF_UINT16 *bitclr1;
+  volatile GEF_UINT16 *str1;
+  volatile GEF_UINT16 *bitset2;
+  volatile GEF_UINT16 *bitclr2;
+  volatile GEF_UINT16 *iped;
+};
+
+#define V792_AM       GEF_VME_ADDR_SPACE_A32
+#define V792_MAP_SIZE 0x10000
+extern const int V792_NUM;
+extern struct V792_REG v792[];
+
 //### TDC64M #############################
 struct TDC64M_REG{
   uint64_t addr;
@@ -78,7 +95,7 @@ struct TDC64M_REG{
 };
 
 #define TDC64M_AM       GEF_VME_ADDR_SPACE_A32
-#define TDC64M_MAP_SIZE 0x10000
+#define TDC64M_MAP_SIZE 0x1000000
 extern const int TDC64M_NUM;
 extern struct TDC64M_REG tdc64m[];
 

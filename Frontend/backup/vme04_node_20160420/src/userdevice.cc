@@ -3,6 +3,7 @@
 #include "userdevice.h"
 #include "vme_xvb.h"
 
+#define DMA_V792   1
 #define DMA_TDC64M 0
 
 static const int max_polling   = 2000000;     //maximum count until time-out
@@ -19,17 +20,29 @@ int get_maxdatasize()
 void open_device(NodeProp& nodeprop)
 {
   vme_open();
+  ////////// V792
+  // uint32_t overflow_suppression = 1; // 0:enable 1:disable
+  // uint32_t zero_suppression     = 1; // 0:enable 1:disable
+  // int iped[] = { 200, 255, 255, 255 };
+  // //int iped[] = { 155, 200, 220, 220 };
+  // for(int i=0;i<V792_NUM;i++){
+  //   *(v792[i].bitset1) = __bswap_16(0x80);
+  //   *(v792[i].bitclr1) = __bswap_16(0x80);
+  //   *(v792[i].bitset2) = __bswap_16( (overflow_suppression&0x1)<<3 |
+  // 				     (zero_suppression&0x1)<<4 );
+  //   *(v792[i].iped)    = __bswap_16(iped[i]); // 0x0-0xff
+  // }
   ////////// TDC64M
   uint32_t reset         = 1; // clear local event counter
-  uint32_t dynamic_range = 0; // 0-7, 2^n[us]
+  uint32_t dynamic_range = 1; // 0-7, 2^n[us]
   uint32_t edge_mode     = 0; // 0:leading 1:leading&trailing
-  uint32_t module_id     = 0; // 5bit, 0-31
-  uint32_t search_window = 1000/8; // 1us
+  uint32_t module_id     = 0; // 5bit, 0-511
+  uint32_t search_window = 2000/8; // 2us
   //uint32_t search_window = 0x3E80; // 8ns unit, 0x0-0x3E80(0-128us)
   uint32_t mask_window   = 0x0; // 8ns unit, 0x0-0x3E80(0-128us)
   for(int i=0;i<TDC64M_NUM;i++){
-    module_id = i+1;
-    *(tdc64m[i].ctr) = __bswap_32( (reset&0x1) |
+    module_id = i;
+    *(tdc64m[i].ctr) = __bswap_32( (reset&0x1 ) |
 				   ((dynamic_range&0x7)<<1) |
 				   ((edge_mode&0x1)<<4) |
 				   ((module_id&0x1f)<<5) );
@@ -39,7 +52,6 @@ void open_device(NodeProp& nodeprop)
 				       ((mask_window&0xffff)<<16) );
     *(tdc64m[i].str) = 0;// tdc64m clear    
   }
-
   return;
 }
 
@@ -129,7 +141,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	  data[ndata++] = __bswap_32(*(vme_rm[i].event));
 	  data[ndata++] = __bswap_32(*(vme_rm[i].spill));
 	  data[ndata++] = __bswap_32(*(vme_rm[i].serial));
-	  data[ndata++] = __bswap_32(*(vme_rm[i].time));
+	  data[ndata++] = 0x0; // spill_end_flag
 	  VME_MODULE_HEADER vme_module_header;
 	  init_vme_module_header( &vme_module_header, vme_rm[i].addr,
 				  ndata - vme_module_header_start );
@@ -174,8 +186,8 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	    }
 #endif
 	  }else{
-	    // sprintf(message, "vme04: TDC64M[%08llx] data is not ready", tdc64m[i].addr );
-	    // send_warning_message(message);
+	    sprintf(message, "vme04: TDC64M[%08llx] data is not ready", tdc64m[i].addr );
+	    send_warning_message(message);
 	  }
 	  *(tdc64m[i].str) = 0;// tdc64m clear
 	  VME_MODULE_HEADER vme_module_header;
@@ -187,6 +199,47 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	}//for(i)
       }
 
+      ////////// V792
+      //       {
+      // 	for(int i=0;i<V792_NUM;i++){
+      // 	  int vme_module_header_start = ndata;
+      // 	  ndata += VME_MODULE_HSIZE;
+      // 	  int data_len = 34;
+      // 	  int dready   = 0;
+      // 	  for(int j=0;j<max_try;j++){
+      // 	    dready = __bswap_16(*(v792[i].str1))&0x1;
+      // 	    if(dready==1) break;
+      // 	  }
+      // 	  if(dready==1){
+      // #if DMA_V792
+      // 	    int status = gefVmeReadDmaBuf(dma_hdl, &v792[i].addr_param, 0, 4*data_len);
+      // 	    if(status!=0){
+      // 	      sprintf(message, "vme04: V792[%08llx] gefVmeReadDmaBuf() failed -- %d",
+      // 		      v792[i].addr, GEF_GET_ERROR(status));
+      // 	      send_error_message(message);
+      // 	    }else{
+      // 	      for(int j=0;j<data_len;j++){
+      // 		data[ndata++] = __bswap_32(dma_buf[j]);
+      // 	      }
+      // 	    }
+      // #else
+      // 	  for(int j=0;j<data_len;j++){
+      // 	    data[ndata++] = __bswap_32(*(v792[i].addr+j));
+      // 	  }
+      // #endif
+      // 	  }else{
+      // 	    sprintf(message, "vme04: V792[%08llx] data is not ready", v792[i].addr );
+      // 	    send_warning_message(message);
+      // 	  }
+      // 	  VME_MODULE_HEADER vme_module_header;
+      // 	  init_vme_module_header( &vme_module_header,v792[i].addr,
+      // 				  ndata - vme_module_header_start );
+      // 	  memcpy( &data[vme_module_header_start],
+      // 		  &vme_module_header, VME_MODULE_HSIZE*4 );
+      // 	  module_num++;
+      // 	}//for(i)
+      //       }
+      
       VME_MASTER_HEADER vme_master_header;
       init_vme_master_header( &vme_master_header, ndata, module_num );
       memcpy( &data[0], &vme_master_header, VME_MASTER_HSIZE*4 );
