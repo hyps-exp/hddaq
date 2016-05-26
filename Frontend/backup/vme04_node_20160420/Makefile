@@ -1,6 +1,6 @@
-# Makefile for Frontend/vme01_node
+# Makefile for Frontend/vme04_node
 
-TARGET	= vme01_frontend
+TARGET	= vme04_frontend
 
 CORE_DIR	= ../core
 SRC_DIR		= src

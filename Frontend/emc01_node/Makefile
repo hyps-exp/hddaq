@@ -1,6 +1,6 @@
 # Makefile for Frontend/vme01_node
 
-TARGET	= vme01_frontend
+TARGET	= emc01_frontend
 
 CORE_DIR	= ../core
 SRC_DIR		= src
@@ -13,8 +13,7 @@ CXXFLAGS	= -O2 -Wall
 INCLUDES	= -I. -I$(CORE_DIR) -I../../kol -I../../Message
 LIBS		= -L../../Message/lib -lMessage \
 			-L../../kol/lib -lkol \
-			-lpthread \
-			-L/usr/lib/gef -lvme
+			-lpthread -L/usr/lib/bit3 -lvmeslib
 
 FLAGS		= $(CXXFLAGS) $(INCLUDES)
 
@@ -54,7 +53,7 @@ $(BLD_DIR)/%.o: $(SRC_DIR)/%.cc
 clean:
 	@echo Cleaning up ...
 	@rm -f $(BIN_DIR)/$(TARGET)
-	@rm -f $(BLD_DIR)/*
-	@rm -f $(SRC_DIR)/*~ *~
+	@rm -fr $(BLD_DIR)
+	@rm -f $(SRC_DIR)/*~ $(SRC_DIR)/\#*\# *~
 
 -include $(DEPENDS)

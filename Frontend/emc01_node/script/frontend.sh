@@ -1,10 +1,10 @@
 #!/bin/sh
 
-nickname=vme01
-nodeid=$((0x201))
-frontend=vme01_frontend
+nickname=emc01
+nodeid=$((0x301))
+frontend=emc01_frontend
 
-bin_dir=$(cd $(dirname $0); pwd)/../bin
+bin_dir=$(cd $(dirname $0); pwd -P)/../bin
 #echo ${bin_dir}
 
 if [ $$ -ne $(pgrep -fo $0) ]; then
@@ -14,7 +14,8 @@ fi
 
 while true
 do
-    echo -e "\n\n"${frontend}
+    echo
+    echo ${frontend}
     ${bin_dir}/${frontend} --nickname=${nickname} --nodeid=${nodeid}
     sleep 1
 done
