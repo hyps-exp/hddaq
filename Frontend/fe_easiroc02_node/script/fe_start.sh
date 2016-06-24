@@ -13,4 +13,5 @@ do
     nickname=easiroc`expr 10 + $i`
     dataport=`expr 9000 + $i`
     $bin_dir/frontend.sh $nickname $nodeid $dataport >/dev/null 2>/dev/null &
+#    $bin_dir/frontend.sh $nickname $nodeid $dataport &
 done

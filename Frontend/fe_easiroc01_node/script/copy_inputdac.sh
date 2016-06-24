@@ -2,7 +2,7 @@
 
 bin_dir=$(cd $(dirname $0); pwd -P)
 
-param_dir=/home/DAQ/bftparam/201510_e0705/inputdac_g30_temp23.0
+param_dir=/home/DAQ/bftparam/201510_e0705/inputdac_g30_temp23.0c
 
 for i in $(seq 0 9)
   do
