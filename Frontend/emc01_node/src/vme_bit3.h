@@ -41,11 +41,30 @@ struct VME_RM_REG {
   volatile uint32_t *reset;
   volatile uint32_t *level;
   volatile uint32_t *pulse;
+  volatile uint32_t *time;
 };
 static const off_t  VME_RM_AM       = VME_A32D32;
 static const size_t VME_RM_MAP_SIZE = 0x10000;
 extern const int    VME_RM_NUM;
 extern struct VME_RM_REG vme_rm[];
+
+//### RPV-130 #############################
+struct RPV130_REG{
+  uint64_t addr;
+  VMEMAP   *map_hdl;
+  volatile uint16_t *latch1;
+  volatile uint16_t *latch2;
+  volatile uint16_t *rsff;
+  volatile uint16_t *through;
+  volatile uint16_t *pulse;
+  volatile uint16_t *level;
+  volatile uint16_t *csr1;
+  volatile uint16_t *csr2;  
+};
+static const off_t  RPV130_AM       = VME_A16D16;
+static const size_t RPV130_MAP_SIZE = 0x1000;
+extern const int    RPV130_NUM;
+extern struct RPV130_REG rpv130[];
 
 //### EMC ################################
 struct EMC_REG

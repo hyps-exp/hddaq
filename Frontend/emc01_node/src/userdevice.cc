@@ -34,8 +34,8 @@ void init_device(NodeProp& nodeprop)
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-      *(vme_rm[0].reset) = 0x0; // input clear
-      *(vme_rm[0].pulse) = 0x1; // busy off
+      *(rpv130[0].csr1)  = 0x1; // io clear
+      *(rpv130[0].pulse) = 0x1; // busy off
       return;
     }
   case DM_DUMMY:
@@ -70,9 +70,9 @@ int wait_device(NodeProp& nodeprop)
       ////////// Polling
       int reg = 0;
       for(int i=0;i<max_polling;i++){
-	reg = *(vme_rm[0].input);
-	if( (reg>>8)&0x1 ){
-	  *(vme_rm[0].reset) = 0x0; // io clear
+	reg = *(rpv130[0].rsff);
+	if( (reg>>0)&0x1 ){
+	  *(rpv130[0].csr1) = 0x1; // io clear
 	  return 0;
 	}
       }
@@ -114,7 +114,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	data[ndata++] = *(vme_rm[0].event);
 	data[ndata++] = *(vme_rm[0].spill);
 	data[ndata++] = *(vme_rm[0].serial);
-	data[ndata++] = 0x0; // spill_end_flag
+	data[ndata++] = *(vme_rm[0].time);
 	VME_MODULE_HEADER vme_module_header;
 	init_vme_module_header( &vme_module_header, vme_rm[i].addr,
 				ndata - vme_module_header_start );
@@ -180,7 +180,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
       memcpy( &data[0], &vme_master_header, VME_MASTER_HSIZE*4 );
       
       len = ndata;
-      *(vme_rm[0].pulse) = 0x1; // busy off
+      *(rpv130[0].pulse) = 0x1; // busy off
       return 0;
     }
   case DM_DUMMY:
