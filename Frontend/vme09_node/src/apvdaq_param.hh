@@ -33,15 +33,14 @@
 //#define CALIBRATION_MODE
 
 #define SINGLE_SEQ_CELL 83
-/*
-#define MULTI_SEQ_CELL2 53
-#define MULTI_SEQ_CELL3 56
-#define MULTI_SEQ_CELL4 59
-*/
 
-#define MULTI_SEQ_CELL2 50
-#define MULTI_SEQ_CELL3 53
-#define MULTI_SEQ_CELL4 56
+//Oct 2015
+// #define MULTI_SEQ_CELL2 50
+// #define MULTI_SEQ_CELL3 53
+// #define MULTI_SEQ_CELL4 56
+#define MULTI_SEQ_CELL2 37
+#define MULTI_SEQ_CELL3 40
+#define MULTI_SEQ_CELL4 43
 
 // At Nagoya 20140117 -- Perfect Timing
 //#define MULTI_SEQ_CELL1 75
@@ -183,13 +182,18 @@ const unsigned short apv_i2c_settings[16][2] = {
 #define ADC_OFFSET 0x64 //
 
 //setting PHOS delay-chip 
-#define MASTER_PHOS_ADCDELAY 6
+#define MASTER_PHOS_ADCDELAY 7
 #define SLAVE1_PHOS_ADCDELAY 8
-#define SLAVE2_PHOS_ADCDELAY 8
+#define SLAVE2_PHOS_ADCDELAY 7
 
-#define SLAVE3_PHOS_ADCDELAY 6
-#define SLAVE4_PHOS_ADCDELAY 8
-#define SLAVE5_PHOS_ADCDELAY 8
+//#define SLAVE3_PHOS_ADCDELAY 7 //original
+#define SLAVE3_PHOS_ADCDELAY 6 
+//#define SLAVE3_PHOS_ADCDELAY 5 fail
+//#define SLAVE3_PHOS_ADCDELAY 8 better
+//#define SLAVE3_PHOS_ADCDELAY 9 fail
+
+#define SLAVE4_PHOS_ADCDELAY 5
+#define SLAVE5_PHOS_ADCDELAY 7
 
 #define SLAVE6_PHOS_ADCDELAY 8
 #define SLAVE7_PHOS_ADCDELAY 10
@@ -210,6 +214,7 @@ const unsigned short apv_i2c_settings[16][2] = {
 #define FirNumOfParam 12
 #define NumberOfSamples 8
 #define FIRONOFF     1 // 1: on, 0: off
+#define FIRONOFFSLV3 0 // 1: on, 0: off BAD MODULE Recommended to Turn off FIR Filter
 #define FIRCALIB     0 // 1: do, 0: don't
 #define FIRTEST      0 // 1: do, 0: don't
 #define MAXFIRCAL    5000 // = TOTAL SAMPLE # / 100
@@ -217,9 +222,10 @@ const unsigned short apv_i2c_settings[16][2] = {
 #define APVDAQNUMB   6
 #define APVCHIPNUMB  4 //3 for old sensor, 4 for new sensor
 
-#define RAWZSSEL     1     //0 : test mode, 1 : ZS mode
+#define RAWZSSEL     1    //0 : test mode, 1 : ZS mode
+#define L2TRG        1     //0 : OFF , 1 : ON
 
-static unsigned long PulseShapeParameter[4][2] = { {0x30c, 0x1000000},
+const  unsigned long PulseShapeParameter[4][2] = { {0x30c, 0x1000000},
 						   {0x30c, 0x1000000},
 						   {0x30c, 0x1000000},
 						   {0x30c, 0x1000000} };
@@ -230,8 +236,23 @@ static unsigned long PulseShapeParameter[4][2] = { {0x0, 0x0},
 						   {0x0, 0x0} };
 */
 #define DevThreshold 0.0
-#define PedThreshold 3.5
+//const double MaxPedThreshold = 40.0;
+// const double PedThreshold[6] =
+//   //    {10.0,10.0,10.0,10.0,10.0,10.0};
+//       {4.0,4.0,4.0,4.0,4.0,4.0};
+  //{0.5,0.5,0.5,0.5,0.5,0.5};
+  //      {2.0,2.0,2.0,2.0,2.0,2.0};
+//  {10.0,10.0,10.0,10.0,10.0,10.0}; -- used at 06/12/2016
 
+const double PedOffset[6][4] =
+  {
+    {0.0, 0.0, 0.0, 0.0},
+    {0.0, 0.0, 0.0, 0.0},
+    {0.0, 0.0, 0.0, 0.0},
+    {0.0, 0.0, 0.0, 0.0},
+    {0.0, 0.0, 0.0, 0.0},
+    {0.0, 0.0, 0.0, 0.0}
+  };
 
 //-------------------
 //setparam.h +
