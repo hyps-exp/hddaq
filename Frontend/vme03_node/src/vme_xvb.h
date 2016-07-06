@@ -12,6 +12,7 @@
 static const int max_hdl_num = 8;
 extern GEF_VME_DMA_HDL   dma_hdl;
 extern GEF_UINT32       *dma_buf;
+extern GEF_VME_ADDR      dma_addr;
 
 void vme_open();
 void vme_close(); 
@@ -37,6 +38,7 @@ struct VME_RM_REG {
   volatile GEF_UINT32 *event;
   volatile GEF_UINT32 *spill;
   volatile GEF_UINT32 *serial;
+  volatile GEF_UINT32 *time;
 };
 #define VME_RM_AM       GEF_VME_ADDR_SPACE_A32
 #define VME_RM_MAP_SIZE 0x10000
@@ -69,6 +71,9 @@ struct V830_REG{
   volatile GEF_UINT32 *enable;
   volatile GEF_UINT16 *clr;
   volatile GEF_UINT16 *str;
+  volatile GEF_UINT16 *geo_addr;
+  volatile GEF_UINT16 *chain_addr;
+  volatile GEF_UINT16 *chain_ctrl;
   volatile GEF_UINT16 *reset;
   volatile GEF_UINT16 *clear;
   volatile GEF_UINT16 *trig;  
@@ -77,23 +82,6 @@ struct V830_REG{
 #define V830_MAP_SIZE  0x10000
 extern const int V830_NUM;
 extern struct V830_REG v830[];
-
-//### V775 ################################
-struct V775_REG{
-  uint64_t addr;
-  GEF_VME_ADDR addr_param;
-  volatile GEF_UINT32 *data_buf;
-  volatile GEF_UINT16 *bitset1;
-  volatile GEF_UINT16 *bitclr1;
-  volatile GEF_UINT16 *str1;
-  volatile GEF_UINT16 *bitset2;
-  volatile GEF_UINT16 *bitclr2;
-  volatile GEF_UINT16 *range;
-};
-#define V775_AM        GEF_VME_ADDR_SPACE_A32
-#define V775_MAP_SIZE  0x10000
-extern const int V775_NUM;
-extern struct V775_REG v775[];
 
 //### For VME node ######################
 #define VME_MASTER_MAGIC 0x00564d45 /* VME */
