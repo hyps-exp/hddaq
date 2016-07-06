@@ -1,7 +1,7 @@
 #!/bin/sh
 
 nickname=vme10
-nodeid=$((0x210))
+nodeid=$((0x20A))
 frontend=vme07_frontend
 
 bin_dir=$(cd $(dirname $0); pwd)/../bin

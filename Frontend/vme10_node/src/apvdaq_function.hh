@@ -46,6 +46,8 @@ void delay_us();
 
 //19 Aug 2015 at Tokai #2 bldg.
 void switch_buffer();
+void switch_buffer(unsigned long module,unsigned long buffer_address);
+unsigned long read_buffer_address(unsigned long module);
 
 void FIR_ON();
 void FIR_OFF();
@@ -66,6 +68,9 @@ private:
   double rms[APVDAQNUMB][APVCHIPNUMB][128][NumberOfSamples];
   double DevMean[APVDAQNUMB][APVCHIPNUMB][128];
   double DevRms[APVDAQNUMB][APVCHIPNUMB][128];
+  double ThresParam[APVDAQNUMB];
+  double ThresParam2[APVDAQNUMB];
+  double MaxPedThreshold;
 
 public:
   SsdParam();
@@ -73,6 +78,7 @@ public:
   static SsdParam& get_instance(void);
 
   void ReadPedParam();
+  void ReadThresParam();
   void WritePedParamToFpga();
   void WriteDevParamToFpga();
   void WritePulseShapeParamToFpga();

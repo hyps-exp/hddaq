@@ -17,11 +17,13 @@
 #include <stdlib.h>
 #include <math.h>
 #include <fstream>
+#include <sstream>
 
 
 #include "gef/gefcmn_vme.h"
 
 #include "data_buffer.hh"
+#include "MessageHelper.h"
 
 #include "apvdaq.hh"
 #include "apvdaq_function.hh"
@@ -599,21 +601,18 @@ void read_2fifo_pio(unsigned long module)
   if(module==SLAVE6){ g_dbuf.add_data(0x6c000000); }
   if(module==SLAVE7){ g_dbuf.add_data(0x7c000000); }
 
-
-  for(i=0;i<50;i++){
-    vread32_uint(module,READ_FIFO_ORIGINAL_AB,&dataword);
+  static unsigned int read_count = 0;
+  static unsigned int cnt =0;
+  for(i=0;i<200;i++){
+    vread32_uint(module,READ_FIFO_TEMP_A,&dataword);
 
     g_dbuf.add_data(dataword);
 
     adc_A[i] = dataword&0x3ff;
     adc_B[i] = (dataword>>16)&0x3ff;    
 
-    //adc_A = dataword&0x3ff;
-    //adc_B = (dataword>>16)&0x3ff;
-    //printf("0x%x : adc_A[%d] = %d, adc_B[%d] = %d\n",module,i,adc_A,i,adc_B);
-    
-    printf("0x%x : adc_A[%d] = %d, adc_B[%d] = %d\n",module,i,adc_A[i],i,adc_B[i]);
-    
+    //    printf("0x%x : adc_A[%d] = %d, adc_B[%d] = %d\n",module,i,adc_A[i],i,adc_B[i]);
+
     //adc_A[i] = dataword&0x3ff;
     //adc_B[i] = (dataword>>16)&0x3ff;    
     //data = 0 ;
@@ -623,9 +622,9 @@ void read_2fifo_pio(unsigned long module)
   }
 
   
-  for(i=0;i<50;i++)
+  for(i=0;i<60;i++)
     {
-      vread32_uint(module,READ_FIFO_ORIGINAL_CD,&dataword);
+      vread32_uint(module,READ_FIFO_TEMP_B,&dataword);
       g_dbuf.add_data(dataword);
       //adc_C = dataword&0x3ff;
       //adc_D = (dataword>>16)&0x3ff;
@@ -634,7 +633,7 @@ void read_2fifo_pio(unsigned long module)
       adc_C[i] = dataword&0x3ff;
       adc_D[i] = (dataword>>16)&0x3ff;
 
-      printf("0x%x : adc_C[%d] = %d, adc_D[%d] = %d\n",module,i,adc_C[i],i,adc_D[i]);
+      //      printf("0x%x : adc_C[%d] = %d, adc_D[%d] = %d\n",module,i,adc_C[i],i,adc_D[i]);
 
       //data = 0;
       //data |= adc_C;
@@ -642,18 +641,48 @@ void read_2fifo_pio(unsigned long module)
       //data |= (adc_B<<16) ;
       //g_dbuf.add_data(data) ;
     }
-  
+
+
+    {
+      std::ofstream ofs;
+      std::stringstream ss;
+      cnt++;
+      ss<<"read"<<cnt<<".txt";
+      ofs.open(ss.str().c_str());
+      for(i=0;i<300;i++)
+	{
+	  ofs<<"adcA_["<<i<<"]= "<<adc_A[i]<<", adc_B["<<i<<"] = "<<adc_B[i]<<"\n";
+	  ofs<<"adc_C["<<i<<"]= "<<adc_C[i]<<", adc_D["<<i<<"] = "<<adc_D[i]<<"\n";
+
+	}
+      ofs.close();
+      
+    }
+  read_count++;
 
   //clear_fifo();
   return;
 }
 void switch_buffer(){
-
-  long dataword = 0;
-
+  static unsigned int buffer_address = 0;
+  long dataword = (0x2)|(0x1&buffer_address);
   vwrite32(BROADCAST,BUFFERSWITCH,&dataword);
+  buffer_address++;
   std::cout<<"switching buffer"<<std::endl;
   return ;
+}
+void switch_buffer(unsigned long module, unsigned long buffer_address){
+  long dataword = (0x2)|(0x1&buffer_address);
+  vwrite32(module,BUFFERSWITCH,&dataword);
+  std::cout<<"switching buffer"<<std::endl;
+  return ;
+}
+
+unsigned long read_buffer_address(unsigned long module)
+{
+  unsigned long buffer_address;
+  vread32_uint(module,BUFFERSWITCH,&buffer_address);
+  return (buffer_address & 0x1);
 }
 
 void read_fifo_ZS(unsigned long module)
@@ -680,36 +709,59 @@ void read_fifo_ZS(unsigned long module)
   if(module==SLAVE6){ g_dbuf.add_data(0x6c000000); }
   if(module==SLAVE7){ g_dbuf.add_data(0x7c000000); }
 
-  std::cout<<"module="<< std::hex <<module<<std::endl;  
+  static unsigned int cnt = 0;
+  const int itr = 1;
+  std::string message = "SSD FIFO Reading";
+  for(int i=0;i<itr;i++)
+    {
+      cnt++;
+      if(!cnt) send_status_message(message);
+    }
+
+
 
   vread32_uint(module,READ_FIFO_SIZE,&dataword);
   g_dbuf.add_data(dataword);
 
-  datasize1=dataword&0xff;
-  datasize2=(dataword>>8)&0xff;
-  datasize3=(dataword>>16)&0xff;
-  datasize4=(dataword>>24)&0xff;
-
-  std::cout<<"datasize1="<< std::dec <<datasize1<<std::endl;
-  std::cout<<"datasize2="<< std::dec <<datasize2<<std::endl;
-  std::cout<<"datasize3="<< std::dec <<datasize3<<std::endl;
-  std::cout<<"datasize4="<< std::dec <<datasize4<<std::endl;
+   datasize1=dataword&0xff;
+   datasize2=(dataword>>8)&0xff;
+   datasize3=(dataword>>16)&0xff;
+   datasize4=(dataword>>24)&0xff;
+  if(datasize1==0&&datasize2==0&&datasize3==0&&datasize4==0)
+  //if(datasize1!=128||datasize2!=128||datasize3!=128||datasize4!=128)
+    {
+      //      read_2fifo_pio(module);
+      std::cout<<"module="<< std::hex <<module<<std::endl;
+      std::cout<<"datasize1="<< std::dec <<datasize1<<std::endl;
+      std::cout<<"datasize2="<< std::dec <<datasize2<<std::endl;
+      std::cout<<"datasize3="<< std::dec <<datasize3<<std::endl;
+      std::cout<<"datasize4="<< std::dec <<datasize4<<std::endl;
+    }
   
-  std::cout<<"CHIP 1 START\n"<<std::endl;
+//   std::cout<<"CHIP 1 START\n"<<std::endl;
   
   for(i=0;i<datasize1;i++)
     {
+        for(int i=0;i<itr;i++)
+    {
+      cnt++;
+      if(!cnt) send_status_message(message);
+    }
+
       vread32_uint(module,READ_FIFO_AA,&dataword);
       g_dbuf.add_data(dataword);
       CHIP = (dataword>>30)&0x3;
       SP1 = dataword&0x3ff;
       SP2 = (dataword>>10)&0x3ff;
       CHANNEL = (dataword>>20)&0x3ff;
+
       vread32_uint(module,READ_FIFO_AB,&dataword);
       g_dbuf.add_data(dataword);
       SP3 = dataword&0x3ff;
       SP4 = (dataword>>10)&0x3ff;
       SP5 = (dataword>>20)&0x3ff;
+
+
       vread32_uint(module,READ_FIFO_AC,&dataword);
       g_dbuf.add_data(dataword);
       SP6 = dataword&0x3ff;
@@ -727,20 +779,28 @@ void read_fifo_ZS(unsigned long module)
     }
   
   
-  std::cout<<"CHIP 2 START\n"<<std::endl;
+//   std::cout<<"CHIP 2 START\n"<<std::endl;
   for(i=0;i<datasize2;i++)
     {
+  for(int i=0;i<itr;i++)
+    {
+      cnt++;
+      if(!cnt) send_status_message(message);
+    }
+
       vread32_uint(module,READ_FIFO_BA,&dataword);
       g_dbuf.add_data(dataword);
       CHIP = (dataword>>30)&0x3;
       SP1 = dataword&0x3ff;
       SP2 = (dataword>>10)&0x3ff;
       CHANNEL = (dataword>>20)&0x3ff;
+
       vread32_uint(module,READ_FIFO_BB,&dataword);
       g_dbuf.add_data(dataword);
       SP3 = dataword&0x3ff;
       SP4 = (dataword>>10)&0x3ff;
       SP5 = (dataword>>20)&0x3ff;
+
       vread32_uint(module,READ_FIFO_BC,&dataword);
       g_dbuf.add_data(dataword);
       SP6 = dataword&0x3ff;
@@ -757,20 +817,28 @@ void read_fifo_ZS(unsigned long module)
       //	printf("0x%x : CHIP = %d,SP1[%d] = %d,SP2[%d] = %d,SP3[%d] = %d,SP4[%d] = %d, SP5[%d] = %d, SP6[%d] = %d, SP7[%d] = %d, SP8[%d] = %d,FLAG = %d\n",module,CHIP,CHANNEL,SP1,CHANNEL,SP2,CHANNEL,SP3,CHANNEL,SP4,CHANNEL,SP5,CHANNEL,SP6,CHANNEL,SP7,CHANNEL,SP8,FLAG);
     }
   
-  std::cout<<"CHIP 3 START\n"<<std::endl;
+//   std::cout<<"CHIP 3 START\n"<<std::endl;
   for(i=0;i<datasize3;i++)
     {
+  for(int i=0;i<itr;i++)
+    {
+      cnt++;
+      if(!cnt) send_status_message(message);
+    }
+
       vread32_uint(module,READ_FIFO_CA,&dataword);
       g_dbuf.add_data(dataword);
       CHIP = (dataword>>30)&0x3;
       SP1 = dataword&0x3ff;
       SP2 = (dataword>>10)&0x3ff;
       CHANNEL = (dataword>>20)&0x3ff;
+
       vread32_uint(module,READ_FIFO_CB,&dataword);
       g_dbuf.add_data(dataword);
       SP3 = dataword&0x3ff;
       SP4 = (dataword>>10)&0x3ff;
       SP5 = (dataword>>20)&0x3ff;
+
       vread32_uint(module,READ_FIFO_CC,&dataword);
       g_dbuf.add_data(dataword);
       SP6 = dataword&0x3ff;
@@ -789,20 +857,29 @@ void read_fifo_ZS(unsigned long module)
     }
   
   
-  std::cout<<"CHIP 4 START\n"<<std::endl;
+//   std::cout<<"CHIP 4 START\n"<<std::endl;
   for(i=0;i<datasize4;i++)
     {
+  for(int i=0;i<itr;i++)
+    {
+      cnt++;
+      if(!cnt) send_status_message(message);
+    }
+
       vread32_uint(module,READ_FIFO_DA,&dataword);
       g_dbuf.add_data(dataword);
       CHIP = (dataword>>30)&0x3;
       SP1 = dataword&0x3ff;
       SP2 = (dataword>>10)&0x3ff;
       CHANNEL = (dataword>>20)&0x3ff;
+
+
       vread32_uint(module,READ_FIFO_DB,&dataword);
       g_dbuf.add_data(dataword);
       SP3 = dataword&0x3ff;
       SP4 = (dataword>>10)&0x3ff;
       SP5 = (dataword>>20)&0x3ff;
+
       vread32_uint(module,READ_FIFO_DC,&dataword);
       g_dbuf.add_data(dataword);
       SP6 = dataword&0x3ff;
@@ -828,6 +905,8 @@ void FIR_ON()
   long config = 0x0;
   config = config | 0x1;
   config = config | RAWZSSEL<<1;
+  config = config | ((L2TRG&0x1)<<2);
+
   std::cout<<"FIR ON data: "<<std::hex<<config<<std::endl;
   vwrite32(BROADCAST,WRITE_USER_CONF,&config);
   return;
@@ -838,6 +917,8 @@ void FIR_OFF()
   long config = 0x0;
   config = config | 0x0;
   config = config | RAWZSSEL<<1;
+  config = config | ((L2TRG&0x1)<<2);
+
   std::cout<<"FIR OFF data: "<<std::hex<<config<<std::endl;
   vwrite32(BROADCAST,WRITE_USER_CONF,&config);
   return;
@@ -848,29 +929,43 @@ void FIR_OFF()
 void WaitDReadySsd(unsigned long module)
 {
   unsigned long dready = 0;
+  //unsigned long dready = 1;
   unsigned int count = 0;
+  static unsigned int cnt = 0;
+  std::string message = "Polling APVDAQ";
+  static unsigned int fail_count = 0;
   while(!dready)
     {
+      for(int i=0;i<10000;i++)
+	{
+	  cnt++;
+	  if(!cnt) send_status_message(message);
+	}
       if(dready==0)
 	{
-	  // std::cout<<"dready bit:"<<dready<<std::endl;
 	  vread32_uint(module,READ_DREADY,&dready);
 	}
       if(dready==1)   
 	{
 	  std::cout<<"dready bit:"<<dready<<std::endl;
+	  fail_count = 0;
 	  break;
 	}
-      /*
-      if(count%5==0)
-	{
-	  std::cerr<<"data is not ready"<<std::endl;
-	  std::cout<<"dready bit:"<<dready<<std::endl;
-	}
-      */
-      if(count == 30000)
+      if(count == 30)
 	{
 	  std::cerr<<"TIMEOUT!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<std::endl;
+	  std::stringstream ss;
+	  ss<<"Wait SSD Time Out!! Module"<<std::hex<<module;
+	  
+	  send_warning_message(ss.str());
+	  if(fail_count >= 10) 
+	    {
+	      std::string fatal_message = "SSD DReady Fail Exit Frontend!";
+	      send_fatal_message(fatal_message);
+	      send_fatal_message(ss.str());
+	      exit(-1);
+	    }
+	  fail_count++;
 	  break;
 	}
 
@@ -889,6 +984,8 @@ void FIRZS_CONFIGURATION() // CONFIGURATION of FIR and ZS test on/off
   long config = 0x0;
   config = config | (FIRONOFF&0x1);
   config = config | ((RAWZSSEL&0x1)<<1);
+  config = config | ((L2TRG&0x1)<<2);
+
   vwrite32(BROADCAST,WRITE_USER_CONF,&config);
   return;
 }
@@ -920,14 +1017,21 @@ void SsdParam::ClearData()
 //=====================================                                                                  
 void SsdParam::ReadPedParam()
 {
-  std::ifstream ifs1,ifs2;
+  std::ifstream ifs1;
+  //std::ifstream ifs1,ifs2;
   std::string filename1 = "/home/sks/jaeyong_work/parameter/MeanRms.txt";
-  std::string filename2 = "/home/sks/jaeyong_work/parameter/DevMeanRms.txt";
+  //std::string filename2 = "/home/sks/jaeyong_work/parameter/DevMeanRms.txt";
 
   ifs1.open(filename1.c_str());
-  ifs2.open(filename2.c_str());
-  if(ifs1.fail()) std::cerr<<"#E file open fail Read Mean RMS"<<std::endl;
-  if(ifs2.fail()) std::cerr<<"#E file open fail Read DevMeanRMS"<<std::endl;
+  //ifs2.open(filename2.c_str());
+  if(ifs1.fail()) 
+  {
+    std::cerr<<"#E file open fail Read Mean RMS"<<std::endl;
+    std::string message = "File open fail! Check Parameter File, Location: ";
+    message+=filename1;
+    send_fatal_message(message);
+  }
+  //if(ifs2.fail()) std::cerr<<"#E file open fail Read DevMeanRMS"<<std::endl;
 
   for( int i = 0; i <APVDAQNUMB; i++ )//module                                                           
     for( int j = 0; j <APVCHIPNUMB; j++ )//chip                                                          
@@ -943,7 +1047,7 @@ void SsdParam::ReadPedParam()
             //      getchar();                                                                           
 #endif
           }
-
+/*
   for( int i = 0; i <APVDAQNUMB; i++ )//module                                                           
     for( int j = 0; j <APVCHIPNUMB; j++ )//chip                                                          
       for( int k = 0; k < 128; k++)//channel                                                             
@@ -957,9 +1061,47 @@ void SsdParam::ReadPedParam()
           //     getchar();                                                                              
 #endif
         }
+*/
+  ifs1.close();
+  //ifs2.close();
+}
+//=====================================                                                                  
+void SsdParam::ReadThresParam()
+{
+  std::ifstream ifs1;
+  std::string filename1 = "/home/sks/jaeyong_work/parameter/Threshold.txt";
+
+  ifs1.open(filename1.c_str());
+  if(ifs1.fail())
+    {
+      std::cerr<<"#E file open fail Read Mean RMS"<<std::endl;
+      std::string message = "File open fail! Check Parameter File, Location: ";
+      message+=filename1;
+      send_fatal_message(message);
+      exit(-1);
+    }
+
+  for( int i = 0; i <APVDAQNUMB; i++ )//module
+    ifs1>>ThresParam[i];
+  ifs1>>MaxPedThreshold;
+
+  for( int i = 0; i <APVDAQNUMB; i++ )//module
+    ifs1>>ThresParam2[i];
+
+  std::stringstream ss;
+  ss<<"Threshold: ";
+  for( int i = 0; i <APVDAQNUMB; i++ )
+    ss<<"\t"<<ThresParam[i];
+  ss<<"\tMaxThreshold: "<<MaxPedThreshold;
+
+  ss<<"\nThreshold2: ";
+  for( int i = 0; i <APVDAQNUMB; i++ )
+    ss<<"\t"<<ThresParam2[i];
+
+
+  send_normal_message(ss.str());
 
   ifs1.close();
-  ifs2.close();
 }
 //=====================================                                                                  
 void SsdParam::WritePedParamToFpga()
@@ -968,34 +1110,42 @@ void SsdParam::WritePedParamToFpga()
   unsigned long OffAddCh, OffAddChip;
   unsigned long OffsetAddress;
   unsigned long Sadc[9] = {0};
-  double threshold = PedThreshold;
-
+  double threshold[6],threshold2[6];;
+  for( int module = 0; module < APVDAQNUMB; ++module )
+    {    threshold[module]=ThresParam[module];    threshold2[module]=ThresParam2[module]; }
   for( int module = 0; module < APVDAQNUMB; ++module )
     for( chip = 0;chip < APVCHIPNUMB; chip++ )
       for( channel = 0; channel < 128; channel++ )
-	{
-	  for(int sample = 0; sample < NumberOfSamples; ++sample)
-	    {
-	      unsigned long adc_threshold = (unsigned long)(mean[module][chip][channel][sample]+threshold*rms[module][chip][channel][sample]);
-	      if(adc_threshold>=510) Sadc[sample] = 510;                                               
-	      else Sadc[sample] = adc_threshold;
-	    }
-	  for( int i = 0; i < 3 ;i++ )//RAM Selector                                                         
-	    {
-	      unsigned int address = (module<<24);
-	      unsigned long ch7bit = 0;
-	      if(channel>=64) ch7bit = 1;
-	      unsigned long data;
-	      OffAddCh = (channel&0x3F)<<2;
-	      OffAddChip = (chip&0x3)<<8;
-	      OffsetAddress = WRITE_PEDESTAL_ADC | OffAddChip | OffAddCh ;
+        {
+          for(int sample = 0; sample < NumberOfSamples; ++sample)
+            {
+              double rms_threshold;
+              if((channel>=32&&channel<48)||(channel>=96&&channel<112))
+                rms_threshold = threshold2[module]*rms[module][chip][channel][sample];
+              else
+                rms_threshold = threshold[module]*rms[module][chip][channel][sample];
+              if(rms_threshold >=MaxPedThreshold) rms_threshold = MaxPedThreshold;
+              Sadc[sample] = (unsigned long)(mean[module][chip][channel][sample]+rms_threshold);
+            }
+          for( int i = 0; i < 3 ;i++ )//RAM Selector                                                        \
 
-	      data = (((i+1)&0x7)<<29) | ((ch7bit&0x1)<<27) | (Sadc[3*i]&0x1ff) | ((Sadc[3*i+1]&0x1ff)<<9) | ((Sadc[3*i+2]&0x1ff)<<18);
+            {
+              unsigned int address = (module<<24);
+              unsigned long ch7bit = 0;
+              if(channel>=64) ch7bit = 1;
+              unsigned long data;
+              OffAddCh = (channel&0x3F)<<2;
+              OffAddChip = (chip&0x3)<<8;
+              OffsetAddress = WRITE_PEDESTAL_ADC | OffAddChip | OffAddCh ;
 
-	      vwrite32_uint(MASTER+address,OffsetAddress,&data);
-	    }
-	}
+              data = (((i+1)&0x7)<<29) | ((ch7bit&0x1)<<27) | (Sadc[3*i]&0x1ff) | ((Sadc[3*i+1]&0x1ff)<<9) |\
+		((Sadc[3*i+2]&0x1ff)<<18);
+
+              vwrite32_uint(MASTER+address,OffsetAddress,&data);
+            }
+        }
 }
+
 void SsdParam::WriteDevParamToFpga()
 {
   unsigned long channel,chip;
@@ -1010,8 +1160,8 @@ void SsdParam::WriteDevParamToFpga()
 	for( chip = 0;chip < APVCHIPNUMB; chip++ )
 	  {
 	    unsigned int dev_adc_threshold = (unsigned int)(DevMean[module][chip][channel]+threshold*DevRms[module][chip][channel]); 
-	    if(dev_adc_threshold > 250) DevData[chip] = 250;          
-	    else DevData[chip] = dev_adc_threshold;
+	    if(dev_adc_threshold > 250) DevData[chip] = 250;
+	    else DevData[chip] = dev_adc_threshold;                                                                         
 	  }
 	unsigned int address = (module<<24);
 	unsigned long data;
@@ -1032,9 +1182,10 @@ void SsdParam::WritePulseShapeParamToFpga()
     for( chip = 0;chip < APVCHIPNUMB; chip++ )
       for( int i = 0; i < 2 ; ++ i)
         {
+	  unsigned long pulse_param = PulseShapeParameter[chip][i];
           unsigned int address = (module<<24);
           OffsetAddress =  WRITE_PULSE_SHAPE_PARAMETER | ( ((chip*2 + i)&0x7) << 2 );
-          vwrite32_uint(MASTER+address,OffsetAddress,&PulseShapeParameter[chip][i]);
+          vwrite32_uint(MASTER+address,OffsetAddress,&pulse_param);
         }
 }
 

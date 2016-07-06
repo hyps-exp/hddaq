@@ -3,12 +3,14 @@
 
 #include <unistd.h>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include "userdevice.h"
 
 #include "DetectorID.hh"
 #include "apvdaq.hh"
 #include "apvdaq_param.hh"
+#include "fir_calibration.hh"
 #include "gpio.hh"
 #include "data_buffer.hh"
 #include "apvdaq_function.hh"
@@ -41,10 +43,10 @@ void open_device(NodeProp& nodeprop) // Before Run Start
   open_gpio();
   open_apvdaq();
 
-    Init_APVDAQ();
-  SsdInitialization();
+  Init_APVDAQ();
+  SsdInitialization(); //-- comment
 
-  return;
+    return;
 }
 
 void init_device(NodeProp& nodeprop) // After Run Start
@@ -59,11 +61,21 @@ void init_device(NodeProp& nodeprop) // After Run Start
       // io clear, busy off
 
       //APVDAQ
+    SsdParam& ssd_param = SsdParam::get_instance();
+    ssd_param.ReadPedParam();
+    ssd_param.ReadThresParam();
+    ssd_param.WritePedParamToFpga();
+    ssd_param.WritePulseShapeParamToFpga();
+    ssd_param.WritePedParamToFpga();
+    ssd_param.WritePulseShapeParamToFpga();
+
       clear_fifo();    
-      switch_buffer(); 
+      switch_buffer();  //comment
       clear_fifo();    
-      switch_buffer(); 
+      switch_buffer(); //comment
       clear_fifo();    
+      //      veto_clear();
+      
       //___________________________________________________
       
       //GPIO
@@ -105,7 +117,10 @@ int wait_device(NodeProp& nodeprop)
       for( int i = 0; i < max_polling; ++i )
 	{
 	  //	  polling
-	  if(wait_gpio()) return 0;
+	  if(wait_gpio())
+	    { 
+	      return 0;
+	    }
 	}
       std::cout<<"wait_device() Time Out"<<std::endl;
       return -1;
@@ -163,20 +178,42 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	
 	module_num++;
       }
+      WaitDReadySsd(MASTER); //--comment out
+//       WaitDReadySsd(SLAVE1);
+//       WaitDReadySsd(SLAVE2);
+//       WaitDReadySsd(SLAVE3);
+//       WaitDReadySsd(SLAVE4);
+//       WaitDReadySsd(SLAVE5);
+      unsigned long temp1 = read_buffer_address(MASTER);
+      switch_buffer(); //APVDAQ Switch Buffer -- comment out
 
-      switch_buffer(); //APVDAQ Switch Buffer
-      make_pulse_gpio(0);//Pulse Output via Channel 0 ->Busy Clear
-
+      unsigned long temp2 = read_buffer_address(MASTER);
+      int buffer_try = 0;
+      //      while(temp1==temp2) 
+      if(temp1==temp2) 
+	{
+	  std::stringstream ss;
+	  ss<<"before: "<<temp1<<"  after: "<<temp2 <<"  try: "<<buffer_try;
+	  send_warning_message("buffer address error!!");
+	  send_warning_message(ss.str());
+	  //	  switch_buffer(SLAVE1,temp1+1);
+	  //  temp2 = read_buffer_address(SLAVE1);
+	}
       //apvdaq module readout
+      make_pulse_gpio(0);//Pulse Output via Channel 0 ->Busy Clear
+      static int cnt_read = 0;
       for(int module = 0; module <APVDAQNUMB; ++module)
+      //      for(int module = APVDAQNUMB-1; module >= 0; --module)
 	{
 	  uint32_t vme_module_header_start = ndata;
 	  ndata += VME_MODULE_HSIZE;
 
 	  g_dbuf.clear_data();
 	  unsigned int address = module <<24;
-	  read_fifo_ZS(MASTER+address);
-
+	  //	  if(cnt_read%100==0)
+	  read_fifo_ZS(MASTER+address); //--comment out
+	  //	  usleep(500);
+	  //	  read_2fifo_pio(MASTER+address);
 	  std::vector<uint32_t> data_apv = g_dbuf.get_one_event_data();
 
 	  for(int i=0;i<data_apv.size();++i)
@@ -193,12 +230,41 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 
 	  module_num++;
 	}
+      cnt_read++;
+      //      veto_clear();
+      //      make_pulse_gpio(0);//Pulse Output via Channel 0 ->Busy Clear --comment out
+//        if(cnt_read%100000==0)
+//  	{
+//  	  long config = 0x0;
+//  	  config = config | (FIRONOFF&0x1);
+//  	  config = config | ((0&0x1)<<1);
+//  	  config = config | ((L2TRG&0x1)<<2);
+//  	  vwrite32(BROADCAST,WRITE_USER_CONF,&config);
+//  	}
+//        if(cnt_read%100000==1)
+//  	{
+//  	  long config = 0x0;
+//  	  config = config | (FIRONOFF&0x1);
+//  	  config = config | ((1&0x1)<<1);
+//  	  config = config | ((L2TRG&0x1)<<2);
+//  	  vwrite32(BROADCAST,WRITE_USER_CONF,&config);
+//  	}
+
       clear_fifo();// apvdaq modules clear data buffer
-      make_pulse_gpio(1);//To Check Readout Busy(temporal) 
+      //      veto_clear();
+
       VME_MASTER_HEADER vme_master_header;                            
       init_vme_master_header( &vme_master_header, ndata, module_num );
       memcpy( &data[0], &vme_master_header, VME_MASTER_HSIZE*4 );     
       len = ndata;                                                    
+
+//        static unsigned int cnt_end = 0;
+//        std::string message = "READ END";
+//        for(int i=0;i<30000;i++)
+//  	{
+//  	  cnt_end++;
+//  	  if(!cnt_end) send_status_message(message);
+//  	}
 
       return 0;
     }
