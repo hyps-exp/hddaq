@@ -153,7 +153,7 @@ void open_device(NodeProp& nodeprop)
       	  status   = udpreg_write(sockudp, clreg, claddr, 1);
       	  printf("#D all write %x %x\n", claddr, clreg[0]);
       	} else {
-      	  for (int i = 0 ; i < 4 ; i++) {
+      	  for ( int i=0; i<4 ;++i ) {
       	    if (((slot >> i) & 0x01) == 0x1) {
       	      claddr   = CL_FINESSE + addr * 4 + i;
       	      clreg[0] = val;
