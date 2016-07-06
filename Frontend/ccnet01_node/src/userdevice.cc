@@ -24,17 +24,20 @@
 #define SCALER  9
 #define COINREG1  11
 #define COINREG2  12
+#define COINREG3  13
+#define COINREG4  14
 
-#define INTREG  14
-#define OUTREG  16
-#define CAMAC_RM 21
+#define INTREG  20
+#define OUTREG  21
+#define CAMAC_RM 23
 
+enum e_2nd_flag { k_init, k_accept, k_clear };
+int  g_2nd_flag = k_init;
 
 //maximum datasize by byte unit
 static const int max_data_size = 4*1024*1024; 
 
 DaqMode g_daq_mode = DM_NORMAL;
-
 
 typedef struct VmeMasterHeader {
     unsigned int magic;
@@ -211,6 +214,8 @@ void init_device(NodeProp& nodeprop)
   status = cam_single_cc(fd, FERA2, 0, 9, &data, &q, &x);    
   status = cam_single_cc(fd, COINREG1, 0, 9, &data, &q, &x);    
   status = cam_single_cc(fd, COINREG2, 0, 9, &data, &q, &x);    
+  status = cam_single_cc(fd, COINREG3, 0, 9, &data, &q, &x);    
+  status = cam_single_cc(fd, COINREG4, 0, 9, &data, &q, &x);    
   status = cam_single_cc(fd, OUTREG, 0, 9, &data, &q, &x);
   
   // enable interrupt at the controller
@@ -325,6 +330,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
   switch(g_daq_mode){
   case DM_NORMAL:
     {
+      int event_number = nodeprop.getEventNumber();
 
       VmeMasterHeader header;
       unsigned int *pheader;
@@ -336,37 +342,52 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
       len = 0;
       pheader = data;
       data += sizeof(header) / sizeof(unsigned int);
-      len += sizeof(header) / sizeof(unsigned int);
-      
+      len  += sizeof(header) / sizeof(unsigned int);
+
       module_data_size = read_camac_rm(data, CAMAC_RM);
-      len += module_data_size;
+      len  += module_data_size;
       data += module_data_size;
       total_module_data_size += module_data_size;
-      
-      module_data_size = read_fera(data, FERA1);  
-      len += module_data_size;
-      data += module_data_size;
-      total_module_data_size += module_data_size;
-      
+
+      //if( (event_number%10) != 0 && g_2nd_flag == k_accept ){
       /*
-	module_data_size = read_fera(data, FERA2);  
-	len += module_data_size;
-	data += module_data_size;
-	total_module_data_size += module_data_size;
+      if( (event_number%10) != 0 ){
+      	init_vme_master_header(&header, total_module_data_size, 0);
+      	memcpy(pheader, &header, sizeof(header));
+	return 0;
+      }
       */
-      
+
+      module_data_size = read_fera(data, FERA1);
+      len  += module_data_size;
+      data += module_data_size;
+      total_module_data_size += module_data_size;
+
+      module_data_size = read_fera(data, FERA2);  
+      len  += module_data_size;
+      data += module_data_size;
+      total_module_data_size += module_data_size;
+
       module_data_size = read_coinreg(data, COINREG1);  
-      len += module_data_size;
+      len  += module_data_size;
       data += module_data_size;
       total_module_data_size += module_data_size;
-      
-      /*
-	module_data_size = read_coinreg(data, COINREG2);  
-	len += module_data_size;
-	data += module_data_size;
-	total_module_data_size += module_data_size;
-      */
-      
+
+      module_data_size = read_coinreg(data, COINREG2);  
+      len  += module_data_size;
+      data += module_data_size;
+      total_module_data_size += module_data_size;
+
+      module_data_size = read_coinreg(data, COINREG3);
+      len  += module_data_size;
+      data += module_data_size;
+      total_module_data_size += module_data_size;
+
+      module_data_size = read_coinreg(data, COINREG4);
+      len  += module_data_size;
+      data += module_data_size;
+      total_module_data_size += module_data_size;
+
       init_vme_master_header(&header, total_module_data_size, 0);
       memcpy(pheader, &header, sizeof(header));
 
@@ -464,8 +485,8 @@ static int read_coinreg(unsigned int *data, int address)
     status = cam_single_cc(fd, address, 0, 2, &value, &q, &x);
     Buffer[0] = value;
     data_size = 1;
-    //printf("COINREG %d, Q=%d, X=%d, data = %x\n", address, q, x, value);
-
+    //    printf("COINREG %d, Q=%d, X=%d, data = %x\n", address, q, x, value);
+    //    if(status < 0 || q!=1) printf("Read error coinreg : %d, q=%d\n", address, q);
     return write_vme_module_data(data, Buffer, Address, data_size);
 }
 
@@ -489,6 +510,7 @@ static int read_camac_rm(unsigned int *data, int address)
     // input register
     status = cam_single_cc(fd, address, 4, 0, &value, &q, &x);
     Buffer[2] = value;
+    g_2nd_flag = value;
 
     data_size=3;
     //printf("RM : Event %x, Spill %x, Input register %x\n", Buffer[0], Buffer[1], Buffer[2]);
