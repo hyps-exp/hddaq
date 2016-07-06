@@ -164,49 +164,53 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	if(dready==1) break;
       }
 
-      GEF_STATUS status = gefVmeReadDmaBuf( dma_hdl, &dma_addr, 0, 4*9*34 );
-      if( status!=GEF_STATUS_SUCCESS ){
-      	sprintf(message, "vme01: gefVmeReadDmaBuf() failed -- %d",
-      		GEF_GET_ERROR(status ) );
-      	send_fatal_message(message);      
-      	std::exit(EXIT_FAILURE);
-      }
-
-      for( int i=0; i<DMA_BUF_LEN; ){
-      	if( dma_buf[i]==0x0 ||
-	    dma_buf[i]==0xffffffff ){
-	  break;
-	}
-	uint64_t vme_addr;
-      	int vme_module_header_start = ndata;
-      	ndata += VME_MODULE_HSIZE;
-	// header
-	uint32_t buf = __bswap_32( dma_buf[i++] );
-	int geo_addr = (buf>>27) & 0x1f;
-	int ncount   = (buf>> 8) & 0x3f;
-	switch( geo_addr ){
-	case 0x2: case 0x4: case 0x6: case 0x8:
-	  vme_addr = 0xAD000000 | (geo_addr<<15);
-	  break;
-	case 0xa: case 0xc: case 0xe: case 0x10: case 0x12:
-	  vme_addr = 0xBD000000 | ( (geo_addr-0x8)<<15 );
-	  break;
-	default:
-	  sprintf( message, "vme01: unknown GEO_ADDRESS %d", geo_addr );
+      if( dready==1 ){
+	GEF_STATUS status = gefVmeReadDmaBuf( dma_hdl, &dma_addr, 0, 4*9*34 );
+	if( status!=GEF_STATUS_SUCCESS ){
+	  sprintf(message, "vme01: gefVmeReadDmaBuf() failed -- %d",
+		  GEF_GET_ERROR( status ) );
 	  send_fatal_message( message );
 	  std::exit( EXIT_FAILURE );
 	}
 
-	data[ndata++] = buf;
-      	for( int j=0; j<ncount+1; ++j ){
-      	  data[ndata++] = __bswap_32( dma_buf[i++] );
-      	}
-	VME_MODULE_HEADER vme_module_header;
-	init_vme_module_header( &vme_module_header, vme_addr,
-				ndata - vme_module_header_start );
-	memcpy( &data[vme_module_header_start],
-		&vme_module_header, VME_MODULE_HSIZE*4 );
-	module_num++;
+	for( int i=0; i<DMA_BUF_LEN; ){
+	  if( dma_buf[i]==0x0 ||
+	      dma_buf[i]==0xffffffff ){
+	    break;
+	  }
+	  uint64_t vme_addr;
+	  int vme_module_header_start = ndata;
+	  ndata += VME_MODULE_HSIZE;
+	  // header
+	  uint32_t buf = __bswap_32( dma_buf[i++] );
+	  int geo_addr = (buf>>27) & 0x1f;
+	  int ncount   = (buf>> 8) & 0x3f;
+	  switch( geo_addr ){
+	  case 0x2: case 0x4: case 0x6: case 0x8:
+	    vme_addr = 0xAD000000 | (geo_addr<<15);
+	    break;
+	  case 0xa: case 0xc: case 0xe: case 0x10: case 0x12:
+	    vme_addr = 0xBD000000 | ( (geo_addr-0x8)<<15 );
+	    break;
+	  default:
+	    sprintf( message, "vme01: unknown GEO_ADDRESS %d", geo_addr );
+	    send_fatal_message( message );
+	    std::exit( EXIT_FAILURE );
+	  }
+
+	  data[ndata++] = buf;
+	  for( int j=0; j<ncount+1; ++j ){
+	    data[ndata++] = __bswap_32( dma_buf[i++] );
+	  }
+	  VME_MODULE_HEADER vme_module_header;
+	  init_vme_module_header( &vme_module_header, vme_addr,
+				  ndata - vme_module_header_start );
+	  memcpy( &data[vme_module_header_start],
+		  &vme_module_header, VME_MODULE_HSIZE*4 );
+	  module_num++;
+	}
+      } else {
+	send_warning_message( "vme01: data is not ready" );
       }
 #else
       ////////// V792
