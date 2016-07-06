@@ -109,7 +109,8 @@ int open_tdc()
 
   data = (0<<10) | (1 <<12); // common start + always make header and footer
   TdcReg->m_Bit_Set2 = reverse_endian(data);
-
+  data = 0;
+  TdcReg->m_Control_Reg = reverse_endian(data);
 #if 0
  std::cout<<"***********Status**************"<<std::hex<<std::endl;
  std::cout<<"Bit Set 1         : "<<reverse_endian(TdcReg->m_Bit_Set1)<<std::endl;
@@ -178,6 +179,13 @@ int read_tdc()
 	 if(datatype==0 || datatype==2 ||datatype==4)
 	   {
 	     g_dbuf.add_data(data32);
+	     /*
+	     if(datatype==0)
+	       {
+		 std::cout<<"channel :"<<((data32>>17)&0xf)<<std::endl;
+		 std::cout<<"tdc value:"<<(data32&0xfff)<<std::endl;
+	       }
+	       */
 	   }
 	 else
 	   valid_data = false;
@@ -186,7 +194,7 @@ int read_tdc()
   else
     {
       std::string message = "vme07 v775 data is not ready";
-      send_warning_message(message.c_str());                                           
+      send_warning_message(message);                                           
     }
   return 0;
 }

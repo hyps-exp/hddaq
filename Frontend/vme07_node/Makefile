@@ -10,7 +10,7 @@ BLD_DIR 	= build
 CXX		= g++
 CXXFLAGS	= -O2 -Wall
 
-INCLUDES	= -I. -I$(CORE_DIR) -I../../kol -I../../Message 
+INCLUDES	= -I. -I$(CORE_DIR) -I../../kol -I../../Message  -I. $(ROOT_INCLUDE)
 LIBS		= -L../../Message/lib -lMessage \
 			-L../../kol/lib -lkol \
 			-lpthread \

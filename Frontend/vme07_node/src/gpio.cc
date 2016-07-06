@@ -112,6 +112,9 @@ int read_gpio()
     }
   else  g_dbuf.add_data(data32);
 
+  // R.K.
+  std::cout << "Event num = " << data32 << std::endl;
+
   status = gefVmeRead32(master_hdl_gpio,0x4,1,&data32);//spill number
   if(status!=GEF_STATUS_SUCCESS)
     {

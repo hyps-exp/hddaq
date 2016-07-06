@@ -39,9 +39,9 @@
 //#define MULTI_SEQ_CELL4 59
 
 
-#define MULTI_SEQ_CELL2 50
-#define MULTI_SEQ_CELL3 53
-#define MULTI_SEQ_CELL4 56
+#define MULTI_SEQ_CELL2 37
+#define MULTI_SEQ_CELL3 40
+#define MULTI_SEQ_CELL4 43
 
 // At Nagoya 20140117 -- Perfect Timing
 //#define MULTI_SEQ_CELL1 75
@@ -183,11 +183,11 @@ const unsigned short apv_i2c_settings[16][2] = {
 #define ADC_OFFSET 0x64 //
 
 //setting PHOS delay-chip 
-#define MASTER_PHOS_ADCDELAY 4
+#define MASTER_PHOS_ADCDELAY 7
 #define SLAVE1_PHOS_ADCDELAY 8
-#define SLAVE2_PHOS_ADCDELAY 6
+#define SLAVE2_PHOS_ADCDELAY 7
 
-#define SLAVE3_PHOS_ADCDELAY 8
+#define SLAVE3_PHOS_ADCDELAY 7
 #define SLAVE4_PHOS_ADCDELAY 8
 #define SLAVE5_PHOS_ADCDELAY 8
 
@@ -218,6 +218,7 @@ const unsigned short apv_i2c_settings[16][2] = {
 #define APVCHIPNUMB  4 //3 for old sensor, 4 for new sensor
 
 #define RAWZSSEL     1     //0 : test mode, 1 : ZS mode
+#define L2TRG        1     //0 : OFF, 1 : ON
 
 
 /*
@@ -225,8 +226,10 @@ static unsigned long PulseShapeParameter[4][2] = { {0x16c, 0x380000},
 						   {0x16c, 0x380000},
 						   {0x16c, 0x380000},
 						   {0x16c, 0x380000} };
+
+
 */
-static unsigned long PulseShapeParameter[4][2] = { {0x30c, 0x1000000},
+const  unsigned long PulseShapeParameter[4][2] = { {0x30c, 0x1000000},
                                                    {0x30c, 0x1000000},
                                                    {0x30c, 0x1000000},
                                                    {0x30c, 0x1000000} };
@@ -236,10 +239,25 @@ static unsigned long PulseShapeParameter[4][2] = { {0x0, 0x0},
 						   {0x0, 0x0},
 						   {0x0, 0x0},
 						   {0x0, 0x0} };
+
 */
 #define DevThreshold 0.0
-#define PedThreshold 3.5
+//#define PedThreshold 3.0
+//const double MaxPedThreshold = 40.0;
+// const double PedThreshold[6] =
+//   //    {2.0,2.0,2.0,2.0,2.0,2.0};
+//   //{3.0,3.0,3.0,3.0,3.0,3.0};
+//     {4.0,4.0,4.0,4.0,4.0,4.0};
 
+const double PedOffset[6][4] =
+  {
+    {0.0, 0.0, 0.0, 0.0},
+    {0.0, 0.0, 0.0, 0.0},
+    {0.0, 0.0, 0.0, 0.0},
+    {0.0, 0.0, 0.0, 0.0},
+    {0.0, 0.0, 0.0, 0.0},
+    {0.0, 0.0, 0.0, 0.0}
+  };
 
 //-------------------
 //setparam.h +
