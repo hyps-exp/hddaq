@@ -1,11 +1,13 @@
 #include <iostream>
 #include <stdint.h>
+#include <sstream>
 
 #include "apvdaq.hh"
 
 #include "apvdaq_function.hh"
 #include "apvdaq_param.hh"
 #include "fir_calibration.hh"
+#include "MessageHelper.h"
 
 #include "data_buffer.hh"
 #include "DetectorID.hh"
@@ -43,7 +45,11 @@ void Init_APVDAQ()
     {
       unsigned int address = (module<<24);
       printf("Module %d:\t",module);
-      is_veto(MASTER+address);
+      if(is_veto(MASTER+address))
+	{
+	  std::string veto_error_message = "veto off status error";
+	  send_error_message(veto_error_message);
+	}
     }
 
   veto_on(BROADCAST);
@@ -52,7 +58,13 @@ void Init_APVDAQ()
     {
       unsigned int address = (module<<24);
       printf("Module %d:\t",module);
-      is_veto(MASTER+address);
+      if(!is_veto(MASTER+address))
+	{
+	  std::string veto_error_message = "veto status error";
+	  send_error_message(veto_error_message);
+	}
+
+
     }
 
   reset_phos();
@@ -89,24 +101,37 @@ void Init_APVDAQ()
 
   // SSD                                                                                                                                       
   /* New Sensor */
-
+  /*
   unsigned int new_chip_address[48]
-    = { 56, 57, 58, 59, 60, 61, 62, 63, 57, 59, 61, 63,
-	48, 49, 50, 51, 52, 53, 54, 55, 49, 51, 53, 55 };
-
+    = { 32, 33, 34, 35, 36, 37, 38, 39, 33, 35, 37, 39,
+        40, 41, 42, 43, 44, 45, 46, 47, 41, 43, 45, 47};
+  */
+  /* Old Sensor */
+       unsigned int new_chip_address[48]
+ 	= {40, 41, 42, 43, 44, 45, 46, 47,41, 43, 45, 47,
+ 	    32, 33, 34, 35,  36, 37, 38, 39, 33, 35, 37, 39};
 
   for (int  module = 0; module < APVDAQNUMB; ++module )
+  //for (int  module = 0; module < 2; ++module ) // R.K.
     {
       unsigned int address = (module<<24);
 
-      for(int i = 0; i < 4; ++i)
+      for(int i = 0; i < APVCHIPNUMB; ++i)
         {
           verbose[0]=0;
-          init_apv(new_chip_address[module*4+i],verbose,MASTER+address);
+          if(!init_apv(new_chip_address[module*4+i],verbose,MASTER+address))
+	    {
+	      std::stringstream chip_fatal_message;
+	      chip_fatal_message<< i + 1<<"th module, "<<i+1<<"th chip initialization error!!  ";
+	      send_fatal_message(chip_fatal_message.str());
+	    }
 	  std::cout << "verbose: " << verbose << std::endl;
         }
     }
+  
   std::cout <<"APVDAQs have been initialized" << std::endl;
+  std::string chip_init_message = "Chips Initialized!";
+  send_status_message(chip_init_message);
 }
 
 
@@ -144,15 +169,14 @@ int SsdInitialization()
     }
   FIRZS_CONFIGURATION();
 
-  {
-    SsdParam& ssd_param = SsdParam::get_instance();
-    ssd_param.ReadPedParam();
-    ssd_param.WritePedParamToFpga();
-    ssd_param.WriteDevParamToFpga();
-    ssd_param.WritePulseShapeParamToFpga();
-    ssd_param.WritePedParamToFpga();
-    ssd_param.WriteDevParamToFpga();
-    ssd_param.WritePulseShapeParamToFpga();
-  }
+//   {
+//     SsdParam& ssd_param = SsdParam::get_instance();
+//     ssd_param.ReadPedParam();
+//     ssd_param.ReadThresParam();
+//     ssd_param.WritePedParamToFpga();
+//     ssd_param.WritePedParamToFpga();
+//     ssd_param.WritePulseShapeParamToFpga();
+//     ssd_param.WritePulseShapeParamToFpga();
+//   }
   return 0;
 }

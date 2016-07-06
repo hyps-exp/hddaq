@@ -66,6 +66,9 @@ private:
   double rms[APVDAQNUMB][APVCHIPNUMB][128][NumberOfSamples];
   double DevMean[APVDAQNUMB][APVCHIPNUMB][128];
   double DevRms[APVDAQNUMB][APVCHIPNUMB][128];
+  double ThresParam[APVDAQNUMB];
+  double ThresParam2[APVDAQNUMB];
+  double MaxPedThreshold;
 
 public:
   SsdParam();
@@ -73,6 +76,7 @@ public:
   static SsdParam& get_instance(void);
 
   void ReadPedParam();
+  void ReadThresParam();
   void WritePedParamToFpga();
   void WriteDevParamToFpga();
   void WritePulseShapeParamToFpga();

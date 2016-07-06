@@ -9,6 +9,7 @@
 #include "DetectorID.hh"
 #include "apvdaq.hh"
 #include "apvdaq_param.hh"
+#include "fir_calibration.hh"
 #include "gpio.hh"
 #include "data_buffer.hh"
 #include "apvdaq_function.hh"
@@ -33,15 +34,18 @@ void open_device(NodeProp& nodeprop) // Before Run Start
 
 
   init_gpio();
+  //init_tdc();
   init_apvdaq();
 
   conf_gpio();
+  //conf_tdc();
   conf_apvdaq();
 
   open_gpio();
+  //open_tdc();
   open_apvdaq();
 
-    Init_APVDAQ();
+  Init_APVDAQ();
   SsdInitialization();
 
   return;
@@ -57,6 +61,13 @@ void init_device(NodeProp& nodeprop) // After Run Start
     {
       // fifo_clear (output buffer clear) veto_clear for apvdaq
       // io clear, busy off
+      SsdParam& ssd_param = SsdParam::get_instance();
+      ssd_param.ReadPedParam();
+      ssd_param.ReadThresParam();
+      ssd_param.WritePedParamToFpga();
+      ssd_param.WritePedParamToFpga();
+      ssd_param.WritePulseShapeParamToFpga();
+      ssd_param.WritePulseShapeParamToFpga();
 
       //APVDAQ
       clear_fifo();    
@@ -90,6 +101,7 @@ void close_device(NodeProp& nodeprop)
 {
   close_gpio();
   close_apvdaq();
+  //close_tdc();
   return;
 }
 
@@ -105,7 +117,11 @@ int wait_device(NodeProp& nodeprop)
       for( int i = 0; i < max_polling; ++i )
 	{
 	  //	  polling
-	  if(wait_gpio()) return 0;
+	  if(wait_gpio()) 
+	    {
+
+	      return 0;
+	    }
 	}
       std::cout<<"wait_device() Time Out"<<std::endl;
       return -1;
@@ -164,10 +180,18 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	module_num++;
       }
 
+      WaitDReadySsd(MASTER);
+//       WaitDReadySsd(SLAVE1);
+//       WaitDReadySsd(SLAVE2);
+//       WaitDReadySsd(SLAVE3);
+//       WaitDReadySsd(SLAVE4);
+//       WaitDReadySsd(SLAVE5);
+
       switch_buffer(); //APVDAQ Switch Buffer
       make_pulse_gpio(0);//Pulse Output via Channel 0 ->Busy Clear
 
       //apvdaq module readout
+      static int cnt_read = 0;
       for(int module = 0; module <APVDAQNUMB; ++module)
 	{
 	  uint32_t vme_module_header_start = ndata;
@@ -175,6 +199,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 
 	  g_dbuf.clear_data();
 	  unsigned int address = module <<24;
+	  //	  if(cnt_read%100==0)
 	  read_fifo_ZS(MASTER+address);
 
 	  std::vector<uint32_t> data_apv = g_dbuf.get_one_event_data();
@@ -193,8 +218,11 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 
 	  module_num++;
 	}
+      cnt_read++;
       clear_fifo();// apvdaq modules clear data buffer
-      make_pulse_gpio(1);//To Check Readout Busy(temporal)
+      //veto_clear();
+      //make_pulse_gpio(1);//To Check Readout Busy(temporal)
+
       VME_MASTER_HEADER vme_master_header;                            
       init_vme_master_header( &vme_master_header, ndata, module_num );
       memcpy( &data[0], &vme_master_header, VME_MASTER_HSIZE*4 );     
