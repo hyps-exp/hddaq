@@ -1,0 +1,15 @@
+2016年  7月  6日 水曜日 15:43:26 JST
+
+bin_dir   : /home/axis/hddaq/Frontend/fe_easiroc01_node/script
+param_dir : /home/axis/hddaq/Frontend/fe_easiroc01_node/script/Input8bitDAC
+temp_dir  : inputdac_g30_temp22.0
+easiroc00 : Input8bitDAC_0.txt
+easiroc01 : Input8bitDAC_1.txt
+easiroc02 : Input8bitDAC_2.txt
+easiroc03 : Input8bitDAC_3.txt
+easiroc04 : Input8bitDAC_4.txt
+easiroc05 : Input8bitDAC_5.txt
+easiroc06 : Input8bitDAC_6.txt
+easiroc07 : Input8bitDAC_7.txt
+easiroc08 : Input8bitDAC_8.txt
+easiroc09 : Input8bitDAC_9.txt
