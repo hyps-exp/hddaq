@@ -163,6 +163,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	data[ndata++] = ( emc[i].serial & k_data_mask ) | ( k_serial_magic << k_word_type_shift );
 	data[ndata++] = ( emc[i].xpos & k_data_mask ) | ( k_xpos_magic << k_word_type_shift );
 	data[ndata++] = ( emc[i].ypos & k_data_mask ) | ( k_ypos_magic << k_word_type_shift );
+	data[ndata++] = ( emc[i].state & k_data_mask ) | ( k_state_magic << k_word_type_shift );
 	data[ndata++] = ( emc[i].utime & k_data_mask ) | ( k_utime_magic << k_word_type_shift );
 	data[ndata++] = ( emc[i].ltime & k_data_mask ) | ( k_ltime_magic << k_word_type_shift );
 	data[ndata++] = ( 0x0 & k_data_mask ) | ( k_footer_magic << k_word_type_shift );
