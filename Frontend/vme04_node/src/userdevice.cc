@@ -19,27 +19,41 @@ int get_maxdatasize()
 void open_device(NodeProp& nodeprop)
 {
   vme_open();
+
+  char message [256];
   ////////// TDC64M
-  uint32_t reset         = 1; // clear local event counter
+  uint32_t reset         = 0; //
+  uint32_t module_id     = 0; // 5bit 0-31
   uint32_t dynamic_range = 0; // 0-7, 2^n[us]
   uint32_t edge_mode     = 0; // 0:leading 1:leading&trailing
-  uint32_t module_id     = 0; // 5bit, 0-31
   uint32_t search_window = 1000/8; // 1us
   //uint32_t search_window = 0x3E80; // 8ns unit, 0x0-0x3E80(0-128us)
   uint32_t mask_window   = 0x0; // 8ns unit, 0x0-0x3E80(0-128us)
-  for(int i=0;i<TDC64M_NUM;i++){
-    module_id = i+1;
+  for( int i=0; i<TDC64M_NUM; ++i ){
+    module_id = i+1; // 5bit 0-31
     *(tdc64m[i].ctr) = __bswap_32( (reset&0x1) |
 				   ((dynamic_range&0x7)<<1) |
 				   ((edge_mode&0x1)<<4) |
 				   ((module_id&0x1f)<<5) );
+    sprintf( message, "vme04: TDC64M[%08llx] set controll register %08x",
+	     tdc64m[i].addr, __bswap_32( *(tdc64m[i].ctr) ) );
+    send_normal_message( message );
+
     *(tdc64m[i].enable1) = __bswap_32(0xffffffff);
     *(tdc64m[i].enable2) = __bswap_32(0xffffffff);
-    *(tdc64m[i].window)  = __bswap_32( (search_window&0xffff) |
-				       ((mask_window&0xffff)<<16) );
+    sprintf( message, "vme04: TDC64M[%08llx] set enable register   %08x %08x",
+	     tdc64m[i].addr, __bswap_32( *(tdc64m[i].enable1) ),
+	     __bswap_32( *(tdc64m[i].enable2) ) );
+    send_normal_message( message );
+
+    *(tdc64m[i].window) = __bswap_32( (search_window&0xffff) |
+				      ((mask_window&0xffff)<<16) );
+    sprintf( message, "vme04: TDC64M[%08llx] set window register   %08x",
+	     tdc64m[i].addr, __bswap_32( *(tdc64m[i].window) ) );
+    send_normal_message( message );
     *(tdc64m[i].str) = 0;// tdc64m clear    
   }
-
+  send_normal_message( "vme04: open!" );
   return;
 }
 
@@ -49,6 +63,10 @@ void init_device(NodeProp& nodeprop)
   switch(g_daq_mode){
   case DM_NORMAL:
     {
+      uint32_t reset = 1; // clear local event counter
+      for(int i=0;i<TDC64M_NUM;i++){
+	*(tdc64m[i].ctr) = __bswap_32(reset&0x1);
+      }
       *(rpv130[0].csr1)  = __bswap_16(0x01); // io clear
       *(rpv130[0].pulse) = __bswap_16(0x01); // busy off
       return;
@@ -174,8 +192,8 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	    }
 #endif
 	  }else{
-	    // sprintf(message, "vme04: TDC64M[%08llx] data is not ready", tdc64m[i].addr );
-	    // send_warning_message(message);
+	    sprintf(message, "vme04: TDC64M[%08llx] data is not ready", tdc64m[i].addr );
+	    send_warning_message(message);
 	  }
 	  *(tdc64m[i].str) = 0;// tdc64m clear
 	  VME_MODULE_HEADER vme_module_header;
