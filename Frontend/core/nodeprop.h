@@ -51,7 +51,8 @@ public:
   void setArgv(char** argv);
 
   int  getArgc(){return m_argc;}
-  std::string getArgv(int index){return m_argv[index];};
+  std::vector<std::string> getArgv(){return m_argv;}
+  std::string getArgv(int index){return m_argv[index];}
 
 private:
   State m_state;
