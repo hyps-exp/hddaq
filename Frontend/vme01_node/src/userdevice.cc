@@ -32,6 +32,8 @@ get_maxdatasize( void )
 void
 open_device( NodeProp& nodeprop )
 {
+  gVmeManager.SetNickName( nodeprop.getNickName() );
+
   gVmeManager.AddModule( new vme::CaenV775( 0xbd010000 ) );
   gVmeManager.AddModule( new vme::CaenV775( 0xbd020000 ) );
   gVmeManager.AddModule( new vme::CaenV775( 0xbd030000 ) );
@@ -41,7 +43,7 @@ open_device( NodeProp& nodeprop )
   gVmeManager.AddModule( new vme::CaenV792( 0xad040000 ) );
   gVmeManager.AddModule( new vme::RM( 0xff010000 ) );
 
-  gVmeManager.Open( nodeprop );
+  gVmeManager.Open();
 
   ////////// V792
   {
@@ -136,7 +138,7 @@ finalize_device( NodeProp& nodeprop )
 void
 close_device( NodeProp& nodeprop )
 {
-  gVmeManager.Close( nodeprop );
+  gVmeManager.Close();
   return;
 }
 
