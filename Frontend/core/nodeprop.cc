@@ -5,7 +5,8 @@
 #include "MessageHelper.h"
 
 NodeProp::NodeProp(int nodeid, std::string nickname, int data_port)
-  : m_state(INITIAL),
+  : m_argc(0),
+    m_state(INITIAL),
     m_daq_mode(DM_NORMAL),
     m_run_number(0),
     m_node_id(nodeid),
@@ -13,7 +14,6 @@ NodeProp::NodeProp(int nodeid, std::string nickname, int data_port)
     m_event_size(0),
     m_data_port(data_port),
     m_nickname(nickname),
-    m_argc(0),
     m_update_flag(false)
 {
   access_mutex = new kol::Mutex;
@@ -58,7 +58,7 @@ void NodeProp::setState(State new_state)
 {
   access_mutex->lock();
   m_state = new_state;
-  access_mutex->unlock();  
+  access_mutex->unlock();
   return;
 }
 State NodeProp::getState()
@@ -72,7 +72,7 @@ State NodeProp::getState()
 void NodeProp::setDaqMode(DaqMode new_mode)
 {
   access_mutex->lock();
-  if(m_state == IDLE) m_daq_mode = new_mode; 
+  if(m_state == IDLE) m_daq_mode = new_mode;
   access_mutex->unlock();
   return;
 }
@@ -116,8 +116,8 @@ int NodeProp::getEventSize()
 
 void NodeProp::ackStatus()
 {
-  std::ostringstream oss; 
- 
+  std::ostringstream oss;
+
   access_mutex->lock();
 
   switch (m_state){
@@ -135,7 +135,7 @@ void NodeProp::ackStatus()
   case DM_DUMMY:  oss << "DM_DUMMY";  break;
   default:        oss << "DM_UNKNOWN";   break;
   }
-  
+
   oss << " run:" << m_run_number;
   oss << " event:" << m_event_number;
   oss << " size:" << m_event_size;
@@ -143,7 +143,7 @@ void NodeProp::ackStatus()
   access_mutex->unlock();
 
   send_status_message(oss.str());
-  
+
   return;
 }
 
