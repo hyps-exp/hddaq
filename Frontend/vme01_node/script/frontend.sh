@@ -4,8 +4,7 @@ nickname=vme01
 nodeid=$((0x201))
 frontend=vme01_frontend
 
-bin_dir=$(cd $(dirname $0); pwd)/../bin
-#echo ${bin_dir}
+bin_dir=$(dirname `readlink -f $0`)/../bin
 
 if [ $$ -ne $(pgrep -fo $0) ]; then
     echo "$0 is already running."
