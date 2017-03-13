@@ -19,7 +19,6 @@ namespace
   char ip[100];
   int  sock=0;
   rbcp_header rbcpHeader;
-
   int  ConnectSocket(char *ip);
   int  Event_Cycle(int socket, unsigned int* event_buffer);
 }
@@ -32,7 +31,8 @@ int get_maxdatasize()
 void
 open_device(NodeProp& nodeprop)
 {
-  std::cout << "open_device" << std::endl;
+  const std::string& nick_name(nodeprop.getNickName());
+  const std::string& func_name(nick_name+" [::"+__func__+"()]");
 
   // RBCP
   rbcpHeader.type = UDPRBCP::rbcp_ver_;
@@ -53,11 +53,11 @@ open_device(NodeProp& nodeprop)
   }
 
   //Connection check -----------------------------------------------
-  char message[400];
   while(0 > (sock = ConnectSocket(ip) )){
-    sprintf(message,"HUL(%s)::open_device : Connection fail", ip);
-    send_error_message(message);
-    fprintf(stderr,"%s\n", message);
+    std::ostringstream oss;
+    oss << func_name << " Connection fail : " << ip;
+    send_error_message( oss.str() );
+    std::cerr << oss.str() << std::endl;
   }
 
   close(sock);
@@ -68,32 +68,44 @@ open_device(NodeProp& nodeprop)
 void
 init_device(NodeProp& nodeprop)
 {
-  fprintf(stdout, "init_device\n");
+  const std::string& nick_name(nodeprop.getNickName());
+  const std::string& func_name(nick_name+" [::"+__func__+"()]");
 
   // update DAQ mode
   g_daq_mode = nodeprop.getDaqMode();
 
-  char message[400];
   //  event_num = 0;
 
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-
       while(0 > (sock = ConnectSocket(ip) )){
-	sprintf(message,"HUL(%s)::init_device : Connection fail", ip);
-	send_error_message(message);
-	fprintf(stderr,"%s\n", message);
+	std::ostringstream oss;
+	oss << func_name << " Connection fail : " << ip;
+	send_error_message( oss.str() );
+	std::cerr << oss.str() << std::endl;
       }
 
-      sprintf(message,"HUL(%s)::init_device : Connection done", ip);
-      send_normal_message(message);
-      fprintf(stderr,"%s\n", message);
+      {
+	std::ostringstream oss;
+	oss << func_name << " Connection done : " << ip;
+	send_normal_message( oss.str() );
+      }
 
       // Start DAQ
       FPGAModule fModule(ip, udp_port, &rbcpHeader, 0);
+      {
+	std::ostringstream oss;
+	oss << func_name << " Firmware : " << std::hex << std::showbase
+	    << fModule.ReadModule( BCT::mid, BCT::laddr_Version, 4 );
+	send_normal_message( oss.str() );
+      }
+
       fModule.WriteModule(BCT::mid, BCT::laddr_Reset,  1);
       ::sleep(1);
+      fModule.WriteModule(MTM::mid, MTM::laddr_sel_trig,
+			  MTM::reg_L1RM | MTM::reg_L2RM |
+			  MTM::reg_EnL2 | MTM::reg_EnRM );
       fModule.WriteModule(DCT::mid, DCT::laddr_evb_reset, 0x1);
       fModule.WriteModule(SCR::mid, SCR::laddr_enable_block, 0xb);
       fModule.WriteModule(SCR::mid, SCR::laddr_counter_reset, 0x0);
@@ -101,7 +113,9 @@ init_device(NodeProp& nodeprop)
       fModule.WriteModule(IOM::mid, IOM::laddr_nimout1, IOM::reg_o_ModuleBusy);
       fModule.WriteModule(IOM::mid, IOM::laddr_nimout2, IOM::reg_o_clk1MHz);
       fModule.WriteModule(IOM::mid, IOM::laddr_nimout3, IOM::reg_o_clk10kHz);
-
+      fModule.WriteModule(IOM::mid, IOM::laddr_nimout4, IOM::reg_o_RML1 );
+      // start DAQ
+      fModule.WriteModule(DCT::mid, DCT::laddr_gate, 1);
       return;
     }
   case DM_DUMMY:
@@ -117,9 +131,11 @@ init_device(NodeProp& nodeprop)
 void
 finalize_device(NodeProp& nodeprop)
 {
-  fprintf(stdout, "finalize_device\n");
+  // const std::string& nick_name(nodeprop.getNickName());
+  // const std::string& func_name(nick_name+" [::"+__func__+"()]");
+
   FPGAModule fModule(ip, udp_port, &rbcpHeader, 0);
-  fModule.WriteModule(DCT::mid, DCT::laddr_gate,  0);
+  fModule.WriteModule(DCT::mid, DCT::laddr_gate, 0);
   ::sleep(1);
   unsigned int data[n_word];
   while(-1 != Event_Cycle(sock, data));
@@ -133,7 +149,8 @@ finalize_device(NodeProp& nodeprop)
 void
 close_device(NodeProp& nodeprop)
 {
-  fprintf(stdout, "close_device\n");
+  // const std::string& nick_name(nodeprop.getNickName());
+  // const std::string& func_name(nick_name+" [::"+__func__+"()]");
   return;
 }
 
@@ -145,7 +162,8 @@ wait_device(NodeProp& nodeprop)
   return  0: TRIGGED -> go read_device
 */
 {
-
+  // const std::string& nick_name(nodeprop.getNickName());
+  // const std::string& func_name(nick_name+" [::"+__func__+"()]");
   switch(g_daq_mode){
   case DM_NORMAL:
     {
@@ -170,16 +188,18 @@ read_device(NodeProp& nodeprop, unsigned int* data, int& len)
   return  0: Send data to EV
 */
 {
-  fprintf(stdout, "read_device\n");
+  // const std::string& nick_name(nodeprop.getNickName());
+  // const std::string& func_name(nick_name+" [::"+__func__+"()]");
   switch(g_daq_mode){
   case DM_NORMAL:
     {
       len = Event_Cycle(sock, data)/sizeof(unsigned int);
-      //      for(int i = 0; i<n_word; ++i){
-      //      	printf("%x ", data[i]);
-      //      	if(i%8==0) printf("\n");
-      //      }
-
+      // if( len > 0 ){
+      // 	for(int i = 0; i<n_word; ++i){
+      // 	  printf("%x ", data[i]);
+      // 	  if(i%8==0) printf("\n");
+      // 	}
+      // }
       return len;
     }
   case DM_DUMMY:
@@ -232,19 +252,20 @@ receive(int sock, char* data_buf, unsigned int ReadLength)
   unsigned int revd_size = 0;
   int tmp_returnVal      = 0;
 
-  char message[400];
   while(revd_size < ReadLength){
     tmp_returnVal = recv(sock, data_buf +revd_size, ReadLength -revd_size, 0);
     if(tmp_returnVal == 0){break;}
     if(tmp_returnVal < 0){
       int errbuf = errno;
-      perror("TCP receive");
+      std::cerr << "TCP receive" << std::endl;
       if(errbuf == EAGAIN){
 	// time out
       }else{
 	// something wrong
-	sprintf(message, "HUL(%s)::receive : TCP receive error No. is %d", ip, errbuf);
-	send_error_message(message);
+	std::ostringstream oss;
+	oss << "::" << __func__ << "() " << ip
+	    << " TCP receive error " << errbuf;
+	send_error_message( oss.str() );
       }
 
       revd_size = tmp_returnVal;
