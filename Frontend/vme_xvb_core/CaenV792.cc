@@ -63,7 +63,6 @@ void
 CaenV792::WriteRegister( GEF_UINT16 reg, GEF_UINT16 val )
 {
   *(m_offset+reg/GEF_VME_DWIDTH_D16) = __bswap_16( val );
-  ::usleep(1000);
 }
 
 //______________________________________________________________________________

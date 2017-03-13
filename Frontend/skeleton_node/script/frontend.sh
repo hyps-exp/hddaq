@@ -1,8 +1,8 @@
 #!/bin/sh
 
-nickname=example
+nickname=skeleton
 nodeid=$((0x777))
-frontend=example_frontend
+frontend=skeleton_frontend
 
 bin_dir=$(cd $(dirname $0); pwd)/../bin
 #echo ${bin_dir}

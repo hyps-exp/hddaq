@@ -40,6 +40,7 @@ RM::Open( void )
   VmeModule::m_addr_param = addr_param;
 }
 
+
 //______________________________________________________________________________
 void
 RM::InitRegister( const GEF_MAP_PTR& ptr, int index )
@@ -53,7 +54,6 @@ void
 RM::WriteRegister( GEF_UINT32 reg, GEF_UINT32 val )
 {
   *(m_offset+reg/GEF_VME_DWIDTH_D32) = __bswap_32( val );
-  ::usleep(1000);
 }
 
 //______________________________________________________________________________

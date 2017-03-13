@@ -47,6 +47,7 @@ open_device( NodeProp& nodeprop )
 
   gVmeManager.Open();
 
+
   ////////// V792
   {
     GEF_UINT16 geo_addr[]  = { 0x2, 0x4, 0x6, 0x8 };

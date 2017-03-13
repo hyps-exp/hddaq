@@ -61,7 +61,6 @@ CaenV775::ClassName( void )
   return g_name;
 }
 
-
 //______________________________________________________________________________
 inline GEF_UINT16
 CaenV775::ReadRegister( GEF_UINT16 reg ) const

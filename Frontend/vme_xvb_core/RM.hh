@@ -67,7 +67,6 @@ RM::ReadRegister( GEF_UINT32 reg ) const
   return __bswap_32( *(m_offset+reg/GEF_VME_DWIDTH_D32) );
 }
 
-
 }
 
 #endif

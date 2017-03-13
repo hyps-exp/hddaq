@@ -1,6 +1,6 @@
-# Makefile for Frontend/example_node
+# Makefile for Frontend/skeleton_node
 
-TARGET	= example_frontend
+TARGET	= skeleton_frontend
 
 CORE_DIR	= ../core
 SRC_DIR		= src
@@ -18,7 +18,7 @@ LIBS		= -L../../Message/lib -lMessage \
 FLAGS		= $(CXXFLAGS) $(INCLUDES)
 
 # If you want frontend to restart at the run end (stop command),
-# enable the flag below. 
+# enable the flag below.
 #FLAGS    += -DEND_AT_STOP
 
 CORE_SRC	= $(notdir $(wildcard $(CORE_DIR)/*.cc))
