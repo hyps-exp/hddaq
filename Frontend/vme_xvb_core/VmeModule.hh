@@ -19,20 +19,22 @@ namespace vme
 class VmeModule
 {
 public:
-  VmeModule( GEF_UINT64 addr )
+  VmeModule( GEF_UINT32 addr )
     : m_addr(addr)
   {}
   virtual ~VmeModule( void )
   {}
 
 protected:
-  GEF_UINT64   m_addr;
+  GEF_UINT32   m_addr;
   GEF_VME_ADDR m_addr_param;
 
 public:
-  virtual void  Open( void ) = 0;
+  virtual void Open( void ) = 0;
+  virtual void Print( void ) const = 0;
   static const std::string& ClassName( void );
-  GEF_UINT64    Addr( void ) const { return m_addr; }
+
+  GEF_UINT32    Addr( void ) const { return m_addr; }
   GEF_VME_ADDR* AddrParam( void ) { return &m_addr_param; }
 
 };

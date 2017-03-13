@@ -43,6 +43,8 @@ open_device( NodeProp& nodeprop )
   gVmeManager.AddModule( new vme::CaenV792( 0xad040000 ) );
   gVmeManager.AddModule( new vme::RM( 0xff010000 ) );
 
+  gVmeManager.SetDmaAddress( 0xaa000000 );
+
   gVmeManager.Open();
 
   ////////// V792

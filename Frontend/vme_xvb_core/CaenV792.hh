@@ -2,6 +2,7 @@
 #ifndef VME_CAEN_V792_HH
 #define VME_CAEN_V792_HH
 
+#include <byteswap.h>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -16,7 +17,7 @@ namespace vme
 class CaenV792 : public VmeModule
 {
 public:
-  CaenV792( GEF_UINT64 addr );
+  CaenV792( GEF_UINT32 addr );
   ~CaenV792( void );
 
 private:
@@ -27,15 +28,6 @@ private:
   static const GEF_UINT32 MapSize = 0x10000;
   volatile GEF_UINT32 *m_data_buf;
   volatile GEF_UINT16 *m_offset;
-  volatile GEF_UINT16 *m_geo_addr;
-  volatile GEF_UINT16 *m_chain_addr;
-  volatile GEF_UINT16 *m_bitset1;
-  volatile GEF_UINT16 *m_bitclr1;
-  volatile GEF_UINT16 *m_str1;
-  volatile GEF_UINT16 *m_chain_ctrl;
-  volatile GEF_UINT16 *m_bitset2;
-  volatile GEF_UINT16 *m_bitclr2;
-  volatile GEF_UINT16 *m_iped;
 
 public:
   enum Register
@@ -67,6 +59,13 @@ CaenV792::ClassName( void )
 {
   static std::string g_name("CaenV792");
   return g_name;
+}
+
+//______________________________________________________________________________
+inline GEF_UINT16
+CaenV792::ReadRegister( GEF_UINT16 reg ) const
+{
+  return __bswap_16( *(m_offset+reg/GEF_VME_DWIDTH_D16) );
 }
 
 }

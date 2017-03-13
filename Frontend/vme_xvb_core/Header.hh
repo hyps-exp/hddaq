@@ -39,7 +39,7 @@ static const std::size_t ModuleHeaderSize = sizeof(ModuleHeader)/sizeof(GEF_UINT
 //____________________________________________________________________________
 void
 SetMasterHeader( MasterHeader *vme_master_header,
-		 GEF_UINT64 data_size, GEF_UINT64 nblock );
+		 GEF_UINT32 data_size, GEF_UINT32 nblock );
 void
 SetModuleHeader( ModuleHeader *vme_module_header,
 		 GEF_UINT64 vme_address, GEF_UINT64 data_size );

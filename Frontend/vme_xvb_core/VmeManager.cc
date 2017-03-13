@@ -120,25 +120,13 @@ VmeManager::Open( void )
 
   Check( gefVmeOpen( &m_bus_hdl ), "gefVmeOpen()" );
 
-  Check( gefVmeAllocDmaBuf( m_bus_hdl,
-			    4*MaxDmaBufLen,
-			    &m_dma_hdl,
-			    (GEF_MAP_PTR*)&m_dma_buf ),
-	 "gefVmeAllocDmaBuf()" );
-
   {
-    GEF_VME_ADDR addr_param = {
-      0x00000000,                     //upoper
-      0xAA000000,                     //lower
-      GEF_VME_ADDR_SPACE_A32,         //addr_space
-      GEF_VME_2ESST_RATE_INVALID,     //vme_2esst_rate
-      GEF_VME_ADDR_MODE_DEFAULT,      //addr_mode
-      GEF_VME_TRANSFER_MODE_BLT,      //transfer_mode
-      GEF_VME_BROADCAST_ID_DISABLE,   //broadcast_id
-      GEF_VME_TRANSFER_MAX_DWIDTH_32, //transfer_max_dwidth
-      GEF_VME_DMA_DEFAULT|GEF_VME_DMA_PFAR //flags
-    };
-    m_dma_addr = addr_param;
+    char *tmp = (char*)&m_dma_buf; // type-punned pointer
+    Check( gefVmeAllocDmaBuf( m_bus_hdl,
+			      4*MaxDmaBufLen,
+			      &m_dma_hdl,
+			      (GEF_MAP_PTR*)tmp ),
+	   "gefVmeAllocDmaBuf()" );
   }
 
   ///// each VmeModule
@@ -190,6 +178,24 @@ VmeManager::ReadDmaBuf( GEF_VME_ADDR *addr, GEF_UINT32 length )
 {
   Check( gefVmeReadDmaBuf( m_dma_hdl, addr, 0, length ),
 	 "gefVmeReadDmaBuf()" );
+}
+
+//______________________________________________________________________________
+void
+VmeManager::SetDmaAddress( GEF_UINT32 addr )
+{
+  GEF_VME_ADDR addr_param = {
+    0x00000000,                          // upper
+    addr,                                // lower
+    GEF_VME_ADDR_SPACE_A32,              // addr_space
+    GEF_VME_2ESST_RATE_INVALID,          // vme_2esst_rate
+    GEF_VME_ADDR_MODE_DEFAULT,           // addr_mode
+    GEF_VME_TRANSFER_MODE_BLT,           // transfer_mode
+    GEF_VME_BROADCAST_ID_DISABLE,        // broadcast_id
+    GEF_VME_TRANSFER_MAX_DWIDTH_32,      // transfer_max_dwidth
+    GEF_VME_DMA_DEFAULT|GEF_VME_DMA_PFAR // flags
+  };
+  m_dma_addr = addr_param;
 }
 
 //______________________________________________________________________________

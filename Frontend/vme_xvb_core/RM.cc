@@ -12,7 +12,7 @@ namespace vme
 {
 
 //______________________________________________________________________________
-RM::RM( GEF_UINT64 addr )
+RM::RM( GEF_UINT32 addr )
   : VmeModule(addr)
 {
 }
@@ -27,15 +27,15 @@ void
 RM::Open( void )
 {
   GEF_VME_ADDR addr_param = {
-    0x00000000,                     //upper
-    VmeModule::m_addr & 0xffffffff, //lower
-    GEF_VME_ADDR_SPACE_A32,         //addr_space
-    GEF_VME_2ESST_RATE_INVALID,     //vme_2esst_rate
-    GEF_VME_ADDR_MODE_DEFAULT,      //addr_mode
-    GEF_VME_TRANSFER_MODE_SCT,      //transfer_mode
-    GEF_VME_BROADCAST_ID_DISABLE,   //broadcast_id
-    GEF_VME_TRANSFER_MAX_DWIDTH_32, //transfer_max_dwidth
-    GEF_VME_WND_EXCLUSIVE           //flags
+    0x00000000,                     // upper
+    VmeModule::m_addr,              // lower
+    GEF_VME_ADDR_SPACE_A32,         // addr_space
+    GEF_VME_2ESST_RATE_INVALID,     // vme_2esst_rate
+    GEF_VME_ADDR_MODE_DEFAULT,      // addr_mode
+    GEF_VME_TRANSFER_MODE_SCT,      // transfer_mode
+    GEF_VME_BROADCAST_ID_DISABLE,   // broadcast_id
+    GEF_VME_TRANSFER_MAX_DWIDTH_32, // transfer_max_dwidth
+    GEF_VME_WND_EXCLUSIVE           // flags
   };
   VmeModule::m_addr_param = addr_param;
 }
@@ -46,22 +46,6 @@ RM::InitRegister( const GEF_MAP_PTR& ptr, int index )
 {
   GEF_UINT32 offset32 = MapSize/GEF_VME_DWIDTH_D32*index;
   m_offset = (GEF_UINT32*)ptr +offset32;
-  m_event  = (GEF_UINT32*)ptr +offset32 + Event  / GEF_VME_DWIDTH_D32;
-  m_spill  = (GEF_UINT32*)ptr +offset32 + Spill  / GEF_VME_DWIDTH_D32;
-  m_serial = (GEF_UINT32*)ptr +offset32 + Serial / GEF_VME_DWIDTH_D32;
-  m_dummy  = (GEF_UINT32*)ptr +offset32 + Dummy  / GEF_VME_DWIDTH_D32;
-  m_input  = (GEF_UINT32*)ptr +offset32 + Input  / GEF_VME_DWIDTH_D32;
-  m_reset  = (GEF_UINT32*)ptr +offset32 + Reset  / GEF_VME_DWIDTH_D32;
-  m_level  = (GEF_UINT32*)ptr +offset32 + Level  / GEF_VME_DWIDTH_D32;
-  m_pulse  = (GEF_UINT32*)ptr +offset32 + Pulse  / GEF_VME_DWIDTH_D32;
-  m_time   = (GEF_UINT32*)ptr +offset32 + Time   / GEF_VME_DWIDTH_D32;
-}
-
-//______________________________________________________________________________
-GEF_UINT32
-RM::ReadRegister( GEF_UINT32 reg )
-{
-  return __bswap_32( *(m_offset+reg/GEF_VME_DWIDTH_D32) );
 }
 
 //______________________________________________________________________________
@@ -69,11 +53,12 @@ void
 RM::WriteRegister( GEF_UINT32 reg, GEF_UINT32 val )
 {
   *(m_offset+reg/GEF_VME_DWIDTH_D32) = __bswap_32( val );
+  ::usleep(1000);
 }
 
 //______________________________________________________________________________
 void
-RM::Print( void )
+RM::Print( void ) const
 {
   PrintHelper helper( 0, std::ios::hex | std::ios::right | std::ios::showbase );
 

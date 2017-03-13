@@ -17,18 +17,21 @@ class VmeModule;
 namespace vme
 {
 
-/*  base address setting for multi modules
-if,
-base_address = 0x12340000 (first module)
-map_offset   = 0x00010000 (LSB of address space)
-
-then,
-module[0]:base_address = 0x12340000
-module[1]:base_address = 0x12350000 (=module[0]+map_offset)
-module[2]:base_address = 0x12360000 (=module[1]+map_offset)
-:
-(Module base address should be set in serial order by map_offset increment.)
-*/
+/**
+ * Base address setting for multi modules
+ * if,
+ *  base_address = 0x12340000 (first module)
+ *  map_offset   = 0x00010000 (LSB of address space)
+ *
+ * then,
+ *  module[0]:base_address = 0x12340000
+ *  module[1]:base_address = 0x12350000 (=module[0]+map_offset)
+ *  module[2]:base_address = 0x12360000 (=module[1]+map_offset)
+ *
+ * Base address should be set in serial order by map_offset increment.
+ * This design is because of limitation of number of map handle.
+ *
+ */
 
 typedef std::vector<VmeModule*>           ModuleList;
 typedef ModuleList::const_iterator        ListIterator;
@@ -72,6 +75,7 @@ public:
   void             PrintModuleList( void ) const;
   void             ReadDmaBuf( GEF_UINT32 length );
   void             ReadDmaBuf( GEF_VME_ADDR *addr, GEF_UINT32 length );
+  void             SetDmaAddress( GEF_UINT32 addr );
   void             SetNickName( const std::string& n ) { m_nick_name = n; }
   // template for each type of VmeModule
   template <typename T>
@@ -94,7 +98,7 @@ VmeManager::GetInstance( void )
   return g_instance;
 }
 
-  //______________________________________________________________________________
+//______________________________________________________________________________
 template <typename T>
 inline void
 VmeManager::AddModule( T* module )
@@ -121,6 +125,7 @@ VmeManager::GetModule( int i ) const
   else
     return 0;
 }
+
 //______________________________________________________________________________
 template <typename T>
 inline int

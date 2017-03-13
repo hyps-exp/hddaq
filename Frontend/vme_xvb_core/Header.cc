@@ -8,7 +8,7 @@ namespace vme
 //____________________________________________________________________________
 void
 SetMasterHeader( MasterHeader *vme_master_header,
-		 GEF_UINT64 data_size, GEF_UINT64 nblock )
+		 GEF_UINT32 data_size, GEF_UINT32 nblock )
 {
   vme_master_header->m_magic     = MasterMagic;
   vme_master_header->m_data_size = data_size;

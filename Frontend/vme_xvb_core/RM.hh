@@ -2,6 +2,7 @@
 #ifndef VME_RM_HH
 #define VME_RM_HH
 
+#include <byteswap.h>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -16,7 +17,7 @@ namespace vme
 class RM : public VmeModule
 {
 public:
-  RM( GEF_UINT64 addr );
+  RM( GEF_UINT32 addr );
   ~RM( void );
 
 private:
@@ -26,15 +27,6 @@ private:
 private:
   static const int MapSize = 0x10000;
   volatile GEF_UINT32 *m_offset;
-  volatile GEF_UINT32 *m_event;
-  volatile GEF_UINT32 *m_spill;
-  volatile GEF_UINT32 *m_serial;
-  volatile GEF_UINT32 *m_dummy;
-  volatile GEF_UINT32 *m_input;
-  volatile GEF_UINT32 *m_reset;
-  volatile GEF_UINT32 *m_level;
-  volatile GEF_UINT32 *m_pulse;
-  volatile GEF_UINT32 *m_time;
 
 public:
   enum Register
@@ -54,9 +46,9 @@ public:
   static const std::string& ClassName( void );
   void Open( void );
   void InitRegister( const GEF_MAP_PTR& ptr, int index );
-  GEF_UINT32 ReadRegister( GEF_UINT32 reg );
+  GEF_UINT32 ReadRegister( GEF_UINT32 reg ) const;
   void       WriteRegister( GEF_UINT32 reg, GEF_UINT32 val );
-  void       Print( void );
+  void       Print( void ) const;
 
 };
 
@@ -67,6 +59,14 @@ RM::ClassName( void )
   static std::string g_name("RM");
   return g_name;
 }
+
+//______________________________________________________________________________
+inline GEF_UINT32
+RM::ReadRegister( GEF_UINT32 reg ) const
+{
+  return __bswap_32( *(m_offset+reg/GEF_VME_DWIDTH_D32) );
+}
+
 
 }
 

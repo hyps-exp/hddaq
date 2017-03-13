@@ -13,7 +13,7 @@ namespace vme
 {
 
 //______________________________________________________________________________
-CaenV792::CaenV792( GEF_UINT64 addr )
+CaenV792::CaenV792( GEF_UINT32 addr )
 : VmeModule(addr)
 {
 }
@@ -28,16 +28,15 @@ void
 CaenV792::Open( void )
 {
   GEF_VME_ADDR addr_param = {
-    0x00000000,                     //upoper
-    VmeModule::m_addr & 0xffffffff, //lower
-    GEF_VME_ADDR_SPACE_A32,         //addr_space
-    GEF_VME_2ESST_RATE_INVALID,     //vme_2esst_rate
-    GEF_VME_ADDR_MODE_DEFAULT,      //addr_mode
-    // GEF_VME_TRANSFER_MODE_BLT,      //transfer_mode
-    GEF_VME_TRANSFER_MODE_SCT,      //transfer_mode
-    GEF_VME_BROADCAST_ID_DISABLE,   //broadcast_id
-    GEF_VME_TRANSFER_MAX_DWIDTH_32, //transfer_max_dwidth
-    GEF_VME_WND_EXCLUSIVE           //flags
+    0x00000000,                     // upper
+    VmeModule::m_addr,              // lower
+    GEF_VME_ADDR_SPACE_A32,         // addr_space
+    GEF_VME_2ESST_RATE_INVALID,     // vme_2esst_rate
+    GEF_VME_ADDR_MODE_DEFAULT,      // addr_mode
+    GEF_VME_TRANSFER_MODE_SCT,      // transfer_mode
+    GEF_VME_BROADCAST_ID_DISABLE,   // broadcast_id
+    GEF_VME_TRANSFER_MAX_DWIDTH_32, // transfer_max_dwidth
+    GEF_VME_WND_EXCLUSIVE           // flags
   };
   VmeModule::m_addr_param = addr_param;
 }
@@ -50,15 +49,6 @@ CaenV792::InitRegister( const GEF_MAP_PTR& ptr, int index )
   GEF_UINT32 offset32 = MapSize/GEF_VME_DWIDTH_D32*index;
   m_data_buf   = (GEF_UINT32*)ptr +offset32;
   m_offset     = (GEF_UINT16*)ptr +offset16;
-  m_geo_addr   = (GEF_UINT16*)ptr +offset16 + GeoAddr   / GEF_VME_DWIDTH_D16;
-  m_chain_addr = (GEF_UINT16*)ptr +offset16 + ChainAddr / GEF_VME_DWIDTH_D16;
-  m_bitset1    = (GEF_UINT16*)ptr +offset16 + BitSet1   / GEF_VME_DWIDTH_D16;
-  m_bitclr1    = (GEF_UINT16*)ptr +offset16 + BitClr1   / GEF_VME_DWIDTH_D16;
-  m_str1       = (GEF_UINT16*)ptr +offset16 + Str1      / GEF_VME_DWIDTH_D16;
-  m_chain_ctrl = (GEF_UINT16*)ptr +offset16 + ChainCtrl / GEF_VME_DWIDTH_D16;
-  m_bitset2    = (GEF_UINT16*)ptr +offset16 + BitSet2   / GEF_VME_DWIDTH_D16;
-  m_bitclr2    = (GEF_UINT16*)ptr +offset16 + BitClr2   / GEF_VME_DWIDTH_D16;
-  m_iped       = (GEF_UINT16*)ptr +offset16 + Iped      / GEF_VME_DWIDTH_D16;
 }
 
 //______________________________________________________________________________
@@ -69,17 +59,11 @@ CaenV792::DataBuf( void )
 }
 
 //______________________________________________________________________________
-GEF_UINT16
-CaenV792::ReadRegister( GEF_UINT16 reg ) const
-{
-  return __bswap_16( *(m_offset+reg/GEF_VME_DWIDTH_D16) );
-}
-
-//______________________________________________________________________________
 void
 CaenV792::WriteRegister( GEF_UINT16 reg, GEF_UINT16 val )
 {
   *(m_offset+reg/GEF_VME_DWIDTH_D16) = __bswap_16( val );
+  ::usleep(1000);
 }
 
 //______________________________________________________________________________
