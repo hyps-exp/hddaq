@@ -12,7 +12,7 @@ namespace
 {
   using namespace HUL;
   //maximum datasize by byte unit
-  static const int n_word = 121;
+  static const int n_word = 100; // header 3 + body 1+32*3
   static const int max_data_size = 4*n_word;
   DaqMode g_daq_mode = DM_NORMAL;
 
