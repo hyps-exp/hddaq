@@ -1,3 +1,6 @@
+// -*- C++ -*-
+
+// Author: Shuhei Hayakawa
 
 #ifndef VME_MODULE_HH
 #define VME_MODULE_HH

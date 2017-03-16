@@ -1,20 +1,23 @@
-// vme01_node: userdevice.cc
+// -*- C++ -*-
+
+// Author: Shuhei Hayakawa
 
 #include "userdevice.h"
 
-#include "Header.hh"
+#include <sstream>
 
-#include "VmeManager.hh"
-#include "RM.hh"
 #include "CaenV775.hh"
 #include "CaenV792.hh"
+#include "Header.hh"
+#include "RM.hh"
+#include "VmeManager.hh"
 
 #define DMA_CHAIN 1
 #define DMA_V792  1 // if DMA_CHAIN 0
 
 namespace
 {
-  vme::VmeManager& gVmeManager = vme::VmeManager::GetInstance();
+  vme::VmeManager& gVme = vme::VmeManager::GetInstance();
   const int max_polling   = 2000000;     //maximum count until time-out
   const int max_try       = 100;         //maximum count to check data ready
   const int max_data_size = 4*1024*1024; //maximum datasize by byte unit
@@ -32,20 +35,20 @@ get_maxdatasize( void )
 void
 open_device( NodeProp& nodeprop )
 {
-  gVmeManager.SetNickName( nodeprop.getNickName() );
+  gVme.SetNickName( nodeprop.getNickName() );
 
-  gVmeManager.AddModule( new vme::CaenV775( 0xbd010000 ) );
-  gVmeManager.AddModule( new vme::CaenV775( 0xbd020000 ) );
-  gVmeManager.AddModule( new vme::CaenV775( 0xbd030000 ) );
-  gVmeManager.AddModule( new vme::CaenV792( 0xad010000 ) );
-  gVmeManager.AddModule( new vme::CaenV792( 0xad020000 ) );
-  gVmeManager.AddModule( new vme::CaenV792( 0xad030000 ) );
-  gVmeManager.AddModule( new vme::CaenV792( 0xad040000 ) );
-  gVmeManager.AddModule( new vme::RM( 0xff010000 ) );
+  gVme.AddModule( new vme::CaenV775( 0xbd010000 ) );
+  gVme.AddModule( new vme::CaenV775( 0xbd020000 ) );
+  gVme.AddModule( new vme::CaenV775( 0xbd030000 ) );
+  gVme.AddModule( new vme::CaenV792( 0xad010000 ) );
+  gVme.AddModule( new vme::CaenV792( 0xad020000 ) );
+  gVme.AddModule( new vme::CaenV792( 0xad030000 ) );
+  gVme.AddModule( new vme::CaenV792( 0xad040000 ) );
+  gVme.AddModule( new vme::RM( 0xff010000 ) );
 
-  gVmeManager.SetDmaAddress( 0xaa000000 );
+  gVme.SetDmaAddress( 0xaa000000 );
 
-  gVmeManager.Open();
+  gVme.Open();
 
 
   ////////// V792
@@ -55,9 +58,9 @@ open_device( NodeProp& nodeprop )
     GEF_UINT16 overflow_suppression = 1; // 0:enable 1:disable
     GEF_UINT16 zero_suppression     = 1; // 0:enable 1:disable
     GEF_UINT16 iped[] = { 255, 255, 255, 255 }; // 0x0-0xff
-    const int n = gVmeManager.GetNumOfModule<vme::CaenV792>();
+    const int n = gVme.GetNumOfModule<vme::CaenV792>();
     for( int i=0; i<n; ++i ){
-      vme::CaenV792* m = gVmeManager.GetModule<vme::CaenV792>(i);
+      vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(i);
       m->WriteRegister( vme::CaenV792::GeoAddr,   geo_addr[i] );
       m->WriteRegister( vme::CaenV792::BitSet1,   0x80        );
       m->WriteRegister( vme::CaenV792::BitClr1,   0x80        );
@@ -82,9 +85,9 @@ open_device( NodeProp& nodeprop )
     GEF_UINT16 common_input = 0;    // 0:common start, 1:common stop
     GEF_UINT16 empty_prog   = 1;    // 0: if data is empty, no header and footer
                                     // 1: add header and footer always
-    const int n = gVmeManager.GetNumOfModule<vme::CaenV775>();
+    const int n = gVme.GetNumOfModule<vme::CaenV775>();
     for( int i=0; i<n; ++i ){
-      vme::CaenV775* m = gVmeManager.GetModule<vme::CaenV775>(i);
+      vme::CaenV775* m = gVme.GetModule<vme::CaenV775>(i);
       m->WriteRegister( vme::CaenV775::GeoAddr,   geo_addr[i] );
       m->WriteRegister( vme::CaenV775::BitSet1,   0x80        );
       m->WriteRegister( vme::CaenV775::BitClr1,   0x80        );
@@ -101,10 +104,11 @@ open_device( NodeProp& nodeprop )
   }
 
   {
-    static vme::RM* m = gVmeManager.GetModule<vme::RM>(0);
+    static vme::RM* m = gVme.GetModule<vme::RM>(0);
     m->WriteRegister( vme::RM::Reset, 0x1 );
     m->WriteRegister( vme::RM::Pulse, 0x1 );
   }
+
   return;
 }
 
@@ -116,9 +120,10 @@ init_device( NodeProp& nodeprop )
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-      static vme::RM* m = gVmeManager.GetModule<vme::RM>(0);
+      static vme::RM* m = gVme.GetModule<vme::RM>(0);
       m->WriteRegister( vme::RM::Reset, 0x1 );
       m->WriteRegister( vme::RM::Pulse, 0x1 );
+      m->WriteRegister( vme::RM::Level, 0x2 );
       return;
     }
   case DM_DUMMY:
@@ -134,6 +139,8 @@ init_device( NodeProp& nodeprop )
 void
 finalize_device( NodeProp& nodeprop )
 {
+  static vme::RM* m = gVme.GetModule<vme::RM>(0);
+  m->WriteRegister( vme::RM::Level, 0x0 );
   return;
 }
 
@@ -141,7 +148,7 @@ finalize_device( NodeProp& nodeprop )
 void
 close_device( NodeProp& nodeprop )
 {
-  gVmeManager.Close();
+  gVme.Close();
   return;
 }
 
@@ -159,7 +166,7 @@ wait_device( NodeProp& nodeprop )
     {
       ////////// Polling
       int reg = 0;
-      vme::RM* m = gVmeManager.GetModule<vme::RM>(0);
+      vme::RM* m = gVme.GetModule<vme::RM>(0);
       for( int i=0; i<max_polling; ++i ){
 	reg = m->ReadRegister( vme::RM::Input );
 	if( (reg>>8)&0x1 == 0x1 ){
@@ -169,7 +176,7 @@ wait_device( NodeProp& nodeprop )
       }
       // TimeOut
       std::cout<<"wait_device() Time Out"<<std::endl;
-      //send_warning_message("vme01: wait_device() Time Out");
+      //send_warning_message( gVme.GetNickName()+" : wait_device() Time Out");
       return -1;
     }
   case DM_DUMMY:
@@ -190,7 +197,6 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
   return  0: Send data to EV
 */
 {
-  char message[256];
   g_daq_mode = nodeprop.getDaqMode();
   switch(g_daq_mode){
   case DM_NORMAL:
@@ -200,20 +206,18 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
       ndata += vme::MasterHeaderSize;
       ////////// VME_RM
       {
-	const int n = gVmeManager.GetNumOfModule<vme::RM>();
+	const int n = gVme.GetNumOfModule<vme::RM>();
 	for( int i=0; i<n; ++i ){
-	  vme::RM* m = gVmeManager.GetModule<vme::RM>(i);
-	  int vme_module_header_start = ndata;
+	  vme::RM* m = gVme.GetModule<vme::RM>(i);
+	  int module_header_start = ndata;
 	  ndata += vme::ModuleHeaderSize;
 	  data[ndata++] = m->ReadRegister( vme::RM::Event  );
 	  data[ndata++] = m->ReadRegister( vme::RM::Spill  );
 	  data[ndata++] = m->ReadRegister( vme::RM::Serial );
 	  data[ndata++] = m->ReadRegister( vme::RM::Time   );
-	  vme::ModuleHeader vme_module_header;
-	  vme::SetModuleHeader( &vme_module_header, m->Addr(),
-				ndata - vme_module_header_start );
-	  std::memcpy( &data[vme_module_header_start],
-		       &vme_module_header, vme::ModuleHeaderSize*4 );
+	  vme::SetModuleHeader( m->Addr(),
+				ndata - module_header_start,
+				&data[module_header_start] );
 	  module_num++;
 	}
       }
@@ -221,21 +225,21 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 #if DMA_CHAIN
       int dready = 0;
       for(int j=0;j<max_try;j++){
-	vme::CaenV792* m = gVmeManager.GetModule<vme::CaenV792>(0);
+	vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(0);
 	dready = m->ReadRegister( vme::CaenV792::Str1 ) & 0x1;
 	if(dready==1) break;
       }
 
       if( dready==1 ){
-	gVmeManager.ReadDmaBuf( 4*9*34 );
-	//gVmeManager.ReadDmaBuf( gVmeManager.DmaBufLen() );
-	for( int i=0; i<gVmeManager.DmaBufLen(); ){
-	  GEF_UINT32 buf = gVmeManager.GetDmaBuf(i);
+	gVme.ReadDmaBuf( 4*9*34 );
+	//gVme.ReadDmaBuf( gVme.DmaBufLen() );
+	for( int i=0; i<gVme.DmaBufLen(); ){
+	  GEF_UINT32 buf = gVme.GetDmaBuf(i);
 	  if( buf==0x0 || buf==0xffffffff )
 	    break;
 
 	  GEF_UINT64 vme_addr;
-	  int vme_module_header_start = ndata;
+	  int module_header_start = ndata;
 	  ndata += vme::ModuleHeaderSize;
 	  // header
 	  int geo_addr = (buf>>27) & 0x1f;
@@ -248,32 +252,34 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	    vme_addr = 0xBD000000 | ( (geo_addr-0x8)<<15 );
 	    break;
 	  default:
-	    sprintf( message, "vme01: unknown GEO_ADDRESS %d", geo_addr );
-	    send_fatal_message( message );
-	    std::exit( EXIT_FAILURE );
+	    {
+	      std::ostringstream oss;
+	      oss << gVme.GetNickName()
+		  << " : unknown GEO_ADDRESS " << geo_addr;
+	      send_fatal_message( oss.str() );
+	      std::exit( EXIT_FAILURE );
+	    }
 	  }
 
 	  data[ndata++] = buf; i++;
 	  for( int j=0; j<ncount+1; ++j ){
-	    data[ndata++] = gVmeManager.GetDmaBuf(i++);
+	    data[ndata++] = gVme.GetDmaBuf(i++);
 	  }
-	  vme::ModuleHeader vme_module_header;
-	  vme::SetModuleHeader( &vme_module_header, vme_addr,
-				ndata - vme_module_header_start );
-	  std::memcpy( &data[vme_module_header_start],
-		       &vme_module_header, vme::ModuleHeaderSize*4 );
+	  vme::SetModuleHeader( vme_addr,
+				ndata - module_header_start,
+				&data[module_header_start] );
 	  module_num++;
 	}
       } else {
-	send_warning_message( "vme01: data is not ready" );
+	send_warning_message( gVme.GetNickName()+" : data is not ready" );
       }
 #else
       ////////// V792
       {
-	const int n = gVmeManager.GetNumOfModule<vme::CaenV792>();
+	const int n = gVme.GetNumOfModule<vme::CaenV792>();
 	for( int i=0; i<n; ++i ){
-	  vme::CaenV792* m = gVmeManager.GetModule<vme::CaenV792>(i);
-	  int vme_module_header_start = ndata;
+	  vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(i);
+	  int module_header_start = ndata;
 	  ndata += vme::ModuleHeaderSize;
 	  int data_len = 34;
 	  int dready   = 0;
@@ -283,9 +289,9 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	  }
 	  if(dready==1){
 # if DMA_V792
-	    gVmeManager.ReadDmaBuf( m->AddrParam(), 4*data_len );
+	    gVme.ReadDmaBuf( m->AddrParam(), 4*data_len );
 	    for(int j=0;j<data_len;j++){
-	      data[ndata++] = gVmeManager.GetDmaBuf(j);
+	      data[ndata++] = gVme.GetDmaBuf(j);
 	    }
 # else
 	    for(int j=0;j<data_len;j++){
@@ -293,23 +299,24 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	    }
 # endif
 	  }else{
-	    sprintf(message, "vme01: V792[%08llx] data is not ready", m->Addr() );
-	    send_warning_message(message);
+	    std::ostringstream oss;
+	    oss << gVme.GetNickName() << std::hex << std::showbase
+		<< " : " << m->ClassName() << "[" << m->Addr() << "]"
+		<< "data is not ready";
+	    send_warning_message( oss.str() );
 	  }
-	  vme::ModuleHeader vme_module_header;
-	  vme::SetModuleHeader( &vme_module_header, m->Addr(),
-				ndata - vme_module_header_start );
-	  std::memcpy( &data[vme_module_header_start],
-		       &vme_module_header, vme::ModuleHeaderSize*4 );
+	  vme::SetModuleHeader( m->Addr(),
+				ndata - module_header_start,
+				&data[module_header_start] );
 	  module_num++;
 	}//for(i)
       }
       ////////// v775
       {
-	const int n = gVmeManager.GetNumOfModule<vme::CaenV775>();
+	const int n = gVme.GetNumOfModule<vme::CaenV775>();
 	for( int i=0; i<n; ++i ){
-	  vme::CaenV775* m = gVmeManager.GetModule<vme::CaenV775>(i);
-	  int vme_module_header_start = ndata;
+	  vme::CaenV775* m = gVme.GetModule<vme::CaenV775>(i);
+	  int module_header_start = ndata;
 	  ndata += vme::ModuleHeaderSize;
 	  int data_len = 34;
 	  int dready   = 0;
@@ -324,31 +331,34 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	      int data_type = (data_buf>>24)&0x7; // 2:header, 0:data, 4:footer
 	      if(data_type==4)  break;
 	      if(k+1==data_len && data_type!=4){
-		sprintf(message, "vme01: V775[%08llx] nooooo fooooter!!!", m->Addr() );
-		send_warning_message(message);
+		std::ostringstream oss;
+		oss << gVme.GetNickName() << std::hex << std::showbase
+		    << " : " << m->ClassName() << "[" << m->Addr() << "]"
+		    << " nooooo fooooter!!!";
+		send_warning_message( oss.str() );
 	      }
 	    }
 	  }else{
-	    sprintf(message, "vme01: V775[%08llx] data is not ready", m->Addr() );
-            send_warning_message(message);
+	    std::ostringstream oss;
+	    oss << gVme.GetNickName() << std::hex << std::showbase
+		<< " : " << m->ClassName() << "[" << m->Addr() << "]"
+		<< " data is not ready";
+	    send_warning_message( oss.str() );
 	  }
-	  vme::ModuleHeader vme_module_header;
-	  vme::SetModuleHeader( &vme_module_header, m->Addr(),
-				ndata - vme_module_header_start );
-	  std::memcpy( &data[vme_module_header_start],
-		       &vme_module_header, vme::ModuleHeaderSize*4 );
+
+	  vme::SetModuleHeader( m->Addr(),
+				ndata - module_header_start,
+				&data[module_header_start] );
 	  module_num++;
 	}
       }
 #endif
 
-      vme::MasterHeader vme_master_header;
-      vme::SetMasterHeader( &vme_master_header, ndata, module_num );
-      std::memcpy( &data[0], &vme_master_header, vme::MasterHeaderSize*4 );
+      vme::SetMasterHeader( ndata, module_num, &data[0] );
 
       len = ndata;
       {
-	static vme::RM* m = gVmeManager.GetModule<vme::RM>(0);
+	static vme::RM* m = gVme.GetModule<vme::RM>(0);
 	m->WriteRegister( vme::RM::Pulse, 0x1 );
       }
       return 0;

@@ -1,3 +1,6 @@
+// -*- C++ -*-
+
+// Author: Shuhei Hayakawa
 
 #include "CaenV792.hh"
 

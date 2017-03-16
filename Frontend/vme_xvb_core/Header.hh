@@ -1,3 +1,7 @@
+// -*- C++ -*-
+
+// Author: Shuhei Hayakawa
+
 #ifndef VME_HEADER_HH
 #define VME_HEADER_HH
 
@@ -18,8 +22,8 @@ struct MasterHeader
   GEF_UINT32  m_data_size;
   GEF_UINT32  m_nblock;
 };
-static const GEF_UINT32  MasterMagic      = 0x00564d45U;
-static const std::size_t MasterHeaderSize = sizeof(MasterHeader)/sizeof(GEF_UINT32);
+const GEF_UINT32  MasterMagic      = 0x00564d45U;
+const std::size_t MasterHeaderSize = sizeof(MasterHeader)/sizeof(GEF_UINT32);
 
 //____________________________________________________________________________
 /* VMEBOARD */
@@ -33,16 +37,18 @@ struct ModuleHeader
   GEF_UINT64 m_tv_sec;
   GEF_UINT64 m_tv_nsec;
 };
-static const GEF_UINT64  ModuleMagic      = 0x766d65626f617264ULL;
-static const std::size_t ModuleHeaderSize = sizeof(ModuleHeader)/sizeof(GEF_UINT32);
+const GEF_UINT64  ModuleMagic      = 0x766d65626f617264ULL;
+const std::size_t ModuleHeaderSize = sizeof(ModuleHeader)/sizeof(GEF_UINT32);
 
 //____________________________________________________________________________
 void
-SetMasterHeader( MasterHeader *vme_master_header,
-		 GEF_UINT32 data_size, GEF_UINT32 nblock );
+SetMasterHeader( GEF_UINT32  data_size,
+		 GEF_UINT32  nblock,
+		 GEF_UINT32* position );
 void
-SetModuleHeader( ModuleHeader *vme_module_header,
-		 GEF_UINT64 vme_address, GEF_UINT64 data_size );
+SetModuleHeader( GEF_UINT64  vme_address,
+		 GEF_UINT64  data_size,
+		 GEF_UINT32* position );
 
 }
 

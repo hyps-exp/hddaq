@@ -1,5 +1,8 @@
-# Makefile for Frontend/vme01_node
+#!/usr/bin/make
 
+# Author: Shuhei Hayakawa
+
+#_______________________________________________________________________________
 TARGET	= vme01_frontend
 
 CORE_DIR	= ../core
@@ -12,12 +15,14 @@ CXX		= g++
 CXXFLAGS	= -O3 -Wall
 #CXXFLAGS	+= -DDebugPrint
 
-INCLUDES	= -I. -I$(CORE_DIR) -I$(VME_CORE_DIR) \
+INCLUDES	= \
+	-I. -I$(CORE_DIR) -I$(VME_CORE_DIR) \
 	-I../../kol -I../../Message
-LIBS		= -L../../Message/lib -lMessage \
-			-L../../kol/lib -lkol \
-			-lpthread \
-			-L/usr/lib/gef -lvme
+
+LIBS		= \
+	-L../../Message/lib -lMessage \
+	-L../../kol/lib -lkol \
+	-lpthread -L/usr/lib/gef -lvme
 
 FLAGS		= $(CXXFLAGS) $(INCLUDES)
 
@@ -35,7 +40,7 @@ USER_OBJ	= $(USER_SRC:.cc=.o)
 SOURCES		= $(CORE_SRC) $(VME_CORE_SRC) $(USER_SRC)
 DEPENDS		= $(addprefix $(BLD_DIR)/, $(SOURCES:.cc=.d))
 
-###Stopping make delete intermediate files
+#_______________________________________________________________________________
 .SECONDARY:
 
 all: $(BIN_DIR)/$(TARGET)

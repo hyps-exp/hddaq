@@ -1,3 +1,7 @@
+// -*- C++ -*-
+
+// Author: Shuhei Hayakawa
+
 #ifndef VME_MANAGER_HH
 #define VME_MANAGER_HH
 
@@ -65,29 +69,31 @@ private:
   ModuleMap                        m_module_map;
 
 public:
-  static const int DmaBufLen( void ) { return MaxDmaBufLen; }
-  void             Close( void );
-  void             Check( GEF_STATUS status, const std::string& name );
-  GEF_VME_BUS_HDL  GetBusHandle( void ) const { return m_bus_hdl; }
-  GEF_UINT32       GetDmaBuf( int i ) const { return __bswap_32( m_dma_buf[i] ); }
-  void             IncrementMasterHandle( void );
-  void             Open( void );
-  void             PrintModuleList( void ) const;
-  void             ReadDmaBuf( GEF_UINT32 length );
-  void             ReadDmaBuf( GEF_VME_ADDR *addr, GEF_UINT32 length );
-  void             SetDmaAddress( GEF_UINT32 addr );
-  void             SetNickName( const std::string& n ) { m_nick_name = n; }
+  static const int   DmaBufLen( void ) { return MaxDmaBufLen; }
+  void               Close( void );
+  void               Check( GEF_STATUS status, const std::string& name );
+  GEF_VME_BUS_HDL    GetBusHandle( void ) const { return m_bus_hdl; }
+  GEF_UINT32         GetDmaBuf( int i ) const { return __bswap_32( m_dma_buf[i] ); }
+  const std::string& GetNickName( void ) const { return m_nick_name; }
+  void               IncrementMasterHandle( void );
+  void               Open( void );
+  void               PrintModuleList( void ) const;
+  void               ReadDmaBuf( GEF_UINT32 length );
+  void               ReadDmaBuf( GEF_VME_ADDR *addr, GEF_UINT32 length );
+  void               SetDmaAddress( GEF_UINT32 addr );
+  void               SetNickName( const std::string& n ) { m_nick_name = n; }
+
   // template for each type of VmeModule
   template <typename T>
-  void             AddModule( T* module );
+  void AddModule( T* module );
   template <typename T>
-  void             CreateMapWindow( void );
+  void CreateMapWindow( void );
   template <typename T>
-  int              GetMapSize( void ) const;
+  int  GetMapSize( void ) const;
   template <typename T>
-  T*               GetModule( int i ) const;
+  T*   GetModule( int i ) const;
   template <typename T>
-  int              GetNumOfModule( void ) const;
+  int  GetNumOfModule( void ) const;
 };
 
 //______________________________________________________________________________

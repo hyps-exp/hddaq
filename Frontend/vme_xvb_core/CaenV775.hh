@@ -1,3 +1,6 @@
+// -*- C++ -*-
+
+// Author: Shuhei Hayakawa
 
 #ifndef VME_CAEN_V775_HH
 #define VME_CAEN_V775_HH

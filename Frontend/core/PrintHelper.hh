@@ -1,3 +1,7 @@
+// -*- C++ -*-
+
+// Author: Shuhei Hayakawa
+
 #ifndef PRINT_HELPER_HH
 #define PRINT_HELPER_HH
 

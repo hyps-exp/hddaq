@@ -1,3 +1,7 @@
+// -*- C++ -*-
+
+// Author: Shuhei Hayakawa
+
 #include "VmeManager.hh"
 
 #include <iomanip>
@@ -100,8 +104,8 @@ VmeManager::IncrementMasterHandle( void )
   const std::string& func_name("["+class_name+"::"+__func__+"()]");
 
   if( m_hdl_num>=MaxHandleNum ){
-    send_error_message(func_name+" too much Master Handle");
-    return;
+    send_fatal_message(func_name+" too much Master Handle");
+    std::exit(EXIT_FAILURE);
   }
   GEF_VME_MASTER_HDL mst_hdl;
   GEF_MAP_HDL        map_hdl;
@@ -130,10 +134,12 @@ VmeManager::Open( void )
   }
 
   ///// each VmeModule
-  MapIterator mitr, mend = m_module_map.end();
-  for( mitr=m_module_map.begin(); mitr!=mend; ++mitr ){
-    ListIterator litr, lend = mitr->second.end();
-    for( litr=mitr->second.begin(); litr!=lend; ++litr ){
+  MapIterator mitr = m_module_map.begin();
+  MapIterator mend = m_module_map.end();
+  for( ; mitr!=mend; ++mitr ){
+    ListIterator litr = mitr->second.begin();
+    ListIterator lend = mitr->second.end();
+    for( ; litr!=lend; ++litr ){
       (*litr)->Open();
     }
   }
@@ -204,27 +210,27 @@ void
 VmeManager::CreateMapWindow( void )
 {
   GEF_MAP_PTR ptr;
-  GEF_UINT32  w_size = GetMapSize<T>() * GetNumOfModule<T>();
+  GEF_UINT32  window_size = GetMapSize<T>() * GetNumOfModule<T>();
 
-  if( w_size==0 )
+  if( window_size==0 )
     return;
 
-  VmeModule* module = GetModule<T>(0);
+  VmeModule* first_module = GetModule<T>(0);
 
-  if( !module )
+  if( !first_module )
     return;
 
   IncrementMasterHandle();
 
   Check( gefVmeCreateMasterWindow( m_bus_hdl,
-				   module->AddrParam(),
-				   w_size,
+				   first_module->AddrParam(),
+				   window_size,
 				   &m_mst_hdl[m_hdl_num-1] ),
 	 "gefVmeCreateMasterWindow()" );
 
   Check( gefVmeMapMasterWindow( m_mst_hdl[m_hdl_num-1],
 				0,
-				w_size,
+				window_size,
 				&m_map_hdl[m_hdl_num-1],
 				&ptr ),
 	 "gefVmeMapMasterWindow()" );
