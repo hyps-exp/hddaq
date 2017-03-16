@@ -21,8 +21,9 @@ INCLUDES	= \
 
 LIBS		= \
 	-L../../Message/lib -lMessage \
-	-L../../kol/lib -lkol \
-	-lpthread -L/usr/lib/gef -lvme
+	-L../../kol/lib -lkol -lpthread \
+
+LIBS		+= -L/usr/lib/gef -lvme
 
 FLAGS		= $(CXXFLAGS) $(INCLUDES)
 

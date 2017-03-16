@@ -1,12 +1,17 @@
 
 #include "userdevice.h"
-#include "daq_funcs.hh"
-#include "RegisterMap.hh"
 
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
+
+#include "FPGAModule.hh"
+#include "RegisterMap.hh"
+#include "UDPRBCP.hh"
+#include "errno.h"
+#include "network.hh"
+#include "rbcp.h"
 
 namespace
 {
@@ -19,17 +24,93 @@ namespace
   char ip[100];
   int  sock=0;
   rbcp_header rbcpHeader;
-  int  ConnectSocket(char *ip);
-  int  Event_Cycle(int socket, unsigned int* event_buffer);
+
+  //______________________________________________________________________________
+  // local function
+  //______________________________________________________________________________
+  int
+  ConnectSocket( char *ip )
+  {
+    struct sockaddr_in SiTCP_ADDR;
+    unsigned int port = tcp_port;
+
+    int sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    SiTCP_ADDR.sin_family      = AF_INET;
+    SiTCP_ADDR.sin_port        = htons((unsigned short int)port);
+    SiTCP_ADDR.sin_addr.s_addr = inet_addr(ip);
+
+    struct timeval tv;
+    tv.tv_sec  = 3;
+    tv.tv_usec = 0;
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(tv));
+
+    int flag = 1;
+    setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag));
+
+    // Connection
+    if(0 > connect(sock, (struct sockaddr*)&SiTCP_ADDR, sizeof(SiTCP_ADDR))){
+      close(sock);
+      return -1;
+    }
+
+    return sock;
+  }
+
+  //______________________________________________________________________________
+  int
+  receive( int sock, char* data_buf, unsigned int ReadLength )
+  {
+    unsigned int revd_size = 0;
+    int tmp_returnVal      = 0;
+
+    while( revd_size < ReadLength ){
+      tmp_returnVal = recv(sock, data_buf +revd_size, ReadLength -revd_size, 0);
+      if(tmp_returnVal == 0){break;}
+      if(tmp_returnVal < 0){
+	int errbuf = errno;
+	std::cerr << "TCP receive" << std::endl;
+	if(errbuf == EAGAIN){
+	  // time out
+	}else{
+	  // something wrong
+	  std::ostringstream oss;
+	  oss << "::" << __func__ << "() " << ip
+	      << " TCP receive error " << errbuf;
+	  send_error_message( oss.str() );
+	}
+
+	revd_size = tmp_returnVal;
+	break;
+      }
+      revd_size += tmp_returnVal;
+    }
+
+    return revd_size;
+  }
+
+  //______________________________________________________________________________
+  int
+  EventCycle( int socket, unsigned int* event_buffer )
+  {
+    static unsigned int sizeData = n_word*sizeof(unsigned int);
+    int ret = receive(socket, (char*)event_buffer, sizeData);
+    if( 0 > ret) return -1;
+
+    return sizeData;
+  }
+
 }
 
-int get_maxdatasize()
+//______________________________________________________________________________
+int
+get_maxdatasize( void )
 {
   return max_data_size;
 }
 
+//______________________________________________________________________________
 void
-open_device(NodeProp& nodeprop)
+open_device( NodeProp& nodeprop )
 {
   const std::string& nick_name(nodeprop.getNickName());
   const std::string& func_name(nick_name+" [::"+__func__+"()]");
@@ -65,8 +146,9 @@ open_device(NodeProp& nodeprop)
   return;
 }
 
+//______________________________________________________________________________
 void
-init_device(NodeProp& nodeprop)
+init_device( NodeProp& nodeprop )
 {
   const std::string& nick_name(nodeprop.getNickName());
   const std::string& func_name(nick_name+" [::"+__func__+"()]");
@@ -128,8 +210,9 @@ init_device(NodeProp& nodeprop)
 
 }
 
+//______________________________________________________________________________
 void
-finalize_device(NodeProp& nodeprop)
+finalize_device( NodeProp& nodeprop )
 {
   // const std::string& nick_name(nodeprop.getNickName());
   // const std::string& func_name(nick_name+" [::"+__func__+"()]");
@@ -138,7 +221,7 @@ finalize_device(NodeProp& nodeprop)
   fModule.WriteModule(DCT::mid, DCT::laddr_gate, 0);
   ::sleep(1);
   unsigned int data[n_word];
-  while(-1 != Event_Cycle(sock, data));
+  while(-1 != EventCycle(sock, data));
 
   shutdown(sock, SHUT_RDWR);
   close(sock);
@@ -146,17 +229,18 @@ finalize_device(NodeProp& nodeprop)
   return;
 }
 
+//______________________________________________________________________________
 void
-close_device(NodeProp& nodeprop)
+close_device( NodeProp& nodeprop )
 {
   // const std::string& nick_name(nodeprop.getNickName());
   // const std::string& func_name(nick_name+" [::"+__func__+"()]");
   return;
 }
 
-
+//______________________________________________________________________________
 int
-wait_device(NodeProp& nodeprop)
+wait_device( NodeProp& nodeprop )
 /*
   return -1: TIMEOUT or FAST CLEAR -> continue
   return  0: TRIGGED -> go read_device
@@ -180,9 +264,9 @@ wait_device(NodeProp& nodeprop)
 
 }
 
-
+//______________________________________________________________________________
 int
-read_device(NodeProp& nodeprop, unsigned int* data, int& len)
+read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 /*
   return -1: Do Not Send data to EV
   return  0: Send data to EV
@@ -193,7 +277,7 @@ read_device(NodeProp& nodeprop, unsigned int* data, int& len)
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-      len = Event_Cycle(sock, data)/sizeof(unsigned int);
+      len = EventCycle(sock, data)/sizeof(unsigned int);
       // if( len > 0 ){
       // 	for(int i = 0; i<n_word; ++i){
       // 	  printf("%x ", data[i]);
@@ -211,79 +295,5 @@ read_device(NodeProp& nodeprop, unsigned int* data, int& len)
     len = 0;
     return 0;
   }
-
-}
-
-//______________________________________________________________________________
-// local function
-namespace
-{
-int
-ConnectSocket(char *ip)
-{
-  struct sockaddr_in SiTCP_ADDR;
-  unsigned int port = tcp_port;
-
-  int sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-  SiTCP_ADDR.sin_family      = AF_INET;
-  SiTCP_ADDR.sin_port        = htons((unsigned short int)port);
-  SiTCP_ADDR.sin_addr.s_addr = inet_addr(ip);
-
-  struct timeval tv;
-  tv.tv_sec  = 3;
-  tv.tv_usec = 0;
-  setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(tv));
-
-  int flag = 1;
-  setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag));
-
-  //Connection -------------------------------------------------------------
-  if(0 > connect(sock, (struct sockaddr*)&SiTCP_ADDR, sizeof(SiTCP_ADDR))){
-    close(sock);
-    return -1;
-  }
-
-  return sock;
-}
-
-int
-receive(int sock, char* data_buf, unsigned int ReadLength)
-{
-  unsigned int revd_size = 0;
-  int tmp_returnVal      = 0;
-
-  while(revd_size < ReadLength){
-    tmp_returnVal = recv(sock, data_buf +revd_size, ReadLength -revd_size, 0);
-    if(tmp_returnVal == 0){break;}
-    if(tmp_returnVal < 0){
-      int errbuf = errno;
-      std::cerr << "TCP receive" << std::endl;
-      if(errbuf == EAGAIN){
-	// time out
-      }else{
-	// something wrong
-	std::ostringstream oss;
-	oss << "::" << __func__ << "() " << ip
-	    << " TCP receive error " << errbuf;
-	send_error_message( oss.str() );
-      }
-
-      revd_size = tmp_returnVal;
-      break;
-    }
-    revd_size += tmp_returnVal;
-  }
-
-  return revd_size;
-}
-
-int Event_Cycle(int socket, unsigned int* event_buffer)
-{
-  static unsigned int sizeData = n_word*sizeof(unsigned int);
-  int ret = receive(socket, (char*)event_buffer, sizeData);
-  if( 0 > ret) return -1;
-
-  return sizeData;
-}
 
 }
