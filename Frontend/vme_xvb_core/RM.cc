@@ -29,20 +29,16 @@ RM::~RM( void )
 void
 RM::Open( void )
 {
-  GEF_VME_ADDR addr_param = {
-    0x00000000,                     // upper
-    VmeModule::m_addr,              // lower
-    GEF_VME_ADDR_SPACE_A32,         // addr_space
-    GEF_VME_2ESST_RATE_INVALID,     // vme_2esst_rate
-    GEF_VME_ADDR_MODE_DEFAULT,      // addr_mode
-    GEF_VME_TRANSFER_MODE_SCT,      // transfer_mode
-    GEF_VME_BROADCAST_ID_DISABLE,   // broadcast_id
-    GEF_VME_TRANSFER_MAX_DWIDTH_32, // transfer_max_dwidth
-    GEF_VME_WND_EXCLUSIVE           // flags
-  };
-  VmeModule::m_addr_param = addr_param;
+  VmeModule::m_addr_param.upper               = 0x00000000;
+  VmeModule::m_addr_param.lower               = VmeModule::m_addr;
+  VmeModule::m_addr_param.addr_space          = GEF_VME_ADDR_SPACE_A32;
+  VmeModule::m_addr_param.vme_2esst_rate      = GEF_VME_2ESST_RATE_INVALID;
+  VmeModule::m_addr_param.addr_mode           = GEF_VME_ADDR_MODE_DEFAULT;
+  VmeModule::m_addr_param.transfer_mode       = GEF_VME_TRANSFER_MODE_SCT;
+  VmeModule::m_addr_param.broadcast_id        = GEF_VME_BROADCAST_ID_DISABLE;
+  VmeModule::m_addr_param.transfer_max_dwidth = GEF_VME_TRANSFER_MAX_DWIDTH_32;
+  VmeModule::m_addr_param.flags               = GEF_VME_WND_EXCLUSIVE;
 }
-
 
 //______________________________________________________________________________
 void
