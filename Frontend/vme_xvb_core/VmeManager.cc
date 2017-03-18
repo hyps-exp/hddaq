@@ -49,26 +49,6 @@ VmeManager::~VmeManager( void )
 
 //______________________________________________________________________________
 void
-VmeManager::Close( void )
-{
-  const std::string& func_name(m_nick_name+" ["+class_name+"::"+__func__+"()]");
-
-  send_normal_message(func_name);
-
-  Check( gefVmeFreeDmaBuf( m_dma_hdl ), "gefVmeFreeDmaBuf()" );
-
-  for( int i=0; i<m_hdl_num; ++i ){
-    Check( gefVmeUnmapMasterWindow( m_map_hdl[i] ),
-	   "gefVmeUnmapMasterWindow()" );
-    Check( gefVmeReleaseMasterWindow( m_mst_hdl[i] ),
-	   "gefVmeReleaseMasterWindow()" );
-  }
-
-  Check( gefVmeClose( m_bus_hdl ), "gefVmeClose()" );
-}
-
-//______________________________________________________________________________
-void
 VmeManager::Check( GEF_STATUS status, const std::string& name )
 {
   static const std::size_t n = 30;
@@ -112,6 +92,26 @@ VmeManager::IncrementMasterHandle( void )
   m_mst_hdl.push_back( mst_hdl );
   m_map_hdl.push_back( map_hdl );
   m_hdl_num++;
+}
+
+//______________________________________________________________________________
+void
+VmeManager::Close( void )
+{
+  const std::string& func_name(m_nick_name+" ["+class_name+"::"+__func__+"()]");
+
+  send_normal_message(func_name);
+
+  Check( gefVmeFreeDmaBuf( m_dma_hdl ), "gefVmeFreeDmaBuf()" );
+
+  for( int i=0; i<m_hdl_num; ++i ){
+    Check( gefVmeUnmapMasterWindow( m_map_hdl[i] ),
+	   "gefVmeUnmapMasterWindow()" );
+    Check( gefVmeReleaseMasterWindow( m_mst_hdl[i] ),
+	   "gefVmeReleaseMasterWindow()" );
+  }
+
+  Check( gefVmeClose( m_bus_hdl ), "gefVmeClose()" );
 }
 
 //______________________________________________________________________________

@@ -48,8 +48,7 @@ RM::Open( void )
 void
 RM::InitRegister( const GEF_MAP_PTR& ptr, int index )
 {
-  GEF_UINT32 offset32 = MapSize/GEF_VME_DWIDTH_D32*index;
-  m_offset = (GEF_UINT32*)ptr +offset32;
+  m_offset = (GEF_UINT32*)ptr + MapSize/GEF_VME_DWIDTH_D32*index;
 }
 
 //______________________________________________________________________________

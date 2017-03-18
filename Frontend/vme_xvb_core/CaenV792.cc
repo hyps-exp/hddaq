@@ -48,10 +48,8 @@ CaenV792::Open( void )
 void
 CaenV792::InitRegister( const GEF_MAP_PTR& ptr, int index )
 {
-  GEF_UINT32 offset16 = MapSize/GEF_VME_DWIDTH_D16*index;
-  GEF_UINT32 offset32 = MapSize/GEF_VME_DWIDTH_D32*index;
-  m_data_buf   = (GEF_UINT32*)ptr +offset32;
-  m_offset     = (GEF_UINT16*)ptr +offset16;
+  m_data_buf = (GEF_UINT32*)ptr + MapSize/GEF_VME_DWIDTH_D32*index;
+  m_offset   = (GEF_UINT16*)ptr + MapSize/GEF_VME_DWIDTH_D16*index;
 }
 
 //______________________________________________________________________________

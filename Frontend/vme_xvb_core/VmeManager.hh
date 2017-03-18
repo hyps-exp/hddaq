@@ -68,14 +68,15 @@ private:
   GEF_VME_ADDR                     m_dma_addr;
   ModuleMap                        m_module_map;
 
+private:
+  void               Check( GEF_STATUS status, const std::string& name );
+  void               IncrementMasterHandle( void );
+
 public:
   static const int   DmaBufLen( void ) { return MaxDmaBufLen; }
   void               Close( void );
-  void               Check( GEF_STATUS status, const std::string& name );
-  GEF_VME_BUS_HDL    GetBusHandle( void ) const { return m_bus_hdl; }
   GEF_UINT32         GetDmaBuf( int i ) const { return __bswap_32( m_dma_buf[i] ); }
   const std::string& GetNickName( void ) const { return m_nick_name; }
-  void               IncrementMasterHandle( void );
   void               Open( void );
   void               PrintModuleList( void ) const;
   void               ReadDmaBuf( GEF_UINT32 length );
@@ -84,16 +85,11 @@ public:
   void               SetNickName( const std::string& n ) { m_nick_name = n; }
 
   // template for each type of VmeModule
-  template <typename T>
-  void AddModule( T* module );
-  template <typename T>
-  void CreateMapWindow( void );
-  template <typename T>
-  int  GetMapSize( void ) const;
-  template <typename T>
-  T*   GetModule( int i ) const;
-  template <typename T>
-  int  GetNumOfModule( void ) const;
+  template <typename T> void AddModule( T* module );
+  template <typename T> void CreateMapWindow( void );
+  template <typename T> int  GetMapSize( void ) const;
+  template <typename T> T*   GetModule( int i ) const;
+  template <typename T> int  GetNumOfModule( void ) const;
 };
 
 //______________________________________________________________________________

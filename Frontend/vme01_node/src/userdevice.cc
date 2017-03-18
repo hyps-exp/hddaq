@@ -40,6 +40,8 @@ open_device( NodeProp& nodeprop )
   gVme.AddModule( new vme::CaenV775( 0xbd010000 ) );
   gVme.AddModule( new vme::CaenV775( 0xbd020000 ) );
   gVme.AddModule( new vme::CaenV775( 0xbd030000 ) );
+  gVme.AddModule( new vme::CaenV775( 0xbd040000 ) );
+  gVme.AddModule( new vme::CaenV775( 0xbd050000 ) );
   gVme.AddModule( new vme::CaenV792( 0xad010000 ) );
   gVme.AddModule( new vme::CaenV792( 0xad020000 ) );
   gVme.AddModule( new vme::CaenV792( 0xad030000 ) );
@@ -77,10 +79,8 @@ open_device( NodeProp& nodeprop )
   }
   ////////// V775
   {
-    // int      geo_addr[]  = { 0xa, 0xc, 0xe, 0x10, 0x12 };
-    // int      chain_set[] = { 0x3, 0x3, 0x3, 0x3, 0x1 };
-    GEF_UINT16 geo_addr[]   = { 0xa, 0xc, 0xe };
-    GEF_UINT16 chain_set[]  = { 0x3, 0x3, 0x1 };
+    GEF_UINT16 geo_addr[]   = { 0xa, 0xc, 0xe, 0x10, 0x12 };
+    GEF_UINT16 chain_set[]  = { 0x3, 0x3, 0x3, 0x3, 0x1 };
     GEF_UINT16 range        = 0xff; // 0x18-0xff, range: 1200-140[ns]
     GEF_UINT16 common_input = 0;    // 0:common start, 1:common stop
     GEF_UINT16 empty_prog   = 1;    // 0: if data is empty, no header and footer
