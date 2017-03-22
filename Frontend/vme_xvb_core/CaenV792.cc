@@ -69,7 +69,7 @@ CaenV792::Print( void ) const
 {
   PrintHelper helper( 0, std::ios::hex | std::ios::right | std::ios::showbase );
 
-  std::cout << "["+ClassName()+"::"+__func__+"()] " << Addr() << std::endl
+  std::cout << "["+ClassName()+"::"+__func__+"()] " << AddrStr() << std::endl
 	    << " GeoAddr   = " << ( ReadRegister( CaenV792::GeoAddr ) & 0x1f )
 	    << std::endl
 	    << " ChainAddr = " << ( ReadRegister( CaenV792::ChainAddr ) & 0xff )

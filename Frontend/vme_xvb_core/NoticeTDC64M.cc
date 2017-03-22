@@ -2,7 +2,7 @@
 
 // Author: Shuhei Hayakawa
 
-#include "CaenV775.hh"
+#include "NoticeTDC64M.hh"
 
 #include <cstdlib>
 #include <sstream>
@@ -10,25 +10,24 @@
 #include <gef/gefcmn_vme_defs.h>
 
 #include "MessageHelper.h"
-#include "PrintHelper.hh"
 
 namespace vme
 {
 
 //______________________________________________________________________________
-CaenV775::CaenV775( GEF_UINT32 addr )
-: VmeModule(addr)
+NoticeTDC64M::NoticeTDC64M( GEF_UINT32 addr )
+  : VmeModule(addr)
 {
 }
 
 //______________________________________________________________________________
-CaenV775::~CaenV775( void )
+NoticeTDC64M::~NoticeTDC64M( void )
 {
 }
 
 //______________________________________________________________________________
 void
-CaenV775::Open( void )
+NoticeTDC64M::Open( void )
 {
   VmeModule::m_addr_param.upper               = 0x00000000;
   VmeModule::m_addr_param.lower               = VmeModule::m_addr;
@@ -43,50 +42,51 @@ CaenV775::Open( void )
 
 //______________________________________________________________________________
 void
-CaenV775::InitRegister( const GEF_MAP_PTR& ptr, int index )
+NoticeTDC64M::InitRegister( const GEF_MAP_PTR& ptr, int index )
 {
-  m_data_buf = (GEF_UINT32*)ptr + MapSize/GEF_VME_DWIDTH_D32*index;
-  m_offset   = (GEF_UINT16*)ptr + MapSize/GEF_VME_DWIDTH_D16*index;
+  m_data_buf = (GEF_UINT32*)ptr + MapSize/GEF_VME_DWIDTH_D32*index
+    + Data/GEF_VME_DWIDTH_D32;
+  m_offset   = (GEF_UINT32*)ptr + MapSize/GEF_VME_DWIDTH_D32*index;
 }
 
 //______________________________________________________________________________
 GEF_UINT32
-CaenV775::DataBuf( void )
+NoticeTDC64M::DataBuf( GEF_UINT32 i ) const
 {
-  return __bswap_32( *m_data_buf );
+  return __bswap_32( *(m_data_buf+i) );
 }
 
 //______________________________________________________________________________
 void
-CaenV775::WriteRegister( GEF_UINT16 reg, GEF_UINT16 val )
+NoticeTDC64M::WriteRegister( GEF_UINT32 reg, GEF_UINT32 val )
 {
-  *(m_offset+reg/GEF_VME_DWIDTH_D16) = __bswap_16( val );
+  *(m_offset+reg/GEF_VME_DWIDTH_D32) = __bswap_32( val );
 }
 
 //______________________________________________________________________________
 void
-CaenV775::Print( void ) const
+NoticeTDC64M::Print( void ) const
 {
   PrintHelper helper( 0, std::ios::hex | std::ios::right | std::ios::showbase );
 
   std::cout << "["+ClassName()+"::"+__func__+"()] " << AddrStr() << std::endl
-	    << " GeoAddr   = " << ( ReadRegister( CaenV775::GeoAddr ) & 0x1f )
+	    << " Ctrl    ="
+	    << " Reset:" << ( ( ReadRegister( NoticeTDC64M::Ctrl ) >> 0 ) & 0x1 )
+	    << " Range:" << ( ( ReadRegister( NoticeTDC64M::Ctrl ) >> 1 ) & 0x7 )
+	    << " Edge:"  << ( ( ReadRegister( NoticeTDC64M::Ctrl ) >> 4 ) & 0x1 )
+	    << " MID:"   << ( ( ReadRegister( NoticeTDC64M::Ctrl ) >> 5 ) & 0x1f )
 	    << std::endl
-	    << " ChainAddr = " << ( ReadRegister( CaenV775::ChainAddr ) & 0xff )
+	    << " ClStat  ="
+	    << " NWord:"  << ( ( ReadRegister( NoticeTDC64M::ClStat ) >> 0 ) & 0xfff )
+	    << " DReady:" << ( ( ReadRegister( NoticeTDC64M::ClStat ) >> 12 ) & 0x1 )
 	    << std::endl
-	    << " BitSet1   ="
-	    << " BErrFlag:"  << ( (ReadRegister( CaenV775::BitSet1 )>>3) & 0x1 )
-	    << " SelAddr:"   << ( (ReadRegister( CaenV775::BitSet1 )>>4) & 0x1 )
-	    << " SoftReset:" << ( (ReadRegister( CaenV775::BitSet1 )>>7) & 0x1 )
+	    << " Enable1 = " << ReadRegister( NoticeTDC64M::Enable1 ) << std::endl
+	    << " Enable2 = " << ReadRegister( NoticeTDC64M::Enable2 ) << std::endl
+	    << " Window  ="
+	    << " Search:" << ( ( ReadRegister( NoticeTDC64M::Window ) >> 0 ) & 0xffff )
+	    << " Mask:" << ( ( ReadRegister( NoticeTDC64M::Window ) >> 16 ) & 0xffff )
 	    << std::endl
-	    << " Str1      = " << ( ReadRegister( CaenV775::Str1 ) & 0xff )
-	    << std::endl
-	    << " ChainCtrl = " << ( ReadRegister( CaenV775::ChainCtrl ) & 0x3 )
-	    << std::endl
-	    << " BitSet2   = " << ( ReadRegister( CaenV775::BitSet2 ) & 0x7fff )
-	    << std::endl
-	    << " Range     = " << ( ReadRegister( CaenV775::Range ) & 0xff )
-	    << std::endl
+	    << " Event   = " << ( ReadRegister( NoticeTDC64M::Event ) & 0xff ) << std::endl
 	    << std::endl;
 }
 

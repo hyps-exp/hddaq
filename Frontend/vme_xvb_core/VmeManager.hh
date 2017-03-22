@@ -13,7 +13,9 @@
 
 #include "CaenV775.hh"
 #include "CaenV792.hh"
+#include "NoticeTDC64M.hh"
 #include "RM.hh"
+#include "RPV130.hh"
 
 class VmeModule;
 
@@ -21,8 +23,8 @@ class VmeModule;
 namespace vme
 {
 
-/**
- * Base address setting for multi modules
+/** Base address setting for multi modules
+ *
  * if,
  *  base_address = 0x12340000 (first module)
  *  map_offset   = 0x00010000 (LSB of address space)
@@ -34,6 +36,15 @@ namespace vme
  *
  * Base address should be set in serial order by map_offset increment.
  * This design is because of limitation of number of map handle.
+ *
+ *
+ ** A new type Vme Module "NewType"
+ *
+ * one line is necessary as follows,
+ *
+ *  CreateMapWindow<NewType>();
+ *
+ * in VmeManager::Open() function.
  *
  */
 
@@ -67,10 +78,7 @@ private:
   GEF_UINT32                      *m_dma_buf;
   GEF_VME_ADDR                     m_dma_addr;
   ModuleMap                        m_module_map;
-
-private:
-  void               Check( GEF_STATUS status, const std::string& name );
-  void               IncrementMasterHandle( void );
+  std::vector<std::string>         m_module_type_list;
 
 public:
   static const int   DmaBufLen( void ) { return MaxDmaBufLen; }
@@ -79,17 +87,24 @@ public:
   const std::string& GetNickName( void ) const { return m_nick_name; }
   void               Open( void );
   void               PrintModuleList( void ) const;
-  void               ReadDmaBuf( GEF_UINT32 length );
-  void               ReadDmaBuf( GEF_VME_ADDR *addr, GEF_UINT32 length );
+  void               ReadDmaBuf( GEF_UINT32 length, GEF_UINT32 offset=0 );
+  void               ReadDmaBuf( GEF_VME_ADDR *addr, GEF_UINT32 length, GEF_UINT32 offset=0 );
   void               SetDmaAddress( GEF_UINT32 addr );
   void               SetNickName( const std::string& n ) { m_nick_name = n; }
 
+private:
+  void               Check( GEF_STATUS status, const std::string& name );
+  void               IncrementMasterHandle( void );
+
   // template for each type of VmeModule
+public:
   template <typename T> void AddModule( T* module );
-  template <typename T> void CreateMapWindow( void );
   template <typename T> int  GetMapSize( void ) const;
   template <typename T> T*   GetModule( int i ) const;
   template <typename T> int  GetNumOfModule( void ) const;
+
+private:
+  template <typename T> void CreateMapWindow( void );
 };
 
 //______________________________________________________________________________

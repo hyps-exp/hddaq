@@ -7,6 +7,7 @@
 
 #include <iomanip>
 #include <ostream>
+#include <sstream>
 #include <stdint.h>
 #include <vector>
 #include <gef/gefcmn_vme.h>
@@ -39,6 +40,7 @@ public:
 
   GEF_UINT32    Addr( void ) const { return m_addr; }
   GEF_VME_ADDR* AddrParam( void ) { return &m_addr_param; }
+  std::string   AddrStr( void ) const;
 
 };
 
@@ -51,10 +53,20 @@ VmeModule::ClassName( void )
 }
 
 //______________________________________________________________________________
+inline std::string
+VmeModule::AddrStr( void ) const
+{
+  std::ostringstream oss;
+  oss << "0x" << std::hex
+      << std::setw(8) << std::setfill('0') << m_addr;
+  return oss.str();
+}
+
+//______________________________________________________________________________
 inline std::ostream&
 operator <<( std::ostream& ost, const VmeModule& module )
 {
-  ost << module.Addr();
+  ost << module.AddrStr();
   return ost;
 }
 

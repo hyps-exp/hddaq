@@ -6,10 +6,7 @@
 
 #include <sstream>
 
-#include "CaenV775.hh"
-#include "CaenV792.hh"
 #include "Header.hh"
-#include "RM.hh"
 #include "VmeManager.hh"
 
 #define DMA_CHAIN 1
@@ -22,6 +19,15 @@ namespace
   const int max_try       = 100;         //maximum count to check data ready
   const int max_data_size = 4*1024*1024; //maximum datasize by byte unit
   DaqMode g_daq_mode = DM_NORMAL;
+
+  template <typename T>
+  std::string
+  user_message( T *m, const std::string& arg )
+  {
+    return
+      std::string( gVme.GetNickName() + " : " + m->ClassName()
+		   + " [" + m->AddrStr() + "] " + arg );
+  }
 }
 
 //____________________________________________________________________________
@@ -51,7 +57,6 @@ open_device( NodeProp& nodeprop )
   gVme.SetDmaAddress( 0xaa000000 );
 
   gVme.Open();
-
 
   ////////// V792
   {
@@ -104,9 +109,12 @@ open_device( NodeProp& nodeprop )
   }
 
   {
-    static vme::RM* m = gVme.GetModule<vme::RM>(0);
+    vme::RM* m = gVme.GetModule<vme::RM>(0);
     m->WriteRegister( vme::RM::Reset, 0x1 );
     m->WriteRegister( vme::RM::Pulse, 0x1 );
+#ifdef DebugPrint
+    m->Print();
+#endif
   }
 
   return;
@@ -120,7 +128,7 @@ init_device( NodeProp& nodeprop )
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-      static vme::RM* m = gVme.GetModule<vme::RM>(0);
+      vme::RM* m = gVme.GetModule<vme::RM>(0);
       m->WriteRegister( vme::RM::Reset, 0x1 );
       m->WriteRegister( vme::RM::Pulse, 0x1 );
       m->WriteRegister( vme::RM::Level, 0x2 );
@@ -139,7 +147,7 @@ init_device( NodeProp& nodeprop )
 void
 finalize_device( NodeProp& nodeprop )
 {
-  static vme::RM* m = gVme.GetModule<vme::RM>(0);
+  vme::RM* m = gVme.GetModule<vme::RM>(0);
   m->WriteRegister( vme::RM::Level, 0x0 );
   return;
 }
@@ -175,8 +183,8 @@ wait_device( NodeProp& nodeprop )
 	}
       }
       // TimeOut
-      std::cout<<"wait_device() Time Out"<<std::endl;
-      //send_warning_message( gVme.GetNickName()+" : wait_device() Time Out");
+      std::cout << "wait_device() Time Out" << std::endl;
+      //send_warning_message( gVme.GetNickName()+" : wait_device() Time Out" );
       return -1;
     }
   case DM_DUMMY:
@@ -206,7 +214,7 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
       ndata += vme::MasterHeaderSize;
       ////////// VME_RM
       {
-	const int n = gVme.GetNumOfModule<vme::RM>();
+	static const int n = gVme.GetNumOfModule<vme::RM>();
 	for( int i=0; i<n; ++i ){
 	  vme::RM* m = gVme.GetModule<vme::RM>(i);
 	  int module_header_start = ndata;
@@ -214,7 +222,7 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	  data[ndata++] = m->ReadRegister( vme::RM::Event  );
 	  data[ndata++] = m->ReadRegister( vme::RM::Spill  );
 	  data[ndata++] = m->ReadRegister( vme::RM::Serial );
-	  data[ndata++] = m->ReadRegister( vme::RM::Time   );
+	  data[ndata++] = 0x0; // m->ReadRegister( vme::RM::Time   );
 	  vme::SetModuleHeader( m->Addr(),
 				ndata - module_header_start,
 				&data[module_header_start] );
@@ -254,8 +262,8 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	  default:
 	    {
 	      std::ostringstream oss;
-	      oss << gVme.GetNickName()
-		  << " : unknown GEO_ADDRESS " << geo_addr;
+	      oss << gVme.GetNickName() << " : "
+		  << "unknown GEO_ADDRESS " << geo_addr;
 	      send_fatal_message( oss.str() );
 	      std::exit( EXIT_FAILURE );
 	    }
@@ -276,7 +284,7 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 #else
       ////////// V792
       {
-	const int n = gVme.GetNumOfModule<vme::CaenV792>();
+	static const int n = gVme.GetNumOfModule<vme::CaenV792>();
 	for( int i=0; i<n; ++i ){
 	  vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(i);
 	  int module_header_start = ndata;
@@ -299,11 +307,7 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	    }
 # endif
 	  }else{
-	    std::ostringstream oss;
-	    oss << gVme.GetNickName() << std::hex << std::showbase
-		<< " : " << m->ClassName() << "[" << m->Addr() << "]"
-		<< "data is not ready";
-	    send_warning_message( oss.str() );
+	    send_warning_message( user_message( m, "data is not ready" ) );
 	  }
 	  vme::SetModuleHeader( m->Addr(),
 				ndata - module_header_start,
@@ -331,19 +335,11 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	      int data_type = (data_buf>>24)&0x7; // 2:header, 0:data, 4:footer
 	      if(data_type==4)  break;
 	      if(k+1==data_len && data_type!=4){
-		std::ostringstream oss;
-		oss << gVme.GetNickName() << std::hex << std::showbase
-		    << " : " << m->ClassName() << "[" << m->Addr() << "]"
-		    << " nooooo fooooter!!!";
-		send_warning_message( oss.str() );
+		send_warning_message( user_message( m, "nooooo fooooter!!!" );
 	      }
 	    }
 	  }else{
-	    std::ostringstream oss;
-	    oss << gVme.GetNickName() << std::hex << std::showbase
-		<< " : " << m->ClassName() << "[" << m->Addr() << "]"
-		<< " data is not ready";
-	    send_warning_message( oss.str() );
+	    send_warning_message( user_message( m, "data is not ready" );
 	  }
 
 	  vme::SetModuleHeader( m->Addr(),
@@ -358,7 +354,7 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 
       len = ndata;
       {
-	static vme::RM* m = gVme.GetModule<vme::RM>(0);
+	vme::RM* m = gVme.GetModule<vme::RM>(0);
 	m->WriteRegister( vme::RM::Pulse, 0x1 );
       }
       return 0;

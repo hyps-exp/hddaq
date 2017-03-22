@@ -60,13 +60,13 @@ RM::Print( void ) const
 {
   PrintHelper helper( 0, std::ios::hex | std::ios::right | std::ios::showbase );
 
-  std::cout << "["+ClassName()+"::"+__func__+"()] " << Addr() << std::endl
+  std::cout << "["+ClassName()+"::"+__func__+"()] " << AddrStr() << std::endl
 	    << " Event  = " << ReadRegister( RM::Event )  << std::endl
 	    << " Spill  = " << ReadRegister( RM::Spill )  << std::endl
 	    << " Serial = " << ReadRegister( RM::Serial ) << std::endl
 	    << " Dummy  = " << ReadRegister( RM::Dummy )  << std::endl
 	    << " Input  = " << ReadRegister( RM::Input )  << std::endl
-	    << " Time   = " << ReadRegister( RM::Time )   << std::endl
+	    // << " Time   = " << ReadRegister( RM::Time )   << std::endl
 	    << std::endl;
 }
 
