@@ -43,6 +43,7 @@ public:
       ChainCtrl = 0x101aU, // R/W [1:0]
       BitSet2   = 0x1032U, // R/W [14:0]
       BitClr2   = 0x1034U, // -/W [14:0]
+      EvReset   = 0x1040U, // -/W [0]
       Range     = 0x1060U  // R/W [7:0]
     };
 

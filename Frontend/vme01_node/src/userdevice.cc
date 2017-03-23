@@ -43,15 +43,15 @@ open_device( NodeProp& nodeprop )
 {
   gVme.SetNickName( nodeprop.getNickName() );
 
+  gVme.AddModule( new vme::CaenV792( 0xad010000 ) );
+  gVme.AddModule( new vme::CaenV792( 0xad020000 ) );
+  gVme.AddModule( new vme::CaenV792( 0xad030000 ) );
+  gVme.AddModule( new vme::CaenV792( 0xad040000 ) );
   gVme.AddModule( new vme::CaenV775( 0xbd010000 ) );
   gVme.AddModule( new vme::CaenV775( 0xbd020000 ) );
   gVme.AddModule( new vme::CaenV775( 0xbd030000 ) );
   gVme.AddModule( new vme::CaenV775( 0xbd040000 ) );
   gVme.AddModule( new vme::CaenV775( 0xbd050000 ) );
-  gVme.AddModule( new vme::CaenV792( 0xad010000 ) );
-  gVme.AddModule( new vme::CaenV792( 0xad020000 ) );
-  gVme.AddModule( new vme::CaenV792( 0xad030000 ) );
-  gVme.AddModule( new vme::CaenV792( 0xad040000 ) );
   gVme.AddModule( new vme::RM( 0xff010000 ) );
 
   gVme.SetDmaAddress( 0xaa000000 );
@@ -64,6 +64,7 @@ open_device( NodeProp& nodeprop )
     GEF_UINT16 chain_set[] = { 0x2, 0x3, 0x3, 0x3 };
     GEF_UINT16 overflow_suppression = 1; // 0:enable 1:disable
     GEF_UINT16 zero_suppression     = 1; // 0:enable 1:disable
+    GEF_UINT16 all_trigger          = 0; // 0:accepted 1:all
     GEF_UINT16 iped[] = { 255, 255, 255, 255 }; // 0x0-0xff
     const int n = gVme.GetNumOfModule<vme::CaenV792>();
     for( int i=0; i<n; ++i ){
@@ -74,8 +75,9 @@ open_device( NodeProp& nodeprop )
       m->WriteRegister( vme::CaenV792::ChainAddr, 0xaa        );
       m->WriteRegister( vme::CaenV792::ChainCtrl, chain_set[i] );
       m->WriteRegister( vme::CaenV792::BitSet2,
-			( overflow_suppression & 0x1 ) << 3 |
-			( zero_suppression     & 0x1 ) << 4 );
+			( overflow_suppression & 0x1 ) <<  3 |
+			( zero_suppression     & 0x1 ) <<  4 |
+			( all_trigger          & 0x1 ) << 14 );
       m->WriteRegister( vme::CaenV792::Iped, iped[i] );
 #ifdef DebugPrint
       m->Print();
@@ -86,10 +88,11 @@ open_device( NodeProp& nodeprop )
   {
     GEF_UINT16 geo_addr[]   = { 0xa, 0xc, 0xe, 0x10, 0x12 };
     GEF_UINT16 chain_set[]  = { 0x3, 0x3, 0x3, 0x3, 0x1 };
+    GEF_UINT16 common_input = 0; // 0:common start 1:common stop
+    GEF_UINT16 empty_prog   = 1; // 0: if data is empty, no header and footer
+                                 // 1: add header and footer always
+    GEF_UINT16 all_trigger  = 0; // 0:accepted 1:all
     GEF_UINT16 range        = 0xff; // 0x18-0xff, range: 1200-140[ns]
-    GEF_UINT16 common_input = 0;    // 0:common start, 1:common stop
-    GEF_UINT16 empty_prog   = 1;    // 0: if data is empty, no header and footer
-                                    // 1: add header and footer always
     const int n = gVme.GetNumOfModule<vme::CaenV775>();
     for( int i=0; i<n; ++i ){
       vme::CaenV775* m = gVme.GetModule<vme::CaenV775>(i);
@@ -99,8 +102,9 @@ open_device( NodeProp& nodeprop )
       m->WriteRegister( vme::CaenV775::ChainAddr, 0xaa        );
       m->WriteRegister( vme::CaenV775::ChainCtrl, chain_set[i] );
       m->WriteRegister( vme::CaenV775::BitSet2,
+			( common_input & 0x1 ) << 10 |
 			( empty_prog   & 0x1 ) << 12 |
-			( common_input & 0x1 ) << 10 );
+			( all_trigger  & 0x1 ) << 14 );
       m->WriteRegister( vme::CaenV775::Range,     range );
 #ifdef DebugPrint
       m->Print();
@@ -128,6 +132,26 @@ init_device( NodeProp& nodeprop )
   switch(g_daq_mode){
   case DM_NORMAL:
     {
+      {
+	const int n = gVme.GetNumOfModule<vme::CaenV792>();
+	for( int i=0; i<n; ++i ){
+	  vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(i);
+	  m->WriteRegister( vme::CaenV792::BitSet2, 0x4 );
+	  m->WriteRegister( vme::CaenV792::BitClr2, 0x4 );
+	  m->WriteRegister( vme::CaenV792::EvReset, 0x0 );
+	}
+      }
+
+      {
+	const int n = gVme.GetNumOfModule<vme::CaenV775>();
+	for( int i=0; i<n; ++i ){
+	  vme::CaenV775* m = gVme.GetModule<vme::CaenV775>(i);
+	  m->WriteRegister( vme::CaenV775::BitSet2, 0x4 );
+	  m->WriteRegister( vme::CaenV775::BitClr2, 0x4 );
+	  m->WriteRegister( vme::CaenV775::EvReset, 0x0 );
+	}
+      }
+
       vme::RM* m = gVme.GetModule<vme::RM>(0);
       m->WriteRegister( vme::RM::Reset, 0x1 );
       m->WriteRegister( vme::RM::Pulse, 0x1 );
