@@ -1,4 +1,6 @@
-// emc01_node: userdevice.cc
+// -*- C++ -*-
+
+// Author: Shuhei Hayakawa
 
 #include <cstdio>
 #include <cstdlib>
@@ -9,33 +11,84 @@
 #include <vector>
 
 #include "userdevice.h"
-#include "vme_bit3.h"
 
-static const int max_polling   = 2000000;     //maximum count until time-out
-static const int max_try       = 100;         //maximum count to check data ready
-static const int max_data_size = 4*1024*1024; //maximum datasize by byte unit
+#include "Header.hh"
+#include "VmeManager.hh"
 
-DaqMode g_daq_mode = DM_NORMAL;
+namespace
+{
+  vme::VmeManager& gVme = vme::VmeManager::GetInstance();
+  const int max_polling   = 2000000;     //maximum count until time-out
+  const int max_try       = 100;         //maximum count to check data ready
+  const int max_data_size = 4*1024*1024; //maximum datasize by byte unit
+  DaqMode g_daq_mode = DM_NORMAL;
+}
 
-int get_maxdatasize()
+//______________________________________________________________________________
+int
+get_maxdatasize( void )
 {
   return max_data_size;
 }
 
-void open_device(NodeProp& nodeprop)
+//______________________________________________________________________________
+void
+open_device( NodeProp& nodeprop )
 {
-  vme_open();
+  gVme.SetNickName( nodeprop.getNickName() );
+
+  gVme.AddModule( new vme::RM( 0xff0e0000 ) );
+  gVme.AddModule( new vme::RPV130( 0x8000 ) );
+  gVme.AddModule( new vme::EMC( 0xe3c00000 ) );
+
+  gVme.Open();
+
+  ////////// RM
+  {
+    vme::RM* m = gVme.GetModule<vme::RM>(0);
+    m->WriteRegister( vme::RM::Reset, 0x1 );
+#ifdef DebugPrint
+    m->Print();
+#endif
+  }
+
+  ////////// RPV130
+  {
+    vme::RPV130 *m = gVme.GetModule<vme::RPV130>(0);
+    m->WriteRegister( vme::RPV130::Csr1, 0x1 );
+    m->WriteRegister( vme::RPV130::Pulse, 0x1 );
+#ifdef DebugPrint
+    m->Print();
+#endif
+  }
+
+  ////////// EMC
+  {
+    vme::EMC *m = gVme.GetModule<vme::EMC>(0);
+#ifdef DebugPrint
+    m->Print();
+#endif
+  }
+
   return;
 }
 
-void init_device(NodeProp& nodeprop)
+//______________________________________________________________________________
+void
+init_device( NodeProp& nodeprop )
 {
   g_daq_mode = nodeprop.getDaqMode();
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-      *(rpv130[0].csr1)  = 0x1; // io clear
-      *(rpv130[0].pulse) = 0x1; // busy off
+      ////////// RPV130
+      {
+	vme::RPV130 *m = gVme.GetModule<vme::RPV130>(0);
+	m->WriteRegister( vme::RPV130::Csr1, 0x1 );
+	m->WriteRegister( vme::RPV130::Pulse, 0x1 );
+	m->WriteRegister( vme::RPV130::Level, 0x2 );
+      }
+
       return;
     }
   case DM_DUMMY:
@@ -47,18 +100,26 @@ void init_device(NodeProp& nodeprop)
   }
 }
 
-void finalize_device(NodeProp& nodeprop)
+//______________________________________________________________________________
+void
+finalize_device( NodeProp& nodeprop )
+{
+  vme::RPV130 *m = gVme.GetModule<vme::RPV130>(0);
+  m->WriteRegister( vme::RPV130::Level, 0x0 );
+
+  return;
+}
+
+//______________________________________________________________________________
+void
+close_device( NodeProp& nodeprop )
 {
   return;
 }
 
-void close_device(NodeProp& nodeprop)
-{
-  return;
-}
-
-
-int wait_device(NodeProp& nodeprop)
+//______________________________________________________________________________
+int
+wait_device( NodeProp& nodeprop )
 /*
   return -1: TIMEOUT or FAST CLEAR -> continue
   return  0: TRIGGED -> go read_device
@@ -69,21 +130,22 @@ int wait_device(NodeProp& nodeprop)
     {
       ////////// Polling
       int reg = 0;
-      for(int i=0;i<max_polling;i++){
-	reg = *(rpv130[0].rsff);
-	if( (reg>>0)&0x1 ){
-	  *(rpv130[0].csr1) = 0x1; // io clear
+      vme::RPV130 *m = gVme.GetModule<vme::RPV130>(0);
+      for( int i=0; i<max_polling; ++i ){
+	reg = m->ReadRegister( vme::RPV130::Rsff );
+	if( (reg>>0) & 0x1 ){
+	  m->WriteRegister( vme::RPV130::Csr1, 0x1 );
 	  return 0;
 	}
       }
       // TimeOut
       std::cout<<"wait_device() Time Out"<<std::endl;
-      //send_warning_message("vme01: wait_device() Time Out");
+      //send_warning_message( gVme.GetNickName()+": wait_device() Time Out" );
       return -1;
     }
   case DM_DUMMY:
     {
-      usleep(200000);
+      ::usleep(200000);
       return 0;
     }
   default:
@@ -92,102 +154,86 @@ int wait_device(NodeProp& nodeprop)
 
 }
 
-
-int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
+//______________________________________________________________________________
+int
+read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 /*
   return -1: Do Not Send data to EV
   return  0: Send data to EV
 */
 {
-  char message[256];
   switch(g_daq_mode){
   case DM_NORMAL:
     {
       int ndata = 0;
       int module_num = 0;
-      ndata += VME_MASTER_HSIZE;
+      ndata += vme::MasterHeaderSize;
 
       ////////// VME_RM
-      for(int i=0; i<VME_RM_NUM; i++){
-	int vme_module_header_start = ndata;
-	ndata += VME_MODULE_HSIZE;
-	data[ndata++] = *(vme_rm[0].event);
-	data[ndata++] = *(vme_rm[0].spill);
-	data[ndata++] = *(vme_rm[0].serial);
-	data[ndata++] = *(vme_rm[0].time);
-	VME_MODULE_HEADER vme_module_header;
-	init_vme_module_header( &vme_module_header, vme_rm[i].addr,
-				ndata - vme_module_header_start );
-	memcpy( &data[vme_module_header_start],
-		&vme_module_header, VME_MODULE_HSIZE*4 );
-	module_num++;
+      {
+	static const int n = gVme.GetNumOfModule<vme::RM>();
+	for( int i=0; i<n; ++i ){
+	  vme::RM *m = gVme.GetModule<vme::RM>(i);
+	  int vme_module_header_start = ndata;
+	  ndata += vme::ModuleHeaderSize;
+	  data[ndata++] = m->ReadRegister( vme::RM::Event  );
+	  data[ndata++] = m->ReadRegister( vme::RM::Spill  );
+	  data[ndata++] = m->ReadRegister( vme::RM::Serial );
+	  // data[ndata++] = m->ReadRegister( vme::RM::Time   );
+	  data[ndata++] = 0x0;
+	  vme::SetModuleHeader( m->Addr(),
+				ndata - vme_module_header_start,
+				&data[vme_module_header_start] );
+	  module_num++;
+	}
       }
+
       ////////// EMC
-      for(int i=0; i<EMC_NUM; i++){
-	///// file read start
-	bool ifs_flag = false;
-	std::ifstream emc_ifs( emc_file.c_str() );
-	if( emc_ifs.fail() ){
-	  sprintf(message, "emc01: EMC[%08llx] failed to read %s",
-		  emc[i].addr, emc_file.c_str() );
-	  send_fatal_message(message);
-	  std::exit(EXIT_FAILURE);
-	}
-	while( emc_ifs.good() ){
-	  std::string line;
-	  std::getline( emc_ifs, line );
-	  if(line.empty()) continue;
-	  std::istringstream input_line( line );
-	  std::istream_iterator<std::string> line_begin( input_line );
-	  std::istream_iterator<std::string> line_end;
-	  std::vector<std::string> emc_param( line_begin, line_end );
-	  if( emc_param.size() != k_emc_param_size )  continue;
-	  if( emc_param[k_magic] != emc_param_magic ) continue;
-	  emc[i].serial = std::strtoul( emc_param[k_serial].c_str(), NULL, 0 );
-	  emc[i].xpos   = (uint32_t)std::strtod( emc_param[k_xpos].c_str(), NULL ) + x_offset;
-	  emc[i].ypos   = (uint32_t)std::strtod( emc_param[k_ypos].c_str(), NULL ) + y_offset;
-	  emc[i].state  = std::strtoul( emc_param[k_state].c_str(), NULL, 0 );
-	  uint64_t time = std::strtoull( emc_param[k_time].c_str(), NULL, 0 );
-	  emc[i].utime = (time>>36) & k_data_mask;
-	  emc[i].ltime = (time>>8) & k_data_mask;
-	  ifs_flag = true;
-	}
-	emc_ifs.close();
-	///// file read end 
-	
-	int vme_module_header_start = ndata;
-	ndata += VME_MODULE_HSIZE;
+      {
+	static const int n = gVme.GetNumOfModule<vme::EMC>();
+	for( int i=0; i<n; ++i ){
+	  vme::EMC *m = gVme.GetModule<vme::EMC>(i);
 
-	if(!ifs_flag) std::cout<<"#W emc01: file is busy"<<std::endl;
-	data[ndata++] = ( ifs_flag & k_data_mask ) | ( k_header_magic << k_word_type_shift );
-	data[ndata++] = ( emc[i].serial & k_data_mask ) | ( k_serial_magic << k_word_type_shift );
-	data[ndata++] = ( emc[i].xpos & k_data_mask ) | ( k_xpos_magic << k_word_type_shift );
-	data[ndata++] = ( emc[i].ypos & k_data_mask ) | ( k_ypos_magic << k_word_type_shift );
-	data[ndata++] = ( emc[i].state & k_data_mask ) | ( k_state_magic << k_word_type_shift );
-	data[ndata++] = ( emc[i].utime & k_data_mask ) | ( k_utime_magic << k_word_type_shift );
-	data[ndata++] = ( emc[i].ltime & k_data_mask ) | ( k_ltime_magic << k_word_type_shift );
-	data[ndata++] = ( 0x0 & k_data_mask ) | ( k_footer_magic << k_word_type_shift );
+	  if( !m->ReadFile() ){
+	    std::ostringstream oss;
+	    oss << gVme.GetNickName() << " : " << std::setw(14) << m->ClassName()
+		<< "[" << m->AddrStr() << "] emc file was busy";
+	    send_warning_message(oss.str());
+	    continue;
+	  }
 
-	VME_MODULE_HEADER vme_module_header;
-	init_vme_module_header( &vme_module_header, emc[i].addr,
-				ndata - vme_module_header_start );
-	memcpy( &data[vme_module_header_start],
-		&vme_module_header, VME_MODULE_HSIZE*4 );
-	module_num++;
+	  int vme_module_header_start = ndata;
+	  ndata += vme::ModuleHeaderSize;
+	  data[ndata++] = m->ReadData( vme::EMC::Header );
+	  data[ndata++] = m->ReadData( vme::EMC::Serial );
+	  data[ndata++] = m->ReadData( vme::EMC::Xpos );
+	  data[ndata++] = m->ReadData( vme::EMC::Ypos );
+	  data[ndata++] = m->ReadData( vme::EMC::State );
+	  data[ndata++] = m->ReadData( vme::EMC::Utime );
+	  data[ndata++] = m->ReadData( vme::EMC::Ltime );
+	  data[ndata++] = m->ReadData( vme::EMC::Footer );
+	  vme::SetModuleHeader( m->Addr(),
+				ndata - vme_module_header_start,
+				&data[vme_module_header_start] );
+	  module_num++;
+	}
       }
 
-      VME_MASTER_HEADER vme_master_header;
-      init_vme_master_header( &vme_master_header, ndata, module_num );
-      memcpy( &data[0], &vme_master_header, VME_MASTER_HSIZE*4 );
-      
+      vme::SetMasterHeader( ndata, module_num, &data[0] );
+
       len = ndata;
-      *(rpv130[0].pulse) = 0x1; // busy off
+
+      {
+	vme::RPV130* m = gVme.GetModule<vme::RPV130>(0);
+	m->WriteRegister( vme::RPV130::Pulse, 0x1 );
+      }
+
       return 0;
     }
   case DM_DUMMY:
     {
       len = 0;
-      return 0; 
+      return 0;
     }
   default:
     len = 0;
