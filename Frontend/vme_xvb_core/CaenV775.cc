@@ -83,6 +83,8 @@ CaenV775::Print( void ) const
 	    << std::endl
 	    << " ChainCtrl = " << ( ReadRegister( CaenV775::ChainCtrl ) & 0x3 )
 	    << std::endl
+	    << " FCLRWin   = " << ( ReadRegister( CaenV775::FCLRWin ) & 0x3ff )
+	    << std::endl
 	    << " BitSet2   = " << ( ReadRegister( CaenV775::BitSet2 ) & 0x7fff )
 	    << std::endl
 	    << " Range     = " << ( ReadRegister( CaenV775::Range ) & 0xff )

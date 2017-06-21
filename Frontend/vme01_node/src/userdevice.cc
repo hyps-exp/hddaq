@@ -62,6 +62,7 @@ open_device( NodeProp& nodeprop )
   {
     GEF_UINT16 geo_addr[]  = { 0x2, 0x4, 0x6, 0x8 };
     GEF_UINT16 chain_set[] = { 0x2, 0x3, 0x3, 0x3 };
+    // GEF_UINT16 fast_clear_window = 0x3f0; // 31.5 + 7 us
     GEF_UINT16 overflow_suppression = 1; // 0:enable 1:disable
     GEF_UINT16 zero_suppression     = 1; // 0:enable 1:disable
     GEF_UINT16 all_trigger          = 0; // 0:accepted 1:all
@@ -74,6 +75,7 @@ open_device( NodeProp& nodeprop )
       m->WriteRegister( vme::CaenV792::BitClr1,   0x80        );
       m->WriteRegister( vme::CaenV792::ChainAddr, 0xaa        );
       m->WriteRegister( vme::CaenV792::ChainCtrl, chain_set[i] );
+      // m->WriteRegister( vme::CaenV792::FCLRWin, fast_clear_window );
       m->WriteRegister( vme::CaenV792::BitSet2,
 			( overflow_suppression & 0x1 ) <<  3 |
 			( zero_suppression     & 0x1 ) <<  4 |
@@ -88,6 +90,7 @@ open_device( NodeProp& nodeprop )
   {
     GEF_UINT16 geo_addr[]   = { 0xa, 0xc, 0xe, 0x10, 0x12 };
     GEF_UINT16 chain_set[]  = { 0x3, 0x3, 0x3, 0x3, 0x1 };
+    // GEF_UINT16 fast_clear_window = 0x3f0; // 31.5 + 7 us
     GEF_UINT16 common_input = 0; // 0:common start 1:common stop
     GEF_UINT16 empty_prog   = 1; // 0: if data is empty, no header and footer
                                  // 1: add header and footer always
@@ -101,6 +104,7 @@ open_device( NodeProp& nodeprop )
       m->WriteRegister( vme::CaenV775::BitClr1,   0x80        );
       m->WriteRegister( vme::CaenV775::ChainAddr, 0xaa        );
       m->WriteRegister( vme::CaenV775::ChainCtrl, chain_set[i] );
+      // m->WriteRegister( vme::CaenV775::FCLRWin, fast_clear_window );
       m->WriteRegister( vme::CaenV775::BitSet2,
 			( common_input & 0x1 ) << 10 |
 			( empty_prog   & 0x1 ) << 12 |

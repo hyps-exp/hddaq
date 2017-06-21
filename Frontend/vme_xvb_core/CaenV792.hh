@@ -41,6 +41,7 @@ public:
       BitClr1   = 0x1008U, // R/W [7,4:3]
       Str1      = 0x100eU, // R/- [8:0]
       ChainCtrl = 0x101aU, // R/W [1:0]
+      FCLRWin   = 0x102eU, // R/W [9:0]
       BitSet2   = 0x1032U, // R/W [14:0]
       BitClr2   = 0x1034U, // -/W [14:0]
       EvReset   = 0x1040U, // -/W [0]
