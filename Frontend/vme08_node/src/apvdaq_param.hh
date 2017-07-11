@@ -38,10 +38,14 @@
 //#define MULTI_SEQ_CELL3 56
 //#define MULTI_SEQ_CELL4 59
 
+#define MULTI_SEQ_CELL2 36
+#define MULTI_SEQ_CELL3 39
+#define MULTI_SEQ_CELL4 42
 
-#define MULTI_SEQ_CELL2 37
-#define MULTI_SEQ_CELL3 40
-#define MULTI_SEQ_CELL4 43
+// by E07-2017 05.29
+// #define MULTI_SEQ_CELL2 37
+// #define MULTI_SEQ_CELL3 40
+// #define MULTI_SEQ_CELL4 43
 
 // At Nagoya 20140117 -- Perfect Timing
 //#define MULTI_SEQ_CELL1 75

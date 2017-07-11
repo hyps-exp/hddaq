@@ -686,14 +686,21 @@ void read_fifo_ZS(unsigned long module)
   if(module==SLAVE7){ g_dbuf.add_data(0x7c000000); }
 
 
-
   vread32_uint(module,READ_FIFO_SIZE,&dataword);
-  g_dbuf.add_data(dataword);
 
-  datasize1=dataword&0xff;
+
+  if(module==SLAVE1) datasize1=0; // for dead chip 2017.01. 23.
+  else datasize1=dataword&0xff;
   datasize2=(dataword>>8)&0xff;
   datasize3=(dataword>>16)&0xff;
   datasize4=(dataword>>24)&0xff;
+
+  if(module==SLAVE1)  g_dbuf.add_data( ((dataword)&(0xffffff00)) ); // for dead chip 2017.01. 23.
+  else g_dbuf.add_data(dataword); 
+
+  //  dataword = ( (datasize1&0xff) || ((datasize2&0xff) << 8) 
+  //       || ((datasize3&0xff) << 16) || ((datasize4&0xff) <<24) );
+
   if(datasize1==0&&datasize2==0&&datasize3==0&&datasize4==0)
   //if(datasize1!=128||datasize2!=128||datasize3!=128||datasize4!=128)
     {
@@ -705,7 +712,7 @@ void read_fifo_ZS(unsigned long module)
     }
   
 //   std::cout<<"CHIP 1 START\n"<<std::endl;
-  
+  if(module!=SLAVE1)
   for(i=0;i<datasize1;i++)
     {
       vread32_uint(module,READ_FIFO_AA,&dataword);

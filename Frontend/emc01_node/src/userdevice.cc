@@ -194,12 +194,19 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	for( int i=0; i<n; ++i ){
 	  vme::EMC *m = gVme.GetModule<vme::EMC>(i);
 
-	  if( !m->ReadFile() ){
+	  bool ifs_flag = false;
+	  for( int j=0; j<max_try; ++j ){
+	    if( m->ReadFile() ){
+	      ifs_flag = true;
+	      break;
+	    }
+	  }
+
+	  if( !ifs_flag ){
 	    std::ostringstream oss;
 	    oss << gVme.GetNickName() << " : " << std::setw(14) << m->ClassName()
 		<< "[" << m->AddrStr() << "] emc file was busy";
 	    send_warning_message(oss.str());
-	    continue;
 	  }
 
 	  int vme_module_header_start = ndata;

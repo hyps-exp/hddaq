@@ -15,11 +15,13 @@
 
 namespace
 {
-  using namespace HUL;
+  using namespace HUL_MST;
   //maximum datasize by byte unit
-  static const int n_word = 100; // header 3 + body 1+32*3
+  static const int n_word = 41; // header 3 + body 1(RM) + 32(TOF) + 4(CH) + 1(TAG)
   static const int max_data_size = 4*n_word;
   DaqMode g_daq_mode = DM_NORMAL;
+
+  static const int NofHead = 3;
 
   char ip[100];
   int  sock=0;
@@ -52,6 +54,8 @@ namespace
       close(sock);
       return -1;
     }
+
+    std::cout << "socket connected" << std::endl;
 
     return sock;
   }
@@ -92,11 +96,27 @@ namespace
   int
   EventCycle( int socket, unsigned int* event_buffer )
   {
-    static unsigned int sizeData = n_word*sizeof(unsigned int);
-    int ret = receive(socket, (char*)event_buffer, sizeData);
-    if( 0 > ret) return -1;
+    // data read ---------------------------------------------------------
+    static const unsigned int sizeHeader = NofHead*sizeof(unsigned int);
+    int ret = receive(sock, (char*)event_buffer, sizeHeader);
+    if(ret < 0) return -1;
 
-    return sizeData;
+    unsigned int n_word_data  = event_buffer[1] & 0x3ff;
+    unsigned int sizeData     = n_word_data*sizeof(unsigned int);
+    
+  
+    //if(n_word_data == 0) return NofHead;
+    if(n_word_data == 0) return sizeHeader;
+
+    ret = receive(sock, (char*)(event_buffer + NofHead), sizeData);
+    if(ret < 0) return -1;
+
+    for (int i=0; i<NofHead+n_word_data; i++)
+      printf("%d : %x\n", i, event_buffer[i]);
+
+    //return NofHead+ n_word_data;
+    return sizeHeader + sizeData;
+
   }
 
 }
@@ -132,6 +152,13 @@ open_device( NodeProp& nodeprop )
       iss >> ip;
     }
   }
+
+  FPGAModule fModule(ip, udp_port, &rbcpHeader, 0);
+  fModule.WriteModule(IOM::mid, IOM::laddr_nimout1, IOM::reg_o_FERAMode);
+  fModule.WriteModule(IOM::mid, IOM::laddr_nimout2, IOM::reg_o_FERAMode);
+  fModule.WriteModule(IOM::mid, IOM::laddr_nimout3, IOM::reg_o_FERAMode);
+  fModule.WriteModule(IOM::mid, IOM::laddr_nimout4, IOM::reg_o_ModuleBusy);
+
 
   //Connection check -----------------------------------------------
   while(0 > (sock = ConnectSocket(ip) )){
@@ -183,22 +210,24 @@ init_device( NodeProp& nodeprop )
 	send_normal_message( oss.str() );
       }
 
-      fModule.WriteModule(BCT::mid, BCT::laddr_Reset,  1);
+      //fModule.WriteModule(BCT::mid, BCT::laddr_Reset,  1);
+      fModule.WriteModule(DCT::mid, DCT::laddr_evb_reset, 1);
       ::sleep(1);
-      fModule.WriteModule(MTM::mid, MTM::laddr_sel_trig,
-			  MTM::reg_L1RM | MTM::reg_L2RM | MTM::reg_ClrRM |
-			  MTM::reg_EnL2 | MTM::reg_EnRM );
-      fModule.WriteModule(DCT::mid, DCT::laddr_evb_reset, 0x1);
-      fModule.WriteModule(SCR::mid, SCR::laddr_enable_block, 0xb);
-      fModule.WriteModule(SCR::mid, SCR::laddr_counter_reset, 0x0);
-      fModule.WriteModule(IOM::mid, IOM::laddr_extSpillGate, IOM::reg_i_nimin1);
-      fModule.WriteModule(IOM::mid, IOM::laddr_nimout1, IOM::reg_o_ModuleBusy);
-      fModule.WriteModule(IOM::mid, IOM::laddr_nimout2, IOM::reg_o_clk1MHz);
-      fModule.WriteModule(IOM::mid, IOM::laddr_nimout3, IOM::reg_o_clk10kHz);
-      fModule.WriteModule(IOM::mid, IOM::laddr_nimout4, IOM::reg_o_RML1 );
+      unsigned int sel_trig = TRM::reg_EnRM | TRM::reg_ClrRM | 
+	                      TRM::reg_L2RM | TRM::reg_EnL2 | 
+	                      TRM::reg_L1RM;
+
+      fModule.WriteModule(TRM::mid, TRM::laddr_sel_trig,  sel_trig);
+
+      fModule.WriteModule(IOM::mid, IOM::laddr_nimout1, IOM::reg_o_FERAMode);
+      fModule.WriteModule(IOM::mid, IOM::laddr_nimout2, IOM::reg_o_FERAMode);
+      fModule.WriteModule(IOM::mid, IOM::laddr_nimout3, IOM::reg_o_FERAMode);
+      fModule.WriteModule(IOM::mid, IOM::laddr_nimout4, IOM::reg_o_ModuleBusy);
 
       // start DAQ
       fModule.WriteModule(DCT::mid, DCT::laddr_gate, 1);
+
+      std::cout << "init_device" << std::endl;
       return;
     }
   case DM_DUMMY:
@@ -273,13 +302,17 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
   return  0: Send data to EV
 */
 {
-  // const std::string& nick_name(nodeprop.getNickName());
-  // const std::string& func_name(nick_name+" [::"+__func__+"()]");
+  const std::string& nick_name(nodeprop.getNickName());
+  const std::string& func_name(nick_name+" [::"+__func__+"()]");
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-      int ret_event_cycle = EventCycle(sock, data);
-      len = ret_event_cycle == -1 ? -1 : ret_event_cycle/sizeof(unsigned int);
+      int val = EventCycle(sock, data);
+      if (val == -1)
+	len = -1;
+      else
+	len = val/sizeof(unsigned int);
+
       // if( len > 0 ){
       // 	for(int i = 0; i<n_word; ++i){
       // 	  printf("%x ", data[i]);

@@ -87,6 +87,8 @@ EMC::ReadFile( void )
     ifs_flag = true;
   }
 
+  if( !ifs_flag ) return false;
+
   m_data[Header] = ( ifs_flag & kDataMask ) | ( kHeaderMagic << kWordTypeShift );
   m_data[Serial] = ( serial & kDataMask ) | ( kSerialMagic << kWordTypeShift );
   m_data[Xpos]   = ( xpos & kDataMask ) | ( kXposMagic << kWordTypeShift );
@@ -95,6 +97,7 @@ EMC::ReadFile( void )
   m_data[Utime]  = ( utime & kDataMask ) | ( kUtimeMagic << kWordTypeShift );
   m_data[Ltime]  = ( ltime & kDataMask ) | ( kLtimeMagic << kWordTypeShift );
   m_data[Footer] = ( 0x0 & kDataMask ) | ( kFooterMagic << kWordTypeShift );
+
   return true;
 }
 

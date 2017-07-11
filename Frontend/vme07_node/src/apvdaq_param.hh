@@ -38,10 +38,15 @@
 //#define MULTI_SEQ_CELL3 56
 //#define MULTI_SEQ_CELL4 59
 
+// by E07-2017 05.29
+#define MULTI_SEQ_CELL2 36
+#define MULTI_SEQ_CELL3 39
+#define MULTI_SEQ_CELL4 42
 
-#define MULTI_SEQ_CELL2 37
-#define MULTI_SEQ_CELL3 40
-#define MULTI_SEQ_CELL4 43
+// by E07-2017 05.29
+// #define MULTI_SEQ_CELL2 37
+// #define MULTI_SEQ_CELL3 40
+// #define MULTI_SEQ_CELL4 43
 
 // At Nagoya 20140117 -- Perfect Timing
 //#define MULTI_SEQ_CELL1 75
@@ -196,16 +201,6 @@ const unsigned short apv_i2c_settings[16][2] = {
 //#define SLAVE8_PHOS_ADCDELAY 10
 //#define SLAVE9_PHOS_ADCDELAY 2
 #define PHOS_TRGDELAY 0
-
-
-
-
-//Jaeyong newly added parameters 18 Aug 2015
-//updated 19 September 2015
-
-#define DATALOCA      "/home/sks/jaeyong_work/SugiDaqSsd_v1.7/FPGA_v1.7/conf/" // data location
-#define SOURCELOCA    "/home/sks/jaeyong_work/SugiDaqSsd_v1.7/FPGA_v1.7/conf/" // source location
-#define WARMUPLOCA    "/home/sks/jaeyong_work/SugiDaqSsd_v1.7/FPGA_v1.7/conf/" // warmup file calibration
 
 #define FirNumOfParam 12
 #define NumberOfSamples 8
