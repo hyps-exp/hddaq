@@ -67,7 +67,7 @@ int check_cl_frame(char *buf, int len)
 	id = clheader->id;
       } else {
 	if (id != clheader->id) {
-	  fprintf(stderr, "Different ID!! %d(0) %d(%d)", id, clheader->id, i);
+	  fprintf(stderr, "Different ID!! %d(0) %d(%d) \n", id, clheader->id, i);
 	  send_error_message("cltcp::check_cl_frame Different ID !");
 	  retval = -1;
 	}
