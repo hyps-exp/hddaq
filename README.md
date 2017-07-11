@@ -3,6 +3,7 @@ README.md
 
 ## Update
 
+- 2017.07.11 --- S.H. Hayakawa
 - 2017.03.11 --- S.H. Hayakawa
 - 2015.03.25 --- K. Hosomi
 
@@ -34,13 +35,13 @@ README.md
 #### Main DAQ
 
     $ cd <work directory>
-    $ sh launcher.py <data directory>
+    $ ./launcher.py <data directory> (default is "./data")
 
 #### GUI tools
 
 #### kill
 
-    $ sh kill.sh
+    $ ./kill.sh
 
 #### Frontend
 
@@ -50,8 +51,8 @@ change nickname, nodeid, frontend values in **frontend.sh**
 
 start frontend
 
-    $ sh fe_start.sh
+    $ ./fe_start.sh
 
 kill frontend
 
-    $ sh fe_kill.sh
+    $ ./fe_kill.sh
