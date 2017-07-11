@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include "gef/gefcmn_vme.h"
 
-static uint32_t address_tdc = 0x20030000;
+const uint32_t address_tdc = 0x20030000;
 
 struct TdcRegister_t  
 {
@@ -68,7 +68,7 @@ int conf_tdc();
 int open_tdc();
 int close_tdc();
 int read_tdc();
-
+void event_count_reset();
 enum TypeOfData tdc_data_check(uint32_t data);
 
 #endif

@@ -28,7 +28,7 @@ const int      k_size    = k_buf_size + sizeof(TdcRegister_t);
 
 static uint32_t data32;
 
-static const int max_try = 100;
+
 
 #include <algorithm>
 template<class T>
@@ -130,6 +130,12 @@ int open_tdc()
   return 0;
 }
 //______________________________________________________________________________
+void event_count_reset()
+{
+  TdcReg->m_Event_Counter_Rst = reverse_endian(0x0);  
+  return;
+}
+//______________________________________________________________________________
 int close_tdc()
 {
   std::cout<<"#D close_tdc()"<<std::endl;
@@ -156,7 +162,7 @@ int read_tdc()
 {
   data_buffer & g_dbuf = data_buffer::get_instance();
   std::cout<<"#D read_tdc()"<<std::endl;
-
+  const int max_try = 100;
   bool valid_data = true;
   uint16_t dready = 0;
   for(int j = 0;j<max_try;j++)

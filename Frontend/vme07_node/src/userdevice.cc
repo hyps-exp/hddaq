@@ -76,7 +76,8 @@ void init_device(NodeProp& nodeprop) // After Run Start
       switch_buffer(); 
       clear_fifo();    
       //___________________________________________________
-      
+      //TDC Reset
+      event_count_reset();
       //GPIO
       reset_inputreg_gpio();
       make_pulse_gpio(0);
