@@ -186,7 +186,7 @@ init_device( NodeProp& nodeprop )
       fModule.WriteModule(BCT::mid, BCT::laddr_Reset,  1);
       ::sleep(1);
       fModule.WriteModule(MTM::mid, MTM::laddr_sel_trig,
-			  MTM::reg_L1RM | MTM::reg_L2RM |
+			  MTM::reg_L1RM | MTM::reg_L2RM | MTM::reg_ClrRM |
 			  MTM::reg_EnL2 | MTM::reg_EnRM );
       fModule.WriteModule(DCT::mid, DCT::laddr_evb_reset, 0x1);
       fModule.WriteModule(SCR::mid, SCR::laddr_enable_block, 0xb);
@@ -196,6 +196,7 @@ init_device( NodeProp& nodeprop )
       fModule.WriteModule(IOM::mid, IOM::laddr_nimout2, IOM::reg_o_clk1MHz);
       fModule.WriteModule(IOM::mid, IOM::laddr_nimout3, IOM::reg_o_clk10kHz);
       fModule.WriteModule(IOM::mid, IOM::laddr_nimout4, IOM::reg_o_RML1 );
+
       // start DAQ
       fModule.WriteModule(DCT::mid, DCT::laddr_gate, 1);
       return;
@@ -277,7 +278,8 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-      len = EventCycle(sock, data)/sizeof(unsigned int);
+      int ret_event_cycle = EventCycle(sock, data);
+      len = ret_event_cycle == -1 ? -1 : ret_event_cycle/sizeof(unsigned int);
       // if( len > 0 ){
       // 	for(int i = 0; i<n_word; ++i){
       // 	  printf("%x ", data[i]);
