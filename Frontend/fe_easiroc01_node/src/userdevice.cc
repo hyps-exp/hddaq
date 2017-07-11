@@ -161,7 +161,8 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-      len = Event_Cycle(sock, data)/sizeof(unsigned int);
+      int ret_event_cycle = Event_Cycle(sock, data);
+      len = ret_event_cycle == -1 ? -1 : ret_event_cycle/sizeof(unsigned int);
 
 #if  EVSLIP_PREVENTION
       //      fprintf(stderr, "%d %d %d\n", event_tag, event_counter, event_num);

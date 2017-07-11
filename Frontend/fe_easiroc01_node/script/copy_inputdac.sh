@@ -7,13 +7,14 @@ param_dir=$bin_dir/Input8bitDAC
 #temp_dir=$param_dir/inputdac_g30_temp19.0
 #temp_dir=$param_dir/inputdac_g30_temp20.0
 #temp_dir=$param_dir/inputdac_g30_temp21.0
-temp_dir=$param_dir/inputdac_g30_temp22.0
-#temp_dir=$param_dir/inputdac_g30_temp23.0
+#temp_dir=$param_dir/inputdac_g30_temp22.0
+temp_dir=$param_dir/inputdac_g30_temp23.0
 #temp_dir=$param_dir/inputdac_g30_temp24.0
 #temp_dir=$param_dir/inputdac_g30_temp25.0
 
 log_file=$bin_dir/last_param.log
-date > $log_file
+echo >> $log_file
+date >> $log_file
 echo "" >> $log_file
 echo "bin_dir   : $bin_dir"   >> $log_file
 echo "param_dir : $param_dir" >> $log_file
