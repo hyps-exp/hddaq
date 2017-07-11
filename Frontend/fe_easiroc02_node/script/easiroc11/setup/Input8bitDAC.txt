@@ -1,1 +1,1 @@
-/home/axis/hddaq/Frontend/fe_easiroc02_node/script/easiroc11/setup/Input8bitDAC/Input8bitDAC_easiroc11_220_45.txt
+/home/axis/hddaq/Frontend/fe_easiroc02_node/script/easiroc11/setup/Input8bitDAC/Input8bitDAC_201_40_227c.txt

@@ -14,7 +14,7 @@
 #include"easiroc_config.hh"
 
 //maximum datasize by byte unit
-static const int max_data_size = 4*1024*1024; 
+static const int max_data_size = 4*1024*1024;
 DaqMode g_daq_mode = DM_NORMAL;
 
 #define EVSLIP_PREVENTION 0
@@ -64,13 +64,9 @@ void open_device(NodeProp& nodeprop)
     send_error_message(message);
     fprintf(stderr,"%s\n", message);
   }
-  
+
   close(sock);
 
-  sprintf(message,"EASIROC(%s)::open_device : Connection done", ip.c_str());
-  send_error_message(message);
-  fprintf(stdout, "%s\n", message);
-  
   return;
 }
 
@@ -137,7 +133,7 @@ int wait_device(NodeProp& nodeprop)
   return  0: TRIGGED -> go read_device
 */
 {
-  
+
   switch(g_daq_mode){
   case DM_NORMAL:
     {
@@ -151,7 +147,7 @@ int wait_device(NodeProp& nodeprop)
   default:
     return 0;
   }
-  
+
 }
 
 
@@ -165,7 +161,8 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-      len = Event_Cycle(sock, data)/sizeof(unsigned int);
+      int ret_event_cycle = Event_Cycle(sock, data);
+      len = ret_event_cycle == -1 ? -1 : ret_event_cycle/sizeof(unsigned int);
 
 #if  EVSLIP_PREVENTION
       //      fprintf(stderr, "%d %d %d\n", event_tag, event_counter, event_num);
@@ -189,7 +186,7 @@ int read_device(NodeProp& nodeprop, unsigned int* data, int& len)
 	  ofs.close();
 	  exit(-1);
 	}
-	
+
 	if(((event_tag) & 0x1 ) != (event_counter+1 & 0x1)){
 	  sprintf(message, "EASIROC(%s)::read_device : Event slip (Global)", ip.c_str());
 	  send_fatal_message(message);
@@ -232,7 +229,7 @@ int ConnectSocket(const char *ip)
   SiTCP_ADDR.sin_family      = AF_INET;
   SiTCP_ADDR.sin_port        = htons((unsigned short int)port);
   SiTCP_ADDR.sin_addr.s_addr = inet_addr(ip);
-  
+
   struct timeval tv;
   tv.tv_sec  = 3;
   tv.tv_usec = 0;
@@ -246,7 +243,7 @@ int ConnectSocket(const char *ip)
     close(sock);
     return -1;
   }
-  
+
   return sock;
 }
 
@@ -308,7 +305,7 @@ int receive(int sock, char* data_buf, unsigned int *ReadLength){
 	sprintf(message, "EASIROC(%s)::receive : TCP receive error No. is %d", ip.c_str(), errbuf);
 	send_error_message(message);
       }
-      
+
       revd_size = tmp_returnVal;
       break;
     }
@@ -375,7 +372,7 @@ int ReadData(int sock, unsigned int signal, unsigned int *data){
 //      }
 //    }
 //    fprintf(stdout, "\n");
-  
+
   return 0;
 }
 
@@ -390,7 +387,7 @@ int PowerOn_ASIC(int socket){
   for(int i = 1 ; i<5; ++i){
     buffer = 0;
     if(i == 4){
-      buffer += 5 << 16;      
+      buffer += 5 << 16;
     }else{
       buffer += i << 16;
     }
@@ -401,7 +398,7 @@ int PowerOn_ASIC(int socket){
     }
     usleep(1);
   }
-  
+
   return 0;
 }
 
@@ -501,7 +498,7 @@ int TransmitReadSC(int socket){
   if(-1 == WriteData(socket, data)){
     exit(-1);
   }
-  
+
   return 0;
 }
 
@@ -537,11 +534,11 @@ int Event_Cycle(int socket, unsigned int* event_buffer){
     ofs.close();
     std::exit(-1);
   }
-  
+
   unsigned int sizeData = sizeof(unsigned int)*(*(event_buffer + 1) & 0xffff);
   ret = receive(socket, (char*)(event_buffer +3), &sizeData);
   if( 0 > ret){return -1;}
-  
+
   return sizeHeader + sizeData;
 }
 
@@ -552,11 +549,11 @@ void Stop_DAQCycle(int socket){
   signal += 100 << 16;
   send(socket, (char*)&signal, sizeof(int), 0);
   sleep(1);
-    
+
   signal = 0;
   signal += 100 << 16;
   send(socket, (char*)&signal, sizeof(int), 0);
-    
+
   usleep(10000);
 
   return;

@@ -1,1 +1,1 @@
-/home/axis/hddaq/Frontend/fe_easiroc02_node/script/easiroc13/setup/DAC/DAC_easiroc13_240_45_3.5.txt
+/home/axis/hddaq/Frontend/fe_easiroc02_node/script/easiroc13/setup/DAC/DAC_easiroc13_240_35_4.5.txt

@@ -3,6 +3,8 @@
 #include<cstdio>
 #include<cstdlib>
 
+#define DEBUG_MODE 0
+
 //maximum datasize by byte unit
 static const int n_word = 121;
 static const int max_data_size = 4*n_word;
@@ -161,11 +163,18 @@ read_device(NodeProp& nodeprop, unsigned int* data, int& len)
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-      len = Event_Cycle(sock, data)/sizeof(unsigned int);
-      //      for(int i = 0; i<n_word; ++i){
-      //      	printf("%x ", data[i]);
-      //      	if(i%8==0) printf("\n");
-      //      }
+      int ret_event_cycle = Event_Cycle(sock, data);
+      len = ret_event_cycle == -1 ? -1 : ret_event_cycle/sizeof(unsigned int);
+#if DEBUG_MODE
+      if(len > 0){
+	std::cout << "#D : I received Event" << std::endl;
+	for(int i = 0; i<n_word; ++i){
+	  printf("%9x ", data[i]);
+	  if((i+1)%8==0) printf("\n");
+	}
+	printf("\n");
+      }
+#endif
 
       return len;
     }
