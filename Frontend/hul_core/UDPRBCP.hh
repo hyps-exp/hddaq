@@ -24,7 +24,7 @@ private:
   static const unsigned int rbcp_cmd_wr_  = 0x80;  
   static const unsigned int rbcp_cmd_rd_  = 0xC0;  
 
-  char*        ipAddr_;
+  const char*  ipAddr_;
   unsigned int port_;
   rbcp_header* sendHeader_;
 
@@ -35,7 +35,7 @@ private:
   rbcp_debug_mode mode_;
 
 public:
-  UDPRBCP(char* ipAddr, unsigned int port, rbcp_header* sendHeader,
+  UDPRBCP(const char* ipAddr, unsigned int port, rbcp_header* sendHeader,
 	  rbcp_debug_mode mode = disp_interactive);
   virtual ~UDPRBCP();
   

@@ -1,7 +1,7 @@
 #ifndef REGISTER_MAP_HH
 #define REGISTER_MAP_HH
 
-namespace HUL
+namespace HUL_SCR
 {
 
 //------------------------------------------------------------------------------
