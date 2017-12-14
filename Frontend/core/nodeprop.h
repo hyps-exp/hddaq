@@ -23,7 +23,7 @@ namespace kol
 class NodeProp
 {
 public:
-  NodeProp(int nodeid, std::string nickname, int dataport);
+  NodeProp(int nodeid, std::string nickname, int dataport, bool noupdate=false);
   ~NodeProp();
 
 private:
@@ -39,6 +39,7 @@ private:
   int                      m_data_port;
   std::string              m_nickname;
   bool                     m_update_flag;
+  bool                     m_noupdate_flag;
 
 public:
   void setRunNumber(int new_value);
