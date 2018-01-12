@@ -53,7 +53,8 @@ namespace SCR
   enum LocalAddress
     {
       laddr_counter_reset  = 0x000, // -/W [0:0] Assert counter reset
-      laddr_enable_block   = 0x010  // R/W [3:0] Set block enable
+      laddr_enable_block   = 0x010,  // R/W [3:0] Set block enable
+      laddr_enable_hdrst   = 0x020  // R/W [3:0] Set block enable
     };
 }
 
