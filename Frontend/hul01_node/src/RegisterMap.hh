@@ -7,7 +7,7 @@ namespace HUL_SCR
 //------------------------------------------------------------------------------
 // MTM Module
 //------------------------------------------------------------------------------
-namespace MTM
+namespace TRM
 {
   static const int mid = 0x0;
   enum LocalAddress
@@ -98,7 +98,8 @@ namespace IOM
       reg_i_nimin1 = 0x0,
       reg_i_nimin2 = 0x1,
       reg_i_nimin3 = 0x2,
-      reg_i_nimin4 = 0x3
+      reg_i_nimin4 = 0x3,
+      reg_i_default = 0x7
     };
 }
 
