@@ -1,4 +1,3 @@
-
 #include "userdevice.h"
 
 #include <cstdio>
@@ -13,15 +12,24 @@
 #include "network.hh"
 #include "rbcp.h"
 
+bool    stand_alone = false;
+DaqMode g_daq_mode  = DM_NORMAL;
+std::string nick_name;
+#define DEBUG 0
+
 namespace
 {
-  using namespace HUL_SCR;
+  using namespace HUL_MHTDC;
   //maximum datasize by byte unit
-  static const int n_word = 100; // header 3 + body 1+32*3
-  static const int max_data_size = 4*n_word;
-  DaqMode g_daq_mode = DM_NORMAL;
+  static const int n_header      = 3;
+  static const int max_n_word    = n_header+8*16*32;
+  static const int max_data_size = sizeof(unsigned int)*max_n_word;
 
   char ip[100];
+  unsigned int min_time_window;
+  unsigned int max_time_window;
+  bool flag_master = false;;
+  
   int  sock=0;
   rbcp_header rbcpHeader;
 
@@ -92,14 +100,61 @@ namespace
   int
   EventCycle( int socket, unsigned int* event_buffer )
   {
-    static unsigned int sizeData = n_word*sizeof(unsigned int);
-    int ret = receive(socket, (char*)event_buffer, sizeData);
-    if( 0 > ret) return -1;
+    static const std::string& func_name(nick_name+" [::"+__func__+"()]");
 
-    return sizeData;
+    // data read ---------------------------------------------------------
+    static const unsigned int sizeHeader = n_header*sizeof(unsigned int);
+    int ret = receive(sock, (char*)event_buffer, sizeHeader);
+    if(ret < 0) return -1;
+
+    unsigned int n_word_data  = event_buffer[1] & 0xfff;
+    unsigned int sizeData     = n_word_data*sizeof(unsigned int);
+
+    if(event_buffer[0] != 0xffff30cc){
+      std::ostringstream oss;
+      oss << func_name << " Data broken : " << ip;
+      send_fatal_message( oss.str() );
+      std::cerr << oss.str() << std::endl;
+    }
+
+#if DEBUG
+    std::cout << ip << std::hex <<std::endl;
+    std::cout << "H1 " << event_buffer[0] << std::endl;
+    std::cout << "H2 " << event_buffer[1] << std::endl;
+    std::cout << "H3 " << event_buffer[2] << std::endl;
+    std::cout << "\n" << std::dec << std::endl;
+#endif
+
+    if(n_word_data == 0) return sizeHeader;
+
+    ret = receive(sock, (char*)(event_buffer + n_header), sizeData);
+#if DEBUG
+    for(unsigned int i = 0; i<n_word_data; ++i){
+      printf("D%d : %x\n", i, event_buffer[n_header+i]);
+    }
+#endif
+
+    if(ret < 0) return -1;  
+    return sizeHeader + sizeData;
+  }
+
+  //______________________________________________________________________________
+  void
+  set_tdc_window(unsigned int wmax, unsigned int wmin, FPGAModule& fModule)
+  {
+    static const unsigned int c_max       = 2047;
+    static const unsigned int ptr_diff_wr = 2;
+
+    unsigned int ptr_ofs = c_max - wmax + ptr_diff_wr;
+
+    fModule.WriteModule(TDC::mid, TDC::laddr_ptrofs,  ptr_ofs);
+    fModule.WriteModule(TDC::mid, TDC::laddr_win_max, wmax);
+    fModule.WriteModule(TDC::mid, TDC::laddr_win_min, wmin);
   }
 
 }
+
+
 
 //______________________________________________________________________________
 int
@@ -112,8 +167,8 @@ get_maxdatasize( void )
 void
 open_device( NodeProp& nodeprop )
 {
-  const std::string& nick_name(nodeprop.getNickName());
-  const std::string& func_name(nick_name+" [::"+__func__+"()]");
+  nick_name = nodeprop.getNickName();
+  static const std::string& func_name(nick_name+" [::"+__func__+"()]");
 
   // RBCP
   rbcpHeader.type = UDPRBCP::rbcp_ver_;
@@ -131,6 +186,21 @@ open_device( NodeProp& nodeprop )
       iss.str( arg.substr(11) );
       iss >> ip;
     }
+
+    if( arg.substr(0,11) == "--min-twin=" ){
+      iss.str( arg.substr(11) );
+      iss >> min_time_window;
+    }
+
+    if( arg.substr(0,11) == "--max-twin=" ){
+      iss.str( arg.substr(11) );
+      iss >> max_time_window;
+    }
+
+    // J0 bus master flag
+    if( arg.substr(0,8) == "--master" ){
+      flag_master = true;
+    }
   }
 
   //Connection check -----------------------------------------------
@@ -143,6 +213,17 @@ open_device( NodeProp& nodeprop )
 
   close(sock);
 
+  FPGAModule fModule(ip, udp_port, &rbcpHeader, 0);
+
+  fModule.WriteModule(BCT::mid, BCT::laddr_Reset, 0);
+  ::sleep(2);
+
+  if(flag_master){
+    fModule.WriteModule(TRM::mid, TRM::laddr_sel_trig,
+			TRM::reg_L1Ext | TRM::reg_L2RM | TRM::reg_ClrRM |
+			TRM::reg_EnL2  | TRM::reg_EnRM );
+  }
+  
   return;
 }
 
@@ -150,8 +231,7 @@ open_device( NodeProp& nodeprop )
 void
 init_device( NodeProp& nodeprop )
 {
-  const std::string& nick_name(nodeprop.getNickName());
-  const std::string& func_name(nick_name+" [::"+__func__+"()]");
+  static const std::string& func_name(nick_name+" [::"+__func__+"()]");
 
   // update DAQ mode
   g_daq_mode = nodeprop.getDaqMode();
@@ -183,23 +263,26 @@ init_device( NodeProp& nodeprop )
 	send_normal_message( oss.str() );
       }
 
-      fModule.WriteModule(BCT::mid, BCT::laddr_Reset,  1);
-      ::sleep(1);
-      fModule.WriteModule(TRM::mid, TRM::laddr_sel_trig,
-			  TRM::reg_L1RM | TRM::reg_L2RM | TRM::reg_ClrRM |
-			  TRM::reg_EnL2 | TRM::reg_EnRM );
+
+
+      if(flag_master){
+	fModule.WriteModule(TRM::mid, TRM::laddr_sel_trig,
+			    TRM::reg_L1Ext | TRM::reg_L2RM | TRM::reg_ClrRM |
+			    TRM::reg_EnL2  | TRM::reg_EnRM );
+      }else{
+	fModule.WriteModule(TRM::mid, TRM::laddr_sel_trig,
+			    TRM::reg_L1Ext | TRM::reg_L2J0 | TRM::reg_ClrJ0 |
+			    TRM::reg_EnL2  | TRM::reg_EnJ0 );
+      }
+
       fModule.WriteModule(DCT::mid, DCT::laddr_evb_reset, 0x1);
-      fModule.WriteModule(SCR::mid, SCR::laddr_counter_reset, 0x0);
-      fModule.WriteModule(SCR::mid, SCR::laddr_enable_block, 0xb);
-      fModule.WriteModule(SCR::mid, SCR::laddr_enable_hdrst, 0xf);
-      fModule.WriteModule(IOM::mid, IOM::laddr_extSpillGate, IOM::reg_i_nimin1);
-      fModule.WriteModule(IOM::mid, IOM::laddr_extCCRst    , IOM::reg_i_nimin2);
-      fModule.WriteModule(IOM::mid, IOM::laddr_extBusy     , IOM::reg_i_nimin3);
-      fModule.WriteModule(IOM::mid, IOM::laddr_extRsv2     , IOM::reg_i_nimin4);
+      fModule.WriteModule(TDC::mid, TDC::laddr_enblock, 0xff);
+      set_tdc_window(max_time_window, min_time_window, fModule);
+
       fModule.WriteModule(IOM::mid, IOM::laddr_nimout1, IOM::reg_o_ModuleBusy);
-      fModule.WriteModule(IOM::mid, IOM::laddr_nimout2, IOM::reg_o_clk100kHz);
-      fModule.WriteModule(IOM::mid, IOM::laddr_nimout3, IOM::reg_o_RML1 );
-      fModule.WriteModule(IOM::mid, IOM::laddr_nimout4, IOM::reg_o_RML2 );
+      fModule.WriteModule(IOM::mid, IOM::laddr_nimout2, IOM::reg_o_CrateBusy);
+      fModule.WriteModule(IOM::mid, IOM::laddr_nimout3, IOM::reg_o_clk10kHz);
+      fModule.WriteModule(IOM::mid, IOM::laddr_nimout4, IOM::reg_o_RMRsv1 );
 
       // start DAQ
       fModule.WriteModule(DCT::mid, DCT::laddr_gate, 1);
@@ -211,7 +294,7 @@ init_device( NodeProp& nodeprop )
     }
   default:
     return;
-  }
+}
 
 }
 
@@ -225,7 +308,7 @@ finalize_device( NodeProp& nodeprop )
   FPGAModule fModule(ip, udp_port, &rbcpHeader, 0);
   fModule.WriteModule(DCT::mid, DCT::laddr_gate, 0);
   ::sleep(1);
-  unsigned int data[n_word];
+  unsigned int data[max_n_word];
   while(-1 != EventCycle(sock, data));
 
   shutdown(sock, SHUT_RDWR);

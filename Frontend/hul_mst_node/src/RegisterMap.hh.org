@@ -1,13 +1,13 @@
 #ifndef REGISTER_MAP_HH
 #define REGISTER_MAP_HH
 
-namespace HUL_SCR
+namespace HUL
 {
 
 //------------------------------------------------------------------------------
 // MTM Module
 //------------------------------------------------------------------------------
-namespace TRM
+namespace MTM
 {
   static const int mid = 0x0;
   enum LocalAddress
@@ -53,8 +53,7 @@ namespace SCR
   enum LocalAddress
     {
       laddr_counter_reset  = 0x000, // -/W [0:0] Assert counter reset
-      laddr_enable_block   = 0x010,  // R/W [3:0] Set block enable
-      laddr_enable_hdrst   = 0x020  // R/W [3:0] Set block enable
+      laddr_enable_block   = 0x010  // R/W [3:0] Set block enable
     };
 }
 
@@ -99,8 +98,7 @@ namespace IOM
       reg_i_nimin1 = 0x0,
       reg_i_nimin2 = 0x1,
       reg_i_nimin3 = 0x2,
-      reg_i_nimin4 = 0x3,
-      reg_i_default = 0x7
+      reg_i_nimin4 = 0x3
     };
 }
 

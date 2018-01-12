@@ -13,6 +13,7 @@ int main(int argc, char* argv[])
   int nodeid = 0;
   int dataport = 9000;
   std::string nickname = "nickname";
+  bool noupdate_flag = false;
 
   std::istringstream iss;
   
@@ -30,6 +31,9 @@ int main(int argc, char* argv[])
     if (arg.substr(0, 12) == "--data-port=") {
       iss.str(arg.substr(12));
       iss >> dataport;
+    } 
+    if (arg.substr(0, 24) == "--ignore-nodeprop-update") {
+      noupdate_flag = true;
     } 
   }
 
@@ -56,7 +60,7 @@ int main(int argc, char* argv[])
     return 0;
   }
 
-  NodeProp       nodeprop(nodeid, nickname, dataport);
+  NodeProp       nodeprop(nodeid, nickname, dataport, noupdate_flag);
   nodeprop.setArgc(argc);
   nodeprop.setArgv(argv);
 
