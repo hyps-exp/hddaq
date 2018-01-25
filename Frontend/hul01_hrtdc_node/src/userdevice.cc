@@ -122,7 +122,6 @@ namespace
     std::cout << "H1 " << event_buffer[0] << std::endl;
     std::cout << "H2 " << event_buffer[1] << std::endl;
     std::cout << "H3 " << event_buffer[2] << std::endl;
-    std::cout << "\n" << std::dec << std::endl;
 #endif
 
     if(n_word_data == 0) return sizeHeader;
@@ -132,6 +131,7 @@ namespace
     for(unsigned int i = 0; i<n_word_data; ++i){
       printf("D%d : %x\n", i, event_buffer[n_header+i]);
     }
+    std::cout << "\n" << std::dec << std::endl;
 #endif
 
     if(ret < 0) return -1;  
@@ -314,7 +314,10 @@ open_device( NodeProp& nodeprop )
 
   FPGAModule fModule(ip, udp_port, &rbcpHeader, 0);
   fModule.WriteModule(BCT::mid, BCT::laddr_Reset, 0);
-  ::sleep(2);
+  ::sleep(1);
+  if(en_up)  fModule.WriteModule(HRTDC_BASE::MIFU::mid, HRTDC_BASE::MIF::laddr_frst, 1);
+  if(en_down)fModule.WriteModule(HRTDC_BASE::MIFD::mid, HRTDC_BASE::MIF::laddr_frst, 1);
+  ::sleep(1);
   if(en_up)  fModule.WriteModule(HRTDC_BASE::MIFU::mid, HRTDC_BASE::MIF::laddr_frst, 0);
   if(en_down)fModule.WriteModule(HRTDC_BASE::MIFD::mid, HRTDC_BASE::MIF::laddr_frst, 0);
   
