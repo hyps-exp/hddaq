@@ -20,6 +20,7 @@
 #include "CaenV792.hh"
 #include "NoticeTDC64M.hh"
 #include "RM.hh"
+#include "RMME.hh"
 #include "RPV130.hh"
 
 namespace vme
@@ -104,6 +105,7 @@ VmeManager::Open( void )
   CreateMapWindow<CaenV792>();
   CreateMapWindow<NoticeTDC64M>();
   CreateMapWindow<RM>();
+  CreateMapWindow<RMME>();
   CreateMapWindow<RPV130>();
 
   PrintModuleList();

@@ -37,11 +37,11 @@ public:
       Event  = 0x00, // R/- [31:0]
       Spill  = 0x04, // R/- [31:0]
       Serial = 0x08, // R/- [31:0]
-      Dummy  = 0x0c, // R/W [31:0]
+      Dummy  = 0x0c, // R/- [31:0]
       Input  = 0x10, // R/- [15:0]
       Reset  = 0x14, // -/W [0]
       Level  = 0x18, // R/W [15:0]
-      Pulse  = 0x1c, // -/W [15:0]
+      Pulse  = 0x1c  // -/W [15:0]
       // Time   = 0x20
     };
 

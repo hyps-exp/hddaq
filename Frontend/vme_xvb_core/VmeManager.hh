@@ -15,6 +15,7 @@
 #include "CaenV792.hh"
 #include "NoticeTDC64M.hh"
 #include "RM.hh"
+#include "RMME.hh"
 #include "RPV130.hh"
 
 class VmeModule;
