@@ -51,11 +51,9 @@ open_device( NodeProp& nodeprop )
   gVme.AddModule( new vme::CaenV792( 0xad040000 ) );
   gVme.AddModule( new vme::CaenV792( 0xad050000 ) );
 
-  //  gVme.AddModule( new vme::CaenV775( 0xbd010000 ) );
   gVme.AddModule( new vme::CaenV775( 0xbd020000 ) );
   gVme.AddModule( new vme::CaenV775( 0xbd030000 ) );
   gVme.AddModule( new vme::CaenV775( 0xbd040000 ) );
-  //  gVme.AddModule( new vme::CaenV775( 0xbd050000 ) );
 #if USE_RMME
   gVme.AddModule( new vme::RMME( 0xff010000 ) );
 #else
@@ -68,9 +66,6 @@ open_device( NodeProp& nodeprop )
 
   ////////// V792
   {
-    //    GEF_UINT16 geo_addr[]  = { 0x2, 0x4, 0x6, 0x8 };
-    //    GEF_UINT16 chain_set[] = { 0x2, 0x3, 0x3, 0x3 };
-
     GEF_UINT16 geo_addr[]  = { 0x2, 0x4, 0x6, 0x8, 0xa};
     GEF_UINT16 chain_set[] = { 0x2, 0x3, 0x3, 0x3, 0x3};
     // GEF_UINT16 fast_clear_window = 0x3f0; // 31.5 + 7 us
@@ -91,6 +86,7 @@ open_device( NodeProp& nodeprop )
 			( overflow_suppression & 0x1 ) <<  3 |
 			( zero_suppression     & 0x1 ) <<  4 |
 			( all_trigger          & 0x1 ) << 14 );
+      m->WriteRegister( vme::CaenV792::BitClr2, ( !all_trigger  & 0x1 ) << 14 );
       m->WriteRegister( vme::CaenV792::Iped, iped[i] );
 #ifdef DebugPrint
       m->Print();
@@ -99,9 +95,6 @@ open_device( NodeProp& nodeprop )
   }
   ////////// V775
   {
-    //    GEF_UINT16 geo_addr[]   = { 0xa, 0xc, 0xe, 0x10, 0x12 };
-    //    GEF_UINT16 chain_set[]  = { 0x3, 0x3, 0x3, 0x3, 0x1 };
-
     GEF_UINT16 geo_addr[]   = { 0xc, 0xe, 0x10};
     GEF_UINT16 chain_set[]  = { 0x3, 0x3, 0x1 };
     // GEF_UINT16 fast_clear_window = 0x3f0; // 31.5 + 7 us
@@ -123,6 +116,7 @@ open_device( NodeProp& nodeprop )
 			( common_input & 0x1 ) << 10 |
 			( empty_prog   & 0x1 ) << 12 |
 			( all_trigger  & 0x1 ) << 14 );
+      m->WriteRegister( vme::CaenV775::BitClr2, ( !all_trigger  & 0x1 ) << 14 );
       m->WriteRegister( vme::CaenV775::Range,     range );
 #ifdef DebugPrint
       m->Print();
@@ -166,7 +160,6 @@ init_device( NodeProp& nodeprop )
 	  vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(i);
 	  m->WriteRegister( vme::CaenV792::BitSet2, 0x4 );
 	  m->WriteRegister( vme::CaenV792::BitClr2, 0x4 );
-	  m->WriteRegister( vme::CaenV792::BitClr2, 0x4000 );
 	  m->WriteRegister( vme::CaenV792::EvReset, 0x0 );
 	}
       }
@@ -177,7 +170,6 @@ init_device( NodeProp& nodeprop )
 	  vme::CaenV775* m = gVme.GetModule<vme::CaenV775>(i);
 	  m->WriteRegister( vme::CaenV775::BitSet2, 0x4 );
 	  m->WriteRegister( vme::CaenV775::BitClr2, 0x4 );
-	  m->WriteRegister( vme::CaenV792::BitClr2, 0x4000 );
 	  m->WriteRegister( vme::CaenV775::EvReset, 0x0 );
 	}
       }
