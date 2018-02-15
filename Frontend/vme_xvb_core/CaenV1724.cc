@@ -2,7 +2,7 @@
 
 // Author: Shuhei Hayakawa
 
-#include "CaenV792.hh"
+#include "CaenV1724.hh"
 
 #include <cstdlib>
 #include <sstream>
@@ -16,19 +16,19 @@ namespace vme
 {
 
 //______________________________________________________________________________
-CaenV792::CaenV792( GEF_UINT32 addr )
+CaenV1724::CaenV1724( GEF_UINT32 addr )
 : VmeModule(addr)
 {
 }
 
 //______________________________________________________________________________
-CaenV792::~CaenV792( void )
+CaenV1724::~CaenV1724( void )
 {
 }
 
 //______________________________________________________________________________
 void
-CaenV792::Open( void )
+CaenV1724::Open( void )
 {
   VmeModule::m_addr_param.upper               = 0x00000000;
   VmeModule::m_addr_param.lower               = VmeModule::m_addr;
@@ -43,53 +43,70 @@ CaenV792::Open( void )
 
 //______________________________________________________________________________
 void
-CaenV792::InitRegister( const GEF_MAP_PTR& ptr, int index )
+CaenV1724::InitRegister( const GEF_MAP_PTR& ptr, int index )
 {
   m_data_buf = (GEF_UINT32*)ptr + MapSize/GEF_VME_DWIDTH_D32*index;
-  m_offset   = (GEF_UINT16*)ptr + MapSize/GEF_VME_DWIDTH_D16*index;
+  m_offset   = (GEF_UINT32*)ptr + MapSize/GEF_VME_DWIDTH_D32*index;
 }
 
 //______________________________________________________________________________
 GEF_UINT32
-CaenV792::DataBuf( void )
+CaenV1724::DataBuf( void )
 {
   return __bswap_32( *m_data_buf );
 }
 
 //______________________________________________________________________________
 void
-CaenV792::WriteRegister( GEF_UINT16 reg, GEF_UINT16 val )
+CaenV1724::WriteRegister( GEF_UINT32 reg, GEF_UINT32 val )
 {
-  *(m_offset+reg/GEF_VME_DWIDTH_D16) = __bswap_16( val );
+  *(m_offset+reg/GEF_VME_DWIDTH_D32) = __bswap_32( val );
 }
 
 //______________________________________________________________________________
 void
-CaenV792::Print( void ) const
+CaenV1724::Print( void ) const
 {
   PrintHelper helper( 0, std::ios::hex | std::ios::right | std::ios::showbase );
 
   std::cout << "["+ClassName()+"::"+__func__+"()] " << AddrStr() << std::endl
-	    << " GeoAddr   = " << ( ReadRegister( CaenV792::GeoAddr ) & 0x1f )
+	    << " ReadoutStatus   = " << ( ReadRegister( CaenV1724::ReadoutStatus ) & 0x1ff )
 	    << std::endl
-	    << " ChainAddr = " << ( ReadRegister( CaenV792::ChainAddr ) & 0xff )
+	    << " ChEnMask        = " << ( ReadRegister( CaenV1724::ChEnMask )      & 0xff )
 	    << std::endl
-	    << " BitSet1   ="
-	    << " BErrFlag:"  << ( (ReadRegister( CaenV792::BitSet1 )>>3) & 0x1 )
-	    << " SelAddr:"   << ( (ReadRegister( CaenV792::BitSet1 )>>4) & 0x1 )
-	    << " SoftReset:" << ( (ReadRegister( CaenV792::BitSet1 )>>7) & 0x1 )
+	    << " BufOrg          ="  << ( ReadRegister( CaenV1724::BufOrg )        & 0xf )
 	    << std::endl
-	    << " Str1      = " << ( ReadRegister( CaenV792::Str1 ) & 0xff )
+	    << " PostTrig        = " << ( ReadRegister( CaenV1724::PostTrig )      & 0xffffffff )
 	    << std::endl
-	    << " ChainCtrl = " << ( ReadRegister( CaenV792::ChainCtrl ) & 0x3 )
+	    << " BoardConf       = " << ( ReadRegister( CaenV1724::BoardConf )     & 0xfffff )
 	    << std::endl
-	    << " FCLRWin   = " << ( ReadRegister( CaenV792::FCLRWin ) & 0x3ff )
+	    << " MemoryAfullLv   = " << ( ReadRegister( CaenV1724::MemoryAfullLv ) & 0x7ff )
 	    << std::endl
-	    << " BitSet2   = " << ( ReadRegister( CaenV792::BitSet2 ) & 0x7fff )
+	    << " CustomSize      = " << ( ReadRegister( CaenV1724::CustomSize )    & 0xffffffff )
 	    << std::endl
-	    << " Iped      = " << ( ReadRegister( CaenV792::Iped ) & 0xff )
+	    << " IOCtrl          = " << ( ReadRegister( CaenV1724::IOCtrl )        & 0xff )
+	    << std::endl
+	    << " GPOEnMask       = " << ( ReadRegister( CaenV1724::GPOEnMask )     & 0xffffffff )
+	    << std::endl
+	    << " AcqCtrl         = " << ( ReadRegister( CaenV1724::AcqCtrl )       & 0xf )
 	    << std::endl
 	    << std::endl;
+
+  std::cout << " Channel DC offset" << std::endl;
+  for(int i = 0; i<NofCh; ++i){
+    std::cout << "  Ch" << i << "    = " << ( ReadRegister( CaenV1724::DcOffset ) & 0xffff ) << std::endl;
+  }// for(i)
+
+  std::cout << " Zero suppression threshold" << std::endl;
+  for(int i = 0; i<NofCh; ++i){
+    std::cout << "  Ch" << i << "    = " << ( ReadRegister( CaenV1724::ZeroSuppThre ) & 0xffffffff ) << std::endl;
+  }// for(i)
+
+  std::cout << " Zero suppression sample" << std::endl;
+  for(int i = 0; i<NofCh; ++i){
+    std::cout << "  Ch" << i << "    = " << ( ReadRegister( CaenV1724::ZeroSuppSample ) & 0xffffffff ) << std::endl;
+  }// for(i)
+
 }
 
 }

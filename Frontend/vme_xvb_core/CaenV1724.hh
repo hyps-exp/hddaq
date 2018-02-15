@@ -30,13 +30,18 @@ private:
 private:
   static const GEF_UINT32 MapSize = 0x10000;
   volatile GEF_UINT32 *m_data_buf;
-  volatile GEF_UINT16 *m_offset;
+  volatile GEF_UINT32 *m_offset;
+  
 
 public:
+  static const int          NofCh = 8;
+  static const unsigned int IReg  = 0x100U;
+
   enum Register
     {
+      // Data buffer ----------------------------
+      DataBuffer     = 0x0000U,
       // Indivisual registers -------------------
-      IReg           = 0x100U,
       ZeroSuppThre   = 0x1024U,
       ZeroSuppSample = 0x1028U,
       TrigThre       = 0x1080U,
@@ -56,7 +61,7 @@ public:
       AcqStatus      = 0x8104U,
       SoftTrig       = 0x8108U,
       TrigMask       = 0x810CU,
-      GPSEnMask      = 0x8110U,
+      GPOEnMask      = 0x8110U,
       PostTrig       = 0x8114U,
       LVDSData       = 0x8118U,
       IOCtrl         = 0x811CU,
@@ -97,8 +102,8 @@ public:
   void       Open( void );
   GEF_UINT32 DataBuf( void );
   void       InitRegister( const GEF_MAP_PTR& ptr, int index );
-  GEF_UINT16 ReadRegister( GEF_UINT16 reg ) const;
-  void       WriteRegister( GEF_UINT16 reg, GEF_UINT16 val );
+  GEF_UINT32 ReadRegister( GEF_UINT32 reg ) const;
+  void       WriteRegister( GEF_UINT32 reg, GEF_UINT32 val );
   void       Print( void ) const;
 };
 
@@ -111,10 +116,10 @@ CaenV1724::ClassName( void )
 }
 
 //______________________________________________________________________________
-inline GEF_UINT16
-CaenV1724::ReadRegister( GEF_UINT16 reg ) const
+inline GEF_UINT32
+CaenV1724::ReadRegister( GEF_UINT32 reg ) const
 {
-  return __bswap_16( *(m_offset+reg/GEF_VME_DWIDTH_D16) );
+  return __bswap_32( *(m_offset+reg/GEF_VME_DWIDTH_D32) );
 }
 
 }
