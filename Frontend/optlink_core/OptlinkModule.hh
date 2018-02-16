@@ -11,6 +11,8 @@
 #include <stdint.h>
 #include <vector>
 
+#include "CAENComm.h"
+
 #include "PrintHelper.hh"
 
 class NodeProp;
@@ -23,20 +25,20 @@ class OptlinkModule
 {
 public:
   OptlinkModule( int link_num, int conet_node, uint32_t addr )
-    : m_addr(addr)
+    : m_link_num(link_num), m_conet_node(conet_node), m_addr(addr)
   {}
   virtual ~OptlinkModule( void )
   {}
 
 protected:
-  int        m_handle;
   int        m_link_num;
   int        m_conet_node;
   uint32_t   m_addr;
+  int        m_handle;
 
 public:
-  virtual void Close( void ) = 0;
-  virtual void Open( void )  = 0;
+  virtual CAENComm_ErrorCode Close( void ) = 0;
+  virtual CAENComm_ErrorCode Open( void )  = 0;
   virtual void Print( void ) const = 0;
   static const std::string& ClassName( void );
 
@@ -47,7 +49,6 @@ public:
   int           ConetNode(void) const {return m_conet_node;}
   int           Handle(void)    const {return m_handle;}
   int           LinkNum(void)   const {return m_link_num;}
-
 };
 
 //______________________________________________________________________________

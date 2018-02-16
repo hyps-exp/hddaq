@@ -9,14 +9,14 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <stdint.h>
 
-#include "NoticeTDC64M.hh"
-
-class OptlinkModule;
+#include "CAENComm.h"
 
 //______________________________________________________________________________
 namespace opt
 {
+class OptlinkModule;
 
 typedef std::vector<OptlinkModule*>       ModuleList;
 typedef ModuleList::const_iterator        ListIterator;
@@ -37,7 +37,7 @@ private:
   OptlinkManager operator =( const OptlinkManager& );
 
 private:
-  static const int MaxBltBufLen = 1000;
+  static const int MaxBltBufLen = 4096;
   std::string                      m_nick_name;
   uint32_t                         m_blt_buf[MaxBltBufLen];
   ModuleMap                        m_module_map;

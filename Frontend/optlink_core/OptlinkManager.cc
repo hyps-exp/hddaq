@@ -8,13 +8,14 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <cstdlib>
 
 #include <CAENComm.h>
 
 #include "MessageHelper.h"
 #include "PrintHelper.hh"
 
-#include "OptV1724.hh"
+#include "OptCaenV1724.hh"
 
 namespace opt
 {
@@ -110,7 +111,7 @@ OptlinkManager::ReadBLT( int handle, uint32_t addr, int length)
 
 //______________________________________________________________________________
 void
-OptlinkManager::Check( CAENCommErrorCode status, const std::string& name )
+OptlinkManager::Check( CAENComm_ErrorCode status, const std::string& name )
 {
   static const std::size_t n = 30;
   if( status!=CAENComm_Success ){
