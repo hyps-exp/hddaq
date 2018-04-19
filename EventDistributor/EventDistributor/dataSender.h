@@ -59,39 +59,39 @@ class SenderThread;
 class DataSender : public StatableThread
 {
 public:
-	DataSender(DistReader& reader);
-	virtual ~DataSender();
-  
-	void                add(SenderThread* t);
-	int                 getSenderNum() const;
-	const std::string   getName() const;
-	const timeval*      getTimeout() const;
-	void                remove(SenderThread* t);
-	void                setTimeout(unsigned int tv_sec=0,
-			               unsigned int tv_usec=0);
+  DataSender(DistReader& reader);
+  virtual ~DataSender();
 
-protected: 
-	virtual int          active_loop();
-	virtual void         notify();
-	virtual EventBuffer* read();
-	virtual void         releaseReader(); 
-
-private:
-	DataSender(const DataSender&);
-	DataSender& operator=(const DataSender&);
-
-	void init();
-	int  waitReader();
+  void                add(SenderThread* t);
+  int                 getSenderNum() const;
+  const std::string   getName() const;
+  const timeval*      getTimeout() const;
+  void                remove(SenderThread* t);
+  void                setTimeout(unsigned int tv_sec=0,
+				 unsigned int tv_usec=0);
 
 protected:
-	DistReader&              m_dist_reader;
-	std::list<SenderThread*> m_sender_list;
-        kol::Mutex               m_list_mutex;
-	std::vector<char>        m_common_data;
+  virtual int          active_loop();
+  virtual void         notify();
+  virtual EventBuffer* read();
+  virtual void         releaseReader();
 
 private:
-	kol::ThreadController  m_controller;
-	timeval*               m_timeoutv;
+  DataSender(const DataSender&);
+  DataSender& operator=(const DataSender&);
+
+  void init();
+  int  waitReader();
+
+protected:
+  DistReader&              m_dist_reader;
+  std::list<SenderThread*> m_sender_list;
+  kol::Mutex               m_list_mutex;
+  std::vector<char>        m_common_data;
+
+private:
+  kol::ThreadController  m_controller;
+  timeval*               m_timeoutv;
 
 };
 
@@ -112,7 +112,7 @@ public:
 private:
   T m_busy;
   T m_data;
-  
+
 };
 
 //______________________________________________________________________________
@@ -139,31 +139,31 @@ class SenderThread : public kol::Thread
 {
 
 public:
-	SenderThread(const kol::TcpSocket& socket,
-                     DataSender& dataSender);
-	virtual ~SenderThread();
+  SenderThread(const kol::TcpSocket& socket,
+	       DataSender& dataSender);
+  virtual ~SenderThread();
 
-	void clearBusy();
-	bool good() const;
-	bool isBusy();
-	void update(const std::vector<char>& common_buffer);
+  void clearBusy();
+  bool good() const;
+  bool isBusy();
+  void update(const std::vector<char>& common_buffer);
 
 protected:
-	virtual int run();
+  virtual int run();
 
 private:
-	SenderThread(const SenderThread&);
-	SenderThread& operator=(const SenderThread&);
+  SenderThread(const SenderThread&);
+  SenderThread& operator=(const SenderThread&);
 
-	bool send();
+  bool send();
 
 private:
-	kol::TcpSocket    m_socket;
-	DataSender&       m_data_sender;
-	const timeval*    m_timeoutv; 
-	std::vector<char> m_buffer;
-	Locker<kol::Mutex>       m_locker;
-// 	Locker<kol::Semaphore>   m_locker;
+  kol::TcpSocket    m_socket;
+  DataSender&       m_data_sender;
+  const timeval*    m_timeoutv;
+  std::vector<char> m_buffer;
+  Locker<kol::Mutex>       m_locker;
+  // 	Locker<kol::Semaphore>   m_locker;
 
 };
 

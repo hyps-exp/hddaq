@@ -1,3 +1,5 @@
+// -*- C++ -*-
+
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -29,18 +31,18 @@ Logger::Logger(unsigned int& event_number,
   if (m_log.fail())
     std::cerr << "#E failed to open file: " << m_filename << std::endl;
   m_log << "\nRUN ";
-//   m_log.fill('0');
+  //   m_log.fill('0');
   m_log << std::setw(5) << m_run_number;
-//   m_log.fill(' ');
+  //   m_log.fill(' ');
   m_log << " : ";
   std::time_t t;
   std::tm     timer;
   std::vector<char> v(0x100);
   std::time(&t);
-//   ::clock_gettime(CLOCK_REALTIME, &m_ts);
+  //   ::clock_gettime(CLOCK_REALTIME, &m_ts);
   ::tzset();
   ::localtime_r(&t, &timer);
-//   ::localtime_r(&m_ts.tv_sec, &timer);
+  //   ::localtime_r(&m_ts.tv_sec, &timer);
   std::strftime(&(v[0]), 0xff, "%c", &timer);
   std::string str = &v[0];
   m_log << std::setw(26) << str << "  -";
@@ -72,12 +74,12 @@ Logger::close()
   std::tm     timer;
   std::vector<char> v(0x100);
   std::time(&t);
-//   unsigned long long sec  = m_ts.tv_sec;
-//   unsigned long long nsec = m_ts.tv_nsec;
-//   ::clock_gettime(CLOCK_REALTIME, &m_ts);
+  //   unsigned long long sec  = m_ts.tv_sec;
+  //   unsigned long long nsec = m_ts.tv_nsec;
+  //   ::clock_gettime(CLOCK_REALTIME, &m_ts);
   ::tzset();
   ::localtime_r(&t, &timer);
-//   ::localtime_r(&m_ts.tv_sec, &timer);
+  //   ::localtime_r(&m_ts.tv_sec, &timer);
   std::strftime(&(v[0]), 0xff, "%c", &timer);
   std::string str = &v[0];
   m_log << std::setw(26) << str;

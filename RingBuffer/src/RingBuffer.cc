@@ -3,7 +3,7 @@
  *  @file   RingBuffer.cc
  *  @brief
  *  @author Kazuo NAKAYOSHI <kazuo.nakayoshi@kek.jp>
- *  @date   
+ *  @date
  *  @note   Modified by Ken Sakashita <kensh@post.kek.jp>
  *
  *  $Id: RingBuffer.cc,v 1.4 2012/04/13 08:39:18 igarashi Exp $
@@ -46,24 +46,24 @@
 
 ////
 RingBuffer::RingBuffer(int buflen, int quelen)
-  : m_quelen(quelen), 
+  : m_quelen(quelen),
     m_buflen(buflen),
     m_write_ptr(0),
     m_read_ptr(0),
-    m_len(0), 
-    m_empty(quelen), 
+    m_len(0),
+    m_empty(quelen),
     m_filled(0)
 {
-  try {  
-	m_buf.resize(m_quelen);
-	for (int i=0; i<m_quelen; ++i) {
-		m_buf[i] = new EventBuffer(m_buflen);
-	}
+  try {
+    m_buf.resize(m_quelen);
+    for (int i=0; i<m_quelen; ++i) {
+      m_buf[i] = new EventBuffer(m_buflen);
+    }
   }
   catch (const std::bad_alloc& e) {
-	std::cerr << "#E Can not allocate memory" << std::endl;
-	m_buf.clear();
-	throw;
+    std::cerr << "#E Can not allocate memory" << std::endl;
+    m_buf.clear();
+    throw;
   }
 }
 
@@ -71,16 +71,16 @@ RingBuffer::RingBuffer(int buflen, int quelen)
 RingBuffer::~RingBuffer()
 {
   for(int i=0; i<m_quelen; ++i) {
-      delete m_buf[i];
-      m_buf[i] = 0;
+    delete m_buf[i];
+    m_buf[i] = 0;
   }
   m_buf.clear();
   std::cerr << "Ringbuffer deleted\n";
 }
 
 ////
-void 
-RingBuffer::initBuffer() 
+void
+RingBuffer::initBuffer()
 {
   m_rwlock.lock();
   m_write_ptr = 0;
@@ -95,7 +95,7 @@ RingBuffer::initBuffer()
 
 ////
 EventBuffer*
-RingBuffer::readBufPeek() 
+RingBuffer::readBufPeek()
 {
   //std::cerr << "readBufPeek()" << std::endl;
   m_filled.wait();
@@ -103,7 +103,7 @@ RingBuffer::readBufPeek()
 }
 
 ////
-int 
+int
 RingBuffer::readBufRelease() {
   //std::cerr << "readBufRelease()" << std::endl;
   m_rwlock.lock();
@@ -121,9 +121,9 @@ RingBuffer::writeBufPeek() {
   m_empty.wait();
   return m_buf[m_write_ptr];
 }
-  
+
 ////
-int 
+int
 RingBuffer::writeBufRelease() {
   //std::cerr << "writeBufRelease()" << std::endl;
   m_rwlock.lock();
@@ -136,25 +136,25 @@ RingBuffer::writeBufRelease() {
 
 int RingBuffer::left()
 {
-	return m_len;
+  return m_len;
 }
 
 int RingBuffer::BufSize()
 {
-	return m_buflen;
+  return m_buflen;
 }
 
 int RingBuffer::depth()
 {
-	return m_quelen;
+  return m_quelen;
 }
 
 int RingBuffer::trywaitFill()
 {
-	return m_filled.trywait();
+  return m_filled.trywait();
 }
 
 int RingBuffer::trywaitEmpty()
 {
-	return m_empty.trywait();
+  return m_empty.trywait();
 }

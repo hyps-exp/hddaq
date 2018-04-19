@@ -19,10 +19,10 @@ public:
 protected:
   virtual int readHeader(kol::TcpClient& client,
 			 unsigned int* header);
-//   virtual int updateEventData(kol::TcpClient& client,
-// 			      unsigned int* header,
-// 			      int trans_byte,
-// 			      int rest_byte);
+  //   virtual int updateEventData(kol::TcpClient& client,
+  // 			      unsigned int* header,
+  // 			      int trans_byte,
+  // 			      int rest_byte);
 
 private:
   virtual int sync(kol::TcpBuffer& tcp);

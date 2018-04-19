@@ -69,7 +69,7 @@ class BuilderThread : public StatableThread
 {
   //static const int SEND_RB_BUFLEN   = 20;
 
- public:
+public:
   BuilderThread(int buflen, int quelen);
   virtual ~BuilderThread();
   void setAllReaders(ReaderThread **readers, int node_num);
@@ -88,14 +88,14 @@ class BuilderThread : public StatableThread
   void setParaFd(int fd_para);
   void getOneShot();
 
- protected:
+protected:
   int    active_loop();
   bool   checkNodeRB();
   double checkTrigRate(int ntimes);
   int    checkEventNumber();
   int    waitReaders();
 
- private:
+private:
   int m_node_num;
   int m_fd_para;
   int m_debug_print;

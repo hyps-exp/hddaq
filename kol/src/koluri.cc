@@ -129,20 +129,20 @@ URI::set_scheme(const char* s)
   // ALPHA / DIGIT / "+" / "-" / "."
   int c;
   while((c = s[++n]))
-  {
-    if((!std::isalnum(c)) &&
-       (c != '+') && (c != '-') && (c != '.'))
-      break;
-  }
+    {
+      if((!std::isalnum(c)) &&
+	 (c != '+') && (c != '-') && (c != '.'))
+	break;
+    }
   if(c != ':')
     return s;
   if((m_scheme = new char [(n + 1)]))
-  {
-    int i;
-    for( i = 0; i < n; i++ )
-      m_scheme[i] = s[i];
-    m_scheme[n] = 0;
-  }
+    {
+      int i;
+      for( i = 0; i < n; i++ )
+	m_scheme[i] = s[i];
+      m_scheme[n] = 0;
+    }
   return (s + n + 1);
 }
 
@@ -163,32 +163,32 @@ URI::set_authority(const char* s)
   int nat = 0;
 
   while((c = s[n]))
-  {
-    if((c == '/') || (c == '?') || (c == '#'))
-      break;
-    if(c == ':')
     {
-      if( nat == 0 )
-        ncol1 = n;
-      else
-        ncol2 = n;
+      if((c == '/') || (c == '?') || (c == '#'))
+	break;
+      if(c == ':')
+	{
+	  if( nat == 0 )
+	    ncol1 = n;
+	  else
+	    ncol2 = n;
+	}
+      if(c == '@')
+	nat = n;
+      ++n;
     }
-    if(c == '@')
-      nat = n;
-    ++n;
-  }
   if(nat == 0)
-  {
-    if(ncol1 >= 2)
-      ncol2 = ncol1;
-    ncol1 = 0;
-  }
+    {
+      if(ncol1 >= 2)
+	ncol2 = ncol1;
+      ncol1 = 0;
+    }
   else
-  {
-    if((ncol1 == 0) || (ncol1 > nat))
-      ncol1 = nat;
-  }
-  
+    {
+      if((ncol1 == 0) || (ncol1 > nat))
+	ncol1 = nat;
+    }
+
   // Authority is stored in the range [2..(n - 1)].
   //   user is stored [2..(ncol1 - 1)]
   //   password is stored [(ncol1 + 1)..(nat - 1)]
@@ -206,72 +206,72 @@ URI::set_authority(const char* s)
   // user
   ns = ncol1 - 1 - 1;
   if( ns > 0 )
-  {
-    if((m_user = new char [(ns + 1)]))
     {
-      int i;
-      for( i = 0; i < ns; i++ )
-        m_user[i] = s[2 + i];
-      m_user[ns] = 0;
+      if((m_user = new char [(ns + 1)]))
+	{
+	  int i;
+	  for( i = 0; i < ns; i++ )
+	    m_user[i] = s[2 + i];
+	  m_user[ns] = 0;
+	}
     }
-  }
 
   // password
   ns = nat - 1 - ncol1;
   if( ns > 0 )
-  {
-    if((m_password = new char [(ns + 1)]))
     {
-      int i;
-      for( i = 0; i < ns; i++ )
-        m_password[i] = s[ncol1 + 1 + i];
-      m_password[ns] = 0;
+      if((m_password = new char [(ns + 1)]))
+	{
+	  int i;
+	  for( i = 0; i < ns; i++ )
+	    m_password[i] = s[ncol1 + 1 + i];
+	  m_password[ns] = 0;
+	}
     }
-  }
 
   // hostport
   ns = n - 1 - nat;
   if( ns > 0 )
-  {
-    if((m_hostport = new char [(ns + 1)]))
     {
-      int i;
-      for( i = 0; i < ns; i++ )
-        m_hostport[i] = s[nat + 1 + i];
-      m_hostport[ns] = 0;
+      if((m_hostport = new char [(ns + 1)]))
+	{
+	  int i;
+	  for( i = 0; i < ns; i++ )
+	    m_hostport[i] = s[nat + 1 + i];
+	  m_hostport[ns] = 0;
+	}
     }
-  }
 
   // host
   ns = ncol2 - 1 - nat;
   if( ns > 0 )
-  {
-    if((m_host = new char [(ns + 1)]))
     {
-      int i;
-      for( i = 0; i < ns; i++ )
-        m_host[i] = s[nat + 1 + i];
-      m_host[ns] = 0;
+      if((m_host = new char [(ns + 1)]))
+	{
+	  int i;
+	  for( i = 0; i < ns; i++ )
+	    m_host[i] = s[nat + 1 + i];
+	  m_host[ns] = 0;
+	}
     }
-  }    
 
   // port
   ns = n - 1 - ncol2;
   if( ns > 0 )
-  {
-    int port = 0;
-    int c;
-    int i;
-    for( i = 0; i < ns; i++ )
     {
-      c = s[ncol2 + 1 + i];
-      if(!std::isdigit(c))
-        break;
-      port = port * 10 + c - '0';
-      m_port = port;
+      int port = 0;
+      int c;
+      int i;
+      for( i = 0; i < ns; i++ )
+	{
+	  c = s[ncol2 + 1 + i];
+	  if(!std::isdigit(c))
+	    break;
+	  port = port * 10 + c - '0';
+	  m_port = port;
+	}
     }
-  }
-     
+
   return (s + n);
 }
 
@@ -290,21 +290,21 @@ URI::set_path(const char* s)
   int n = 0;
   int c;
   while((c = s[n]))
-  {
-    if((c == '?') || (c == '#'))
-      break;
-    ++n;
-  }
-  if( n > 0 )
-  {
-    if((m_path = new char [(n + 1)]))
     {
-      int i;
-      for( i = 0; i < n; i++ )
-        m_path[i] = s[i];
-      m_path[n] = 0;
+      if((c == '?') || (c == '#'))
+	break;
+      ++n;
     }
-  }
+  if( n > 0 )
+    {
+      if((m_path = new char [(n + 1)]))
+	{
+	  int i;
+	  for( i = 0; i < n; i++ )
+	    m_path[i] = s[i];
+	  m_path[n] = 0;
+	}
+    }
   return (s + n);
 }
 
@@ -319,21 +319,21 @@ URI::set_query(const char* s)
   int n = 1;
   int c;
   while((c = s[n]))
-  {
-    if(c == '#')
-      break;
-    ++n;
-  }
-  if( n > 1 )
-  {
-    if((m_query = new char [n]))
     {
-      int i;
-      for( i = 0; i < (n - 1); i++ )
-        m_query[i] = s[i + 1];
-      m_query[n - 1] = 0;
+      if(c == '#')
+	break;
+      ++n;
     }
-  }
+  if( n > 1 )
+    {
+      if((m_query = new char [n]))
+	{
+	  int i;
+	  for( i = 0; i < (n - 1); i++ )
+	    m_query[i] = s[i + 1];
+	  m_query[n - 1] = 0;
+	}
+    }
   return (s + n);
 }
 
@@ -350,14 +350,14 @@ URI::set_fragment(const char* s)
   while((c = s[n]))
     ++n;
   if( n > 1 )
-  {
-    if((m_fragment = new char [n]))
     {
-      int i;
-      for( i = 0; i < (n - 1); i++ )
-        m_fragment[i] = s[i + 1];
-      m_fragment[n - 1] = 0;
+      if((m_fragment = new char [n]))
+	{
+	  int i;
+	  for( i = 0; i < (n - 1); i++ )
+	    m_fragment[i] = s[i + 1];
+	  m_fragment[n - 1] = 0;
+	}
     }
-  }
   return (s + n);
 }

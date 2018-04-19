@@ -87,303 +87,303 @@ static const int k_quelen = 20;
 
 void sigpipehandler(int signum)
 {
-	fprintf(stderr, "Got SIGPIPE! %d\n", signum);
-	return;
+  fprintf(stderr, "Got SIGPIPE! %d\n", signum);
+  return;
 }
 
 int set_signal()
 {
-	struct sigaction act;
+  struct sigaction act;
 
-	memset(&act, 0, sizeof(struct sigaction));
-	act.sa_handler = sigpipehandler;
-	act.sa_flags |= SA_RESTART;
+  memset(&act, 0, sizeof(struct sigaction));
+  act.sa_handler = sigpipehandler;
+  act.sa_flags |= SA_RESTART;
 
-	if(sigaction(SIGPIPE, &act, NULL) != 0 ) {
-		fprintf( stderr, "sigaction(2) error!\n" );
-		return -1;
-	}
+  if(sigaction(SIGPIPE, &act, NULL) != 0 ) {
+    fprintf( stderr, "sigaction(2) error!\n" );
+    return -1;
+  }
 
-	return 0;
+  return 0;
 }
 
 
 void print_usage(const std::string& process_name)
 {
   std::cout << "#D Usage: \n"
-	<< "   " << process_name << " ([option] ...)"
-	<< "\n"
-	<< "   option: "
-	<< "\n"
+	    << "   " << process_name << " ([option] ...)"
+	    << "\n"
+	    << "   option: "
+	    << "\n"
 
-	<< "          -h, -help, --h, --help"
-	<< "\n"
-	<< "                    " 
-	<< " print this message"
-	<< "\n\n"
+	    << "          -h, -help, --h, --help"
+	    << "\n"
+	    << "                    "
+	    << " print this message"
+	    << "\n\n"
 
-	<< "          --node-id=<number>, --id=<4 ASCII characters>"
-	<< "\n"
-	<< "                    " 
-	<< " overwrite Node ID (32 bit) in Event Header with this value"
-	<< "\n"
-	<< "                    "
-	<< " defalut = automatically calculated from IPv4 address"
-	<< "\n\n"
+	    << "          --node-id=<number>, --id=<4 ASCII characters>"
+	    << "\n"
+	    << "                    "
+	    << " overwrite Node ID (32 bit) in Event Header with this value"
+	    << "\n"
+	    << "                    "
+	    << " defalut = automatically calculated from IPv4 address"
+	    << "\n\n"
 
-	<< "          --nickname=<string>"
-	<< "\n"
-	<< "                    " 
-	<< " nickname shown in DAQ Controller widget"
-	<< "\n\n"
+	    << "          --nickname=<string>"
+	    << "\n"
+	    << "                    "
+	    << " nickname shown in DAQ Controller widget"
+	    << "\n\n"
 
-	<< "          --mon-port=<number>"
-	<< "\n"
-	<< "                    "
-	<< " port number of monitor server."
-	<< "\n"
-	<< "                    "
-	<< " default = 8901"
-	<< "\n\n"
+	    << "          --mon-port=<number>"
+	    << "\n"
+	    << "                    "
+	    << " port number of monitor server."
+	    << "\n"
+	    << "                    "
+	    << " default = 8901"
+	    << "\n\n"
 
-	<< "          --rec-port=<number>"
-	<< "\n"
-	<< "                    "
-	<< " port number of recorder server."
-	<< "\n"
-	<< "                    "
-	<< " default = 8902"
-	<< "\n\n"
+	    << "          --rec-port=<number>"
+	    << "\n"
+	    << "                    "
+	    << " port number of recorder server."
+	    << "\n"
+	    << "                    "
+	    << " default = 8902"
+	    << "\n\n"
 
-	<< "          --src-host=<string>" 
-	<< "\n"
-	<< "                    "
-	<< " hostname or IPv4 address of data source host."
-	<< "\n"
-	<< "                    "
-	<< " default = localhost"
-	<< "\n\n"
+	    << "          --src-host=<string>"
+	    << "\n"
+	    << "                    "
+	    << " hostname or IPv4 address of data source host."
+	    << "\n"
+	    << "                    "
+	    << " default = localhost"
+	    << "\n\n"
 
-	<< "          --src-port=<number>"
-	<< "\n"
-	<< "                    "
-	<< " port number of data source."
-	<< "\n"
-	<< "                    "
-	<< " default = 8900 (= event builder port)"
-	<< "\n\n"
+	    << "          --src-port=<number>"
+	    << "\n"
+	    << "                    "
+	    << " port number of data source."
+	    << "\n"
+	    << "                    "
+	    << " default = 8900 (= event builder port)"
+	    << "\n\n"
 
-	<< "          --mon-timeout-sec=<number>"
-	<< "\n"
-	<< "          --mon-timeout-usec=<number>"
-	<< "\n"
-	<< "                    "
-	<< " timeout value for monitor client socket."
-	<< "\n"
-	<< "                    "
-	<< " default = 1 sec"
-	<< "\n\n"
+	    << "          --mon-timeout-sec=<number>"
+	    << "\n"
+	    << "          --mon-timeout-usec=<number>"
+	    << "\n"
+	    << "                    "
+	    << " timeout value for monitor client socket."
+	    << "\n"
+	    << "                    "
+	    << " default = 1 sec"
+	    << "\n\n"
 
-	<< "          --buf-len=<number>"
-	<< "\n"
-	<< "                    "
-	<< " event size of ring buffer (in bytes)"
-	<< "\n"
-	<< "                    "
-	<< " default = " << max_event_len
-	<< "\n\n"
+	    << "          --buf-len=<number>"
+	    << "\n"
+	    << "                    "
+	    << " event size of ring buffer (in bytes)"
+	    << "\n"
+	    << "                    "
+	    << " default = " << max_event_len
+	    << "\n\n"
 
-	<< "          --que-len=<number>"
-	<< "\n"
-	<< "                    "
-	<< " ring buffer length (in events)"
-	<< "\n"
-	<< "                    "
-	<< " default = " << k_quelen
-	<< "\n\n"
+	    << "          --que-len=<number>"
+	    << "\n"
+	    << "                    "
+	    << " ring buffer length (in events)"
+	    << "\n"
+	    << "                    "
+	    << " default = " << k_quelen
+	    << "\n\n"
 
-	<< std::endl;
-	return;
+	    << std::endl;
+  return;
 }
 
 int main(int argc, char* argv[])
 {
-	int buflen = 0;
-// 	const int quelen = 20;
-	int quelen = k_quelen;
+  int buflen = 0;
+  // 	const int quelen = 20;
+  int quelen = k_quelen;
 
-	std::string src_hostname("localhost");
-	unsigned int src_port = eventbuilder_port;
-	unsigned int rec_port = eventDist_rec_port;
-	unsigned int mon_port = eventDist_mon_port;
+  std::string src_hostname("localhost");
+  unsigned int src_port = eventbuilder_port;
+  unsigned int rec_port = eventDist_rec_port;
+  unsigned int mon_port = eventDist_mon_port;
 
-	int nodeid = -1;
-	std::string nickname = NodeId::getNodeId(NODETYPE_ED, &nodeid);
+  int nodeid = -1;
+  std::string nickname = NodeId::getNodeId(NODETYPE_ED, &nodeid);
 
-	unsigned int mon_tv_sec  = 10;
-	unsigned int mon_tv_usec = 0;
+  unsigned int mon_tv_sec  = 10;
+  unsigned int mon_tv_usec = 0;
 
-	for (int i = 1 ; i < argc ; i++) {
-		bool is_match = false;
-		std::string arg = argv[i];
-		const std::string k_opt_srchost("--src-host=");
-		const std::string k_opt_srcport("--src-port=");
-		const std::string k_opt_recport("--rec-port=");
-		const std::string k_opt_monport("--mon-port=");
-		const std::string k_opt_mon_timeout_sec("--mon-timeout-sec=");
-		const std::string k_opt_mon_timeout_usec("--mon-timeout-usec=");
-		const std::string k_opt_buf_len("--buf-len=");
-		const std::string k_opt_que_len("--que-len=");
-		if (arg=="-h" || arg=="--h" || arg=="-help" || arg=="--help") {
-			print_usage(argv[0]);
-			return 0;
-		}
-		if (arg.find(k_opt_srchost)==0) {
-			src_hostname = arg.substr(k_opt_srchost.size());
-			is_match = true;
-		} 
-		if (arg.find(k_opt_srcport)==0) {
-			std::stringstream ss(arg.substr(k_opt_srcport.size()));
-			ss >> src_port;
-			is_match = true;
-		}
-		if (arg.find(k_opt_recport)==0) {
-			std::stringstream ss(arg.substr(k_opt_recport.size()));
-			ss >> rec_port;
-			is_match = true;
-		}
-		if (arg.find(k_opt_monport)==0) {
-			std::stringstream ss(arg.substr(k_opt_monport.size()));
-			ss >> mon_port;
-			is_match = true;
-		}
-		if (arg.find(k_opt_mon_timeout_sec)==0) {
-			std::stringstream 
-			  ss(arg.substr(k_opt_mon_timeout_sec.size()));
-			ss >> mon_tv_sec;
-			is_match = true;
-		}
-		if (arg.find(k_opt_mon_timeout_usec)==0) {
-			std::stringstream 
-			  ss(arg.substr(k_opt_mon_timeout_usec.size()));
-			ss >> mon_tv_usec;
-			is_match = true;
-		}
-		if (arg.find(k_opt_buf_len)==0) {
-			std::stringstream 
-			  ss(arg.substr(k_opt_buf_len.size()));
-			ss >> buflen;
-			is_match = true;
-		}
-		if (arg.find(k_opt_que_len)==0) {
-			std::stringstream 
-			  ss(arg.substr(k_opt_que_len.size()));
-			ss >> quelen;
-			is_match = true;
-		}
-		if (arg.substr(0, 10) == "--node-id=") {
-			std::istringstream ssval(arg.substr(10));
-			ssval >> nodeid;
-			is_match = true;
-		}
+  for (int i = 1 ; i < argc ; i++) {
+    bool is_match = false;
+    std::string arg = argv[i];
+    const std::string k_opt_srchost("--src-host=");
+    const std::string k_opt_srcport("--src-port=");
+    const std::string k_opt_recport("--rec-port=");
+    const std::string k_opt_monport("--mon-port=");
+    const std::string k_opt_mon_timeout_sec("--mon-timeout-sec=");
+    const std::string k_opt_mon_timeout_usec("--mon-timeout-usec=");
+    const std::string k_opt_buf_len("--buf-len=");
+    const std::string k_opt_que_len("--que-len=");
+    if (arg=="-h" || arg=="--h" || arg=="-help" || arg=="--help") {
+      print_usage(argv[0]);
+      return 0;
+    }
+    if (arg.find(k_opt_srchost)==0) {
+      src_hostname = arg.substr(k_opt_srchost.size());
+      is_match = true;
+    }
+    if (arg.find(k_opt_srcport)==0) {
+      std::stringstream ss(arg.substr(k_opt_srcport.size()));
+      ss >> src_port;
+      is_match = true;
+    }
+    if (arg.find(k_opt_recport)==0) {
+      std::stringstream ss(arg.substr(k_opt_recport.size()));
+      ss >> rec_port;
+      is_match = true;
+    }
+    if (arg.find(k_opt_monport)==0) {
+      std::stringstream ss(arg.substr(k_opt_monport.size()));
+      ss >> mon_port;
+      is_match = true;
+    }
+    if (arg.find(k_opt_mon_timeout_sec)==0) {
+      std::stringstream
+	ss(arg.substr(k_opt_mon_timeout_sec.size()));
+      ss >> mon_tv_sec;
+      is_match = true;
+    }
+    if (arg.find(k_opt_mon_timeout_usec)==0) {
+      std::stringstream
+	ss(arg.substr(k_opt_mon_timeout_usec.size()));
+      ss >> mon_tv_usec;
+      is_match = true;
+    }
+    if (arg.find(k_opt_buf_len)==0) {
+      std::stringstream
+	ss(arg.substr(k_opt_buf_len.size()));
+      ss >> buflen;
+      is_match = true;
+    }
+    if (arg.find(k_opt_que_len)==0) {
+      std::stringstream
+	ss(arg.substr(k_opt_que_len.size()));
+      ss >> quelen;
+      is_match = true;
+    }
+    if (arg.substr(0, 10) == "--node-id=") {
+      std::istringstream ssval(arg.substr(10));
+      ssval >> nodeid;
+      is_match = true;
+    }
 #if 0  //2014.11.26 K.Hosomi
-		if (arg.substr(0, 5) == "--id=") {
-			char idchar[5];
-			strncpy(idchar, arg.substr(5,4).c_str(), 4);
-			for (int i = strlen(idchar) ; i < 5 ; i++) {
-				idchar[i] = '\0';
-			}
-			nodeid = *(reinterpret_cast<int *>(idchar));
-			is_match = true;
-		}
+    if (arg.substr(0, 5) == "--id=") {
+      char idchar[5];
+      strncpy(idchar, arg.substr(5,4).c_str(), 4);
+      for (int i = strlen(idchar) ; i < 5 ; i++) {
+	idchar[i] = '\0';
+      }
+      nodeid = *(reinterpret_cast<int *>(idchar));
+      is_match = true;
+    }
 #endif //2014.11.26 K.Hosomi
-		if (arg.substr(0, 11) == "--nickname=") {
-			nickname = arg.substr(11);
-			std::cout << "NICKNAME : " << nickname << std::endl;
-			is_match = true;
-		}
-		if (!is_match) {
-			std::cout << "unknown option " << arg << std::endl;
-		}
-	}
+    if (arg.substr(0, 11) == "--nickname=") {
+      nickname = arg.substr(11);
+      std::cout << "NICKNAME : " << nickname << std::endl;
+      is_match = true;
+    }
+    if (!is_match) {
+      std::cout << "unknown option " << arg << std::endl;
+    }
+  }
 
-	if (buflen==0) buflen = max_event_len;
+  if (buflen==0) buflen = max_event_len;
 
-	std::cout << "data source: host = " << src_hostname 
-		<< ", port = " << src_port << std::endl;
-	std::cout << "recorder port = " << rec_port << "\n"
-		<< "monitor  port = " << mon_port << std::endl;
+  std::cout << "data source: host = " << src_hostname
+	    << ", port = " << src_port << std::endl;
+  std::cout << "recorder port = " << rec_port << "\n"
+	    << "monitor  port = " << mon_port << std::endl;
 
-	std::cout << "NODE ID : " << nodeid
-		  << " " << std::showbase << std::hex << nodeid 
-		  << std::dec << std::noshowbase << std::endl;
+  std::cout << "NODE ID : " << nodeid
+	    << " " << std::showbase << std::hex << nodeid
+	    << std::dec << std::noshowbase << std::endl;
 
-	std::cout << "event buffer size = " << buflen
-		<< ", que length = " << quelen << std::endl;
+  std::cout << "event buffer size = " << buflen
+	    << ", que length = " << quelen << std::endl;
 
-	set_signal();
+  set_signal();
 
-	GlobalMessageClient::getInstance("localhost", g_MESSAGE_PORT_UPSTREAM, nodeid);
-	
-	GlobalInfo& gi = GlobalInfo::getInstance();
+  GlobalMessageClient::getInstance("localhost", g_MESSAGE_PORT_UPSTREAM, nodeid);
 
-	gi.nickname = nickname;
-	gi.node_id = nodeid;
+  GlobalInfo& gi = GlobalInfo::getInstance();
 
-	//std::string mstring = "ENTRY " + nickname;
-	//msock.sendString(MT_STATUS, &mstring);
+  gi.nickname = nickname;
+  gi.node_id = nodeid;
 
-	try {
-		EdControl controller;
-		DistReader reader(buflen, quelen);
-		reader.setName("%% DistReader");
-		reader.setHost(src_hostname.c_str(), src_port);
-		gi.reader = &reader;
+  //std::string mstring = "ENTRY " + nickname;
+  //msock.sendString(MT_STATUS, &mstring);
 
-		DataSender    recDataSender(reader);
-		recDataSender.setName("++ recDataSender");
-		recDataSender.setTimeout(10, 0);
-		DataServer recDataSrv(rec_port, recDataSender);
-		gi.sender = &recDataSender;
+  try {
+    EdControl controller;
+    DistReader reader(buflen, quelen);
+    reader.setName("%% DistReader");
+    reader.setHost(src_hostname.c_str(), src_port);
+    gi.reader = &reader;
 
-		MonDataSender monDataSender(reader);
-		monDataSender.setName("-- monDataSender");
-		monDataSender.setTimeout(mon_tv_sec, mon_tv_usec);
-		DataServer monDataSrv(mon_port, monDataSender);
-		gi.monsender = &monDataSender;
+    DataSender    recDataSender(reader);
+    recDataSender.setName("++ recDataSender");
+    recDataSender.setTimeout(10, 0);
+    DataServer recDataSrv(rec_port, recDataSender);
+    gi.sender = &recDataSender;
 
-		controller.setSlave(&recDataSender);
- 		controller.setSlave(&monDataSender);
-		controller.setSlave(&reader);
+    MonDataSender monDataSender(reader);
+    monDataSender.setName("-- monDataSender");
+    monDataSender.setTimeout(mon_tv_sec, mon_tv_usec);
+    DataServer monDataSrv(mon_port, monDataSender);
+    gi.monsender = &monDataSender;
 
-
-		controller.sendEntry();
-		controller.start();
-
-		recDataSrv.start();
- 		monDataSrv.start();
-		recDataSender.start();
- 		monDataSender.start();
-		reader.start();
-
-		WatchDog watchdog(&controller);
-		watchdog.start();
+    controller.setSlave(&recDataSender);
+    controller.setSlave(&monDataSender);
+    controller.setSlave(&reader);
 
 
-		reader.join(); std::cerr << "reader joined" << std::endl;
- 		monDataSender.join(); std::cerr << "mondatasender joined" << std::endl;
-		recDataSender.join(); std::cerr << "recdatasender joined" << std::endl;
+    controller.sendEntry();
+    controller.start();
 
- 		monDataSrv.cancel();
-		recDataSrv.cancel();
- 		monDataSrv.join(); std::cerr << "mondatasrv joined" << std::endl;
-		recDataSrv.join(); std::cerr << "recdatasrv joined" << std::endl;
-		controller.join(); std::cerr << "controller joined" << std::endl;
-	} catch(...) {
-		std::cout << " @@ Data Distributor: ERROR caught" << std::endl;
-	}
-	std::cerr << "#D main end\n" << std::endl;
+    recDataSrv.start();
+    monDataSrv.start();
+    recDataSender.start();
+    monDataSender.start();
+    reader.start();
 
-	return 0;
+    WatchDog watchdog(&controller);
+    watchdog.start();
+
+
+    reader.join(); std::cerr << "reader joined" << std::endl;
+    monDataSender.join(); std::cerr << "mondatasender joined" << std::endl;
+    recDataSender.join(); std::cerr << "recdatasender joined" << std::endl;
+
+    monDataSrv.cancel();
+    recDataSrv.cancel();
+    monDataSrv.join(); std::cerr << "mondatasrv joined" << std::endl;
+    recDataSrv.join(); std::cerr << "recdatasrv joined" << std::endl;
+    controller.join(); std::cerr << "controller joined" << std::endl;
+  } catch(...) {
+    std::cout << " @@ Data Distributor: ERROR caught" << std::endl;
+  }
+  std::cerr << "#D main end\n" << std::endl;
+
+  return 0;
 }
 
