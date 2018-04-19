@@ -52,8 +52,10 @@
  *
  */
 
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
+#include <iomanip>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -142,7 +144,7 @@ int open_ppdev()
     printf("open error?n");
     ret = 1;
   }
-  else 
+  else
     ret = fd;
   if(ioctl(fd,PPCLAIM)) {
     printf("PPCLAIM error?n");
@@ -159,34 +161,29 @@ void close_ppdev(int fd)
 }
 #endif
 
-
 void sigpipehandler(int signum)
 {
-	fprintf(stderr, "Got SIGPIPE! %d\n", signum);
-	return;
+  fprintf(stderr, "Got SIGPIPE! %d\n", signum);
+  return;
 }
 
 int set_signal()
 {
-	struct sigaction act;
+  struct sigaction act;
 
-	memset(&act, 0, sizeof(struct sigaction));
-	act.sa_handler = sigpipehandler;
-	act.sa_flags |= SA_RESTART;
+  std::memset(&act, 0, sizeof(struct sigaction));
+  act.sa_handler = sigpipehandler;
+  act.sa_flags |= SA_RESTART;
 
-	if(sigaction(SIGPIPE, &act, NULL) != 0 ) {
-		fprintf( stderr, "sigaction(2) error!\n" );
-		return -1;
-	}
-	return 0;
+  if(sigaction(SIGPIPE, &act, NULL) != 0 ) {
+    fprintf( stderr, "sigaction(2) error!\n" );
+    return -1;
+  }
+  return 0;
 }
-
-
-
 
 int main(int argc, char* argv[])
 {
-
   int event_buflen = max_event_len;
   int quelen = 0;
 
@@ -198,163 +195,172 @@ int main(int argc, char* argv[])
     std::cerr << "Error: node-map filename missing" << std::endl;
     return -1;
   }
-	//int nodeid = g_NODE_EB;
-	//std::string nickname = "EB";
+  //int nodeid = g_NODE_EB;
+  //std::string nickname = "EB";
 
-	int nodeid;
-	std::string nickname = NodeId::getNodeId(NODETYPE_EB, &nodeid);
+  int nodeid;
+  std::string nickname = NodeId::getNodeId(NODETYPE_EB, &nodeid);
 
-	char nodemapname[128];
-	strcpy(nodemapname, "nodemap.txt");
-	for (int i = 1 ; i < argc ; i++) {
-		std::string arg = argv[i];
-		if (arg[i] != '-') {
-			strncpy(nodemapname, argv[i], 128);
-		} else {
-			bool is_match = false;
-			if (arg.substr(0, 11) == "--idnumber=") {
-				std::istringstream ssval(arg.substr(11));
-				ssval >> nodeid;
-				std::cout << "NODE ID : " << nodeid << std::endl;
-				is_match = true;
-			}
-#if 0  //2014.11.26 K.Hosomi 
-			if (arg.substr(0, 5) == "--id=") {
-				//union {char idchar[5]; int idint;};
-				char idchar[5];
-				strncpy(idchar, arg.substr(5,4).c_str(), 4);
-				for (int i = strlen(idchar) ; i < 5 ; i++) {
-					idchar[i] = '\0';
-				}
-				nodeid = *(reinterpret_cast<int *>(idchar));
-				//nodeid = idint;
-				std::cout << "NODE ID : " << nodeid << std::endl;
-				is_match = true;
-			}
-#endif //2014.11.26 K.Hosomi 
-			if (arg.substr(0, 11) == "--nickname=") {
-				nickname = arg.substr(11);
-				std::cout << "NICKNAME : " << nickname << std::endl;
-				is_match = true;
-			}
-			if (!is_match) {
-				std::cout << "unknown option " << arg << std::endl;
-			}
-		}
+  char nodemapname[128];
+  std::strcpy(nodemapname, "nodemap.txt");
+  for (int i = 1 ; i < argc ; i++) {
+    std::string arg = argv[i];
+    if (arg[i] != '-') {
+      strncpy(nodemapname, argv[i], 128);
+    } else {
+      bool is_match = false;
+      if (arg.substr(0, 11) == "--idnumber=") {
+	std::istringstream ssval(arg.substr(11));
+	ssval >> nodeid;
+	std::cout << "NODE ID : " << nodeid << std::endl;
+	is_match = true;
+      }
+#if 0  //2014.11.26 K.Hosomi
+      if (arg.substr(0, 5) == "--id=") {
+	//union {char idchar[5]; int idint;};
+	char idchar[5];
+	strncpy(idchar, arg.substr(5,4).c_str(), 4);
+	for (int i = strlen(idchar) ; i < 5 ; i++) {
+	  idchar[i] = '\0';
 	}
+	nodeid = *(reinterpret_cast<int *>(idchar));
+	//nodeid = idint;
+	std::cout << "NODE ID : " << nodeid << std::endl;
+	is_match = true;
+      }
+#endif //2014.11.26 K.Hosomi
+      if (arg.substr(0, 11) == "--nickname=") {
+	nickname = arg.substr(11);
+	std::cout << "NICKNAME : " << nickname << std::endl;
+	is_match = true;
+      }
+      if (!is_match) {
+	std::cout << "unknown option " << arg << std::endl;
+      }
+    }
+  }
 
 
 
-#ifdef  USE_PARAPORT  
-	int ppdev_fd = open_ppdev();
+#ifdef  USE_PARAPORT
+  int ppdev_fd = open_ppdev();
 #endif
 
-	set_signal();
-	GlobalMessageClient& msock = GlobalMessageClient::getInstance(
-		"localhost", g_MESSAGE_PORT_UPSTREAM, nodeid);
-	GlobalInfo& gi = GlobalInfo::getInstance();
+  set_signal();
+  GlobalMessageClient& msock =
+    GlobalMessageClient::getInstance("localhost",
+				     g_MESSAGE_PORT_UPSTREAM, nodeid);
+  GlobalInfo& gi = GlobalInfo::getInstance();
 
-	gi.nickname = nickname;
-	gi.node_id = nodeid;
+  gi.nickname = nickname;
+  gi.node_id = nodeid;
 
-	//std::string mstring = "ENTRY " + nickname;
-	//msock.sendString(MT_STATUS, &mstring);
+  //std::string mstring = "ENTRY " + nickname;
+  //msock.sendString(MT_STATUS, &mstring);
 
   try
-  {
-    // int node_number = get_node_inf(argv[1], &node_map);
-    int node_number = get_node_inf(nodemapname, &node_map);
-    if(node_number == -1)
-      return -1;
-    std::cout << "node num: " << node_number << std::endl;
+    {
+      // int node_number = get_node_inf(argv[1], &node_map);
+      int node_number = get_node_inf(nodemapname, &node_map);
+      if(node_number == -1)
+	return -1;
+      if(node_number > max_node_num){
+	std::stringstream msg;
+	msg << "EB: node number is too much! ["
+	    << node_number << "/" << max_node_num << "]";
+	msock.sendString(MT_FATAL, msg.str());
+	return -1;
+      }
 
-//     readers = new ReaderThread * [node_number];
-    readers.resize(node_number);
-    for(int node=0; node<node_number; node++) {
-      int node_buflen = node_info[node].getRingbufSize();
-      quelen = node_info[node].getRingbufLen();
-      const std::string& flag = node_info[node].getSyncFlag();
-      if (flag.empty())
-	readers[node] = new ReaderThread(node_buflen, quelen);
-      else if (flag=="slow")
-	readers[node] = new SlowReaderThread(node_buflen, quelen);
-      
-      const char *hostname = node_info[node].getHostName().c_str();
-      int port       = node_info[node].getPortNo();
-      readers[node]->setName("** ReaderThread");
-      readers[node]->setHost(hostname, port, node);
+      //     readers = new ReaderThread * [node_number];
+      readers.resize(node_number);
+      for(int node=0; node<node_number; node++) {
+	int node_buflen = node_info[node].getRingbufSize();
+	quelen = node_info[node].getRingbufLen();
+	const std::string& flag = node_info[node].getSyncFlag();
+	if (flag.empty())
+	  readers[node] = new ReaderThread(node_buflen, quelen);
+	else if (flag=="slow")
+	  readers[node] = new SlowReaderThread(node_buflen, quelen);
 
-      std::cerr << "  hostname:" << node_info[node].getHostName();
-      std::cerr << "  RingBuf Size:" << node_buflen << "  RingBuf len:" << quelen << (flag.empty() ? "" : " +"+flag) << std::endl;
+	const char *hostname = node_info[node].getHostName().c_str();
+	int port       = node_info[node].getPortNo();
+	std::stringstream name;
+	name << "** ReaderThread" << std::setw(3) << node;
+	readers[node]->setName(name.str());
+	readers[node]->setHost(hostname, port, node);
 
+	std::cerr << "  hostname:" << node_info[node].getHostName();
+	std::cerr << "  RingBuf Size:" << node_buflen
+		  << "  RingBuf len:" << quelen
+		  << (flag.empty() ? "" : " +"+flag) << std::endl;
 	{
-		char messagestr[128];
-		sprintf(messagestr, "EB: node: %s, Bsize %d, Nque %d",
-			node_info[node].getHostName().c_str(),
-			node_buflen, quelen);
-		msock.sendString(messagestr);
+	  char messagestr[128];
+	  sprintf(messagestr, "EB: node: %s, Bsize %d, Nque %d",
+		  node_info[node].getHostName().c_str(),
+		  node_buflen, quelen);
+	  msock.sendString(messagestr);
 	}
+      }
 
+      BuilderThread builder(event_buflen,quelen);
+      builder.setName("## BuilderThread");
+      builder.setDebugPrint(0);
+      builder.setAllReaders(&readers[0], node_number);
+
+#ifdef  USE_PARAPORT
+      builder.setParaFd(ppdev_fd);
+#endif
+
+      SenderThread  sender(event_buflen,quelen);
+      sender.setName("== SenderThread");
+      sender.setBuilder(&builder);
+
+
+      EbControl controller;
+      controller.setSlave(&sender);
+      controller.setSlave(&builder);
+      for(int node=0; node<node_number; node++)
+	controller.setSlave(readers[node]);
+
+      gi.builder = &builder;
+      gi.sender = &sender;
+      for (int i = 0 ; i < node_number ; i++) {
+	gi.readers.push_back(readers[i]);
+      }
+      gi.state = IDLE;
+
+      controller.sendEntry();
+      controller.start();
+
+      sender.start();
+      for(int node=0; node < node_number; node++)
+	readers[node]->start();
+      std::cerr << "readers start" << std::endl;
+      builder.start();
+
+      WatchDog watchdog(&controller, &builder, &readers[0], node_number);
+      watchdog.start();
+
+      builder.join();
+      sender.join();
+      for(int node=0; node < node_number; node++)
+	readers[node]->join();
+      controller.join();
     }
-
-    BuilderThread builder(event_buflen,quelen);
-    builder.setName("## BuilderThread");
-    builder.setAllReaders(&readers[0], node_number);
-
+  catch(...)
+    {
+      std::cout << " @@ Eventbuilder: ERROR caught" << std::endl;
 #ifdef  USE_PARAPORT
-    builder.setParaFd(ppdev_fd);
+      close_ppdev(ppdev_fd);
 #endif
-
-    SenderThread  sender(event_buflen,quelen);
-    sender.setName("== SenderThread");
-    sender.setBuilder(&builder);
-
-
-    EbControl controller;
-    controller.setSlave(&sender);
-    controller.setSlave(&builder);
-    for(int node=0; node<node_number; node++)
-      controller.setSlave(readers[node]);
-
-	gi.builder = &builder;
-	gi.sender = &sender;
-	for (int i = 0 ; i < node_number ; i++) {
-		gi.readers.push_back(readers[i]);
-	}
-	gi.state = IDLE;
-
-
-    controller.sendEntry();
-    controller.start();
-
-    sender.start();
-    for(int node=0; node < node_number; node++)
-      readers[node]->start();
-    std::cerr << "readers start" << std::endl;
-    builder.start();
-
-	WatchDog watchdog(&controller, &builder, &readers[0], node_number);
-	watchdog.start();
-
-    builder.join();
-    sender.join();
-    for(int node=0; node < node_number; node++)
-      readers[node]->join();
-    controller.join();
-  }
-  catch(...) 
-  {
-    std::cout << " @@ Eventbuilder: ERROR caught" << std::endl;
-#ifdef  USE_PARAPORT
-    close_ppdev(ppdev_fd);
-#endif
-  }
+    }
 
 #ifdef  USE_PARAPORT
   close_ppdev(ppdev_fd);
 #endif
 
-//   delete[] readers;
+  //   delete[] readers;
 
   std::cerr << "#D main end" << std::endl;
 

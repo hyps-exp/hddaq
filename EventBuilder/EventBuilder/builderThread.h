@@ -68,12 +68,12 @@
 class BuilderThread : public StatableThread
 {
   //static const int SEND_RB_BUFLEN   = 20;
-  
+
  public:
   BuilderThread(int buflen, int quelen);
   virtual ~BuilderThread();
   void setAllReaders(ReaderThread **readers, int node_num);
-  
+
   void initAllNodeBuffers();
   void initSendBuffer();
   EventBuffer * peekReadMergData();
@@ -83,26 +83,26 @@ class BuilderThread : public StatableThread
   int leftEventData();
   int getRingBufferDepth();
   void setSemPost();
-  
+
   void setDebugPrint(int d_print);
   void setParaFd(int fd_para);
   void getOneShot();
-  
+
  protected:
-  int active_loop();
-  bool checkNodeRB();
+  int    active_loop();
+  bool   checkNodeRB();
   double checkTrigRate(int ntimes);
-  int checkEventNumber();
-  int waitReaders();
-  
+  int    checkEventNumber();
+  int    waitReaders();
+
  private:
   int m_node_num;
   int m_fd_para;
   int m_debug_print;
-  
-  ReaderThread ** m_readers;
-  EventBuffer * m_event_f[max_node_num];
-  RingBuffer * m_send_rb;
+
+  ReaderThread** m_readers;
+  EventBuffer*   m_event_f[max_node_num];
+  RingBuffer*    m_send_rb;
 };
 
 #endif

@@ -55,138 +55,136 @@
 
 SenderThread::SenderThread(int buflen, int quelen)
 {
-    m_command = STOP;
-    m_event_number = 0;
+  m_command = STOP;
+  m_event_number = 0;
 }
 
 SenderThread::~SenderThread()
 {
-    std::cerr << "Sender Deleted.\n";
+  std::cerr << "Sender Deleted.\n";
 }
 
 void SenderThread::setBuilder(BuilderThread * builder)
 {
-    m_builder = builder;
+  m_builder = builder;
 }
 
 void SenderThread::setSemPost()
 {
-    m_builder->releaseReadMergData();
+  m_builder->releaseReadMergData();
 }
 
 int SenderThread::waitBuilder()
 {
-	while(m_builder->getState() != RUNNING) {
-		usleep(10000);
-	}
-	return 0;
+  while(m_builder->getState() != RUNNING) {
+    usleep(10000);
+  }
+  return 0;
 }
 
 /* */
 int SenderThread::run()
 {
-	active_loop();
-	return 0;
+  active_loop();
+  return 0;
 }
 /* */
 
 int SenderThread::active_loop()
 {
-    std::cerr << "== SenderThread: entered active_loop" << std::endl;
+  std::cerr << "== SenderThread: entered active_loop" << std::endl;
 
+  while (true) {
+    try {
+      //int event_number = 0;
+      //m_builder->initSendBuffer(); --> BuilderThread de yaru
 
-    while (1) {
+      kol::TcpServer server(eventbuilder_port);
 
-	try {
-	    //int event_number = 0;
-	    //m_builder->initSendBuffer(); --> BuilderThread de yaru
+      m_state = IDLE;
+      std::cerr <<
+	"== SenderThread: waiting for connection from client port:" <<
+	eventbuilder_port << std::endl;
+      kol::TcpSocket sock = server.accept();
+      std::cerr << "== sender: accepted" << std::endl;
+      server.shutdown();
+      server.close();
 
-	    kol::TcpServer server(eventbuilder_port);
+      struct timeval timeoutv;
+      timeoutv.tv_sec = 10;
+      timeoutv.tv_usec = 0;
+      sock.setsockopt(SOL_SOCKET, SO_SNDTIMEO,
+		      &timeoutv, sizeof(timeoutv));
 
-	    m_state = IDLE;
-	    std::cerr <<
-		"== SenderThread: waiting for connection from client port:" <<
-		eventbuilder_port << std::endl;
-	    kol::TcpSocket sock = server.accept();
-	    std::cerr << "== sender: accepted" << std::endl;
-	    server.shutdown();
-	    server.close();
+      waitBuilder();
 
-	    struct timeval timeoutv;
-	    timeoutv.tv_sec = 10;
-	    timeoutv.tv_usec = 0;
-	    sock.setsockopt(SOL_SOCKET, SO_SNDTIMEO,
-		&timeoutv, sizeof(timeoutv));
+      m_command = NOCOMM;
+      m_event_number = 0;
+      while (true) {
 
-	    waitBuilder();
+	m_state = RUNNING;
 
-	    m_command = NOCOMM;
-	    m_event_number = 0;
-	    while (1) {
+	if (checkCommand()) break;
 
-		m_state = RUNNING;
+	EventBuffer *event = m_builder->peekReadMergData();
 
-		if (checkCommand()) break;
+	if (checkHeader(event->getHeader(), m_name)<0) break;
 
-		EventBuffer *event = m_builder->peekReadMergData();
+	size_t trans_byte = (event->getLength()) * sizeof(unsigned int);
+	if (checkDataSize(max_event_len, trans_byte, m_name)!=0) break;
 
-		if (checkHeader(event->getHeader(), m_name)<0) break;
-		
-		size_t trans_byte = (event->getLength()) * sizeof(unsigned int);
-		if (checkDataSize(max_event_len, trans_byte, m_name)!=0) break;
-
-		bool writeerr;
-		bool retry;
-		do {
-		writeerr = false;
-		retry    = false;
-		if (checkCommand()) break;
-		try {
-		    if (sock.write(event->getBuf(), trans_byte) == 0) {
-			std::cerr <<
-			    "== SenderThread Error: write error occurred"
-			    << std::endl;
-			writeerr = true;
-			break;
-		    }
-		    sock.flush();
-		} catch(kol::SocketException &e) {
-		    if (e.reason() == EWOULDBLOCK) {
-			std::cerr <<
-			"== SenderThread::actrive_loop() socket time out!!"
+	bool writeerr;
+	bool retry;
+	do {
+	  writeerr = false;
+	  retry    = false;
+	  if (checkCommand()) break;
+	  try {
+	    if (sock.write(event->getBuf(), trans_byte) == 0) {
+	      std::cerr <<
+		"== SenderThread Error: write error occurred"
 			<< std::endl;
-			sock.iostate_good();
-			retry = true;
-		    } else {
-			std::cerr << "== SenderThread::active_loop() write Err. : "
-			<< e.what() << std::endl;
-			writeerr = true;
-			break;
-		    }
-		}
-		} while (retry);
-
-		if (writeerr) break;
-
-		m_builder->releaseReadMergData();
-		m_event_number++;
-
+	      writeerr = true;
+	      break;
 	    }
+	    sock.flush();
+	  } catch(kol::SocketException &e) {
+	    if (e.reason() == EWOULDBLOCK) {
+	      std::cerr <<
+		"== SenderThread::actrive_loop() socket time out!!"
+			<< std::endl;
+	      sock.iostate_good();
+	      retry = true;
+	    } else {
+	      std::cerr << "== SenderThread::active_loop() write Err. : "
+			<< e.what() << std::endl;
+	      writeerr = true;
+	      break;
+	    }
+	  }
+	} while (retry);
 
-	    std::cerr << "== SenderThread event loop finished" << std::endl;
-	    ///temp////setSemPost();
-	    //sock.shutdown();
-	    sock.close();
+	if (writeerr) break;
 
-	} catch(std::exception & e) {
-	    std::cerr << "== SenderThread Error: " << e.what()
+	m_builder->releaseReadMergData();
+	m_event_number++;
+
+      }
+
+      std::cerr << "== SenderThread event loop finished" << std::endl;
+      ///temp////setSemPost();
+      //sock.shutdown();
+      sock.close();
+
+    } catch(std::exception & e) {
+      std::cerr << "== SenderThread Error: " << e.what()
 		<< " Loop NO: " << m_builder->getEventNumber()
 		<< std::endl;
-	}
-
     }
 
-    std::cerr << "senderThread: exited active_loop" << std::endl;
+  }
 
-    return 0;
+  std::cerr << "senderThread: exited active_loop" << std::endl;
+
+  return 0;
 }
