@@ -20,7 +20,7 @@ Logger::Logger(unsigned int& event_number,
   if (log_exists.good())
     {
       ::chmod(m_filename.c_str(),
-	      S_IRUSR | S_IWUSR | 
+	      S_IRUSR | S_IWUSR |
 	      S_IRGRP | S_IWGRP |
 	      S_IROTH);
       log_exists.close();
@@ -86,6 +86,6 @@ Logger::close()
   m_log << " events : " << std::setw(14) << m_size << " bytes";
   m_log.flush();
   m_log.close();
-  ::chmod(m_filename.c_str(), S_IRUSR | S_IRGRP | S_IROTH);
+  ::chmod(m_filename.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
   return;
 }
