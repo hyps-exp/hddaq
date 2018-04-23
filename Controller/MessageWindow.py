@@ -104,5 +104,5 @@ class MessageWindow():
 
   #_____________________________________________________________________________
   def AddSaveMessage(self, logfile, linebuf):
-    AddMessage(linebuf)
-    SaveMessage(logfile, linebuf)
+    self.AddMessage(linebuf)
+    self.SaveMessage(logfile, linebuf)
