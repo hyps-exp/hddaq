@@ -406,8 +406,31 @@ class Controller(Frame):
       starttime = self.get_starttime()
       self.lasttime.configure(text='Last Run Start Time: ' + starttime)
       print('update_startime_window : {0}'.format(starttime))
-    self.disklink.configure(text='Data Storage Path: '
-                            + os.path.realpath(args.data_path))
+    st = os.statvfs(os.path.realpath(args.data_path))
+    free = st.f_frsize * st.f_bavail / 1000000000
+    used = st.f_frsize * (st.f_blocks - st.f_bfree) / 1000000000
+    total = st.f_frsize * st.f_blocks / 1000000000
+    usage = float(used) * 100 / total
+    info = 'Data Storage Path: {0}\n(Used: {1}/{2} GB  {3:.1f}%)' \
+        .format(os.path.realpath(args.data_path), used, total, usage)
+    if usage < 75.0:
+      fg_color = 'black'
+      bg_color = '#d9d9d9'
+      flush = False
+    elif usage < 90.0:
+      fg_color = 'yellow'
+      bg_color = 'black'
+      flush = True
+    else:
+      fg_color = 'red'
+      bg_color = 'black'
+      flush = True
+    bg = self.disklink.cget("bg")
+    fg = self.disklink.cget("fg")
+    if flush and bg == bg_color and fg == fg_color:
+      bg_color = fg
+      fg_color = bg
+    self.disklink.configure(text=info, fg=fg_color, bg=bg_color)
   #___________________________________________________________________________
   def update_comment_window(self):
     stat = os.stat(self.comment_file).st_mtime
@@ -553,7 +576,7 @@ class Controller(Frame):
     if ( self.master_controller_flag == 1 ):
       msgfile = self.message_dir + '/msglog_run' \
           + str(self.get_runno()).zfill(5) + '.txt'
-      msgw.AddSaveMessage(msgfile,linebuf)
+      msgw.AddSaveMessage(msgfile, linebuf)
     else:
       msgw.AddMessage(linebuf)
     '''Status'''
