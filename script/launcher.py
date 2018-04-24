@@ -189,8 +189,8 @@ if __name__ == '__main__':
             '--node-id=70000 --compress --dir='+storage_path)
   app.controller_entry('CONTROLLER',
                        'Controller/controller.py \
-                        --data-path {0} --data-path-list {1}'
-                       .format(storage_path, path_list))
+                        --data-path {0} --data-path-list {1} --mtm-host {2}'
+                       .format(storage_path, path_list, '192.168.10.3'))
   app.makebuttons()
   app.updater()
   app.mainloop()

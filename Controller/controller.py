@@ -48,6 +48,8 @@ class Controller(Frame):
     self.trig_timestamp =  time.time()
     self.starttime_timestamp =  time.time()
     self.undertransition_timestamp =  time.time()
+    MTMController.set_host(args.mtm_host)
+    MTMController.set_port(args.mtm_port)
   #___________________________________________________________________________
   def __make_menu(self):
     menubar= Menu(self)
@@ -414,14 +416,13 @@ class Controller(Frame):
       with open(self.comment_file, 'r') as f:
         CommentWindow.ShowComment(f.read())
       self.load_last_comment()
-      print('update_comment_window')
   #___________________________________________________________________________
   def update_runno_window(self):
     stat = os.stat(self.runno_file).st_mtime
     if self.runno_timestamp != stat:
       self.runno_timestamp = stat
-      print('update_runno_window')
       runno = self.get_runno()
+      print('update_runno_window : {0}'.format(runno))
       self.runno_e.config(state=NORMAL)
       self.runno_e.delete(0,END)
       self.runno_e.insert(0, str(runno))
@@ -431,8 +432,8 @@ class Controller(Frame):
     stat = os.stat(self.maxevent_file).st_mtime
     if self.maxevent_timestamp != stat:
       self.maxevent_timestamp = stat
-      print('update_maxevent_window')
       maxevent = self.get_maxevent()
+      print('update_maxevent_window : {0}'.format(maxevent))
       self.maxevent_e.delete(0,END)
       self.maxevent_e.insert(0, str(maxevent))
   #___________________________________________________________________________
@@ -440,8 +441,8 @@ class Controller(Frame):
     stat = os.stat(self.trig_file).st_mtime
     if self.trig_timestamp != stat:
       self.trig_timestamp = stat
-      print('update_trig_status')
       state = self.get_trig_state()
+      print('update_trig_status : ' + state)
       if state == 'ON':
         self.btrigon.config(fg='black', bg='green', state=DISABLED)
         self.btrigoff.config(state=NORMAL)
@@ -593,10 +594,10 @@ if __name__ == '__main__':
   parse argument
   '''
   parser = argparse.ArgumentParser()
-  parser.add_argument('--host-ip', default='eb_e40',
+  parser.add_argument('--cmsgd-host', default='localhost',
                       help='Which host name to connect CMSGD.')
-  parser.add_argument('--port', type=int, default=8882,
-                      help='The port number to connect CMSGD.')
+  parser.add_argument('--cmsgd-port', type=int, default=8882,
+                      help='Which port number to connect CMSGD.')
   parser.add_argument('--data-path', default='./data',
                       help='''
                       The data storage path.
@@ -607,6 +608,10 @@ if __name__ == '__main__':
                       The text file which the list of
                       data storage path is written.
                       ''')
+  parser.add_argument('--mtm-host', default='localhost',
+                      help='Which host name to connect MTM controller')
+  parser.add_argument('--mtm-port', type=int, default=24,
+                      help='Which port number to connect MTM controller')
   args, unparsed = parser.parse_known_args()
   argc = len(sys.argv)
   '''
@@ -625,7 +630,7 @@ if __name__ == '__main__':
   '''
   msgw = MessageWindow.MessageWindow()
   app = Controller(args.data_path)
-  msgh = MessageHandler.MessageHandler(args.host_ip, args.port)
+  msgh = MessageHandler.MessageHandler(args.cmsgd_host, args.cmsgd_port)
   status = StatusList.StatusList()
   '''
   play sound comman while under stansition state
