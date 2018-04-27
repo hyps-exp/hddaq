@@ -217,7 +217,6 @@ int ReaderThread::updateEventData(kol::TcpClient& client,
 				  int trans_byte,
 				  int rest_byte)
 {
-
   GlobalMessageClient & msock = GlobalMessageClient::getInstance();
 
   EventBuffer* event_f = m_node_rb->writeBufPeek();
@@ -237,7 +236,7 @@ int ReaderThread::updateEventData(kol::TcpClient& client,
       status = 0;
       break;
     } catch (kol::SocketException& e) {
-      if (e.reason() ==  EWOULDBLOCK) {
+      if (e.reason() == EWOULDBLOCK) {
 	//std::cerr
 	//<< "#D2 Data socket timeout. retry"
 	//<< std::endl;
@@ -279,7 +278,6 @@ int ReaderThread::active_loop()
   name << m_name  << " " << m_host << " " << m_port;
   initBuffer();
   //GlobalMessageClient & msock = GlobalMessageClient::getInstance();
-
 
   //kol::TcpClient client(m_host, m_port);
   kol::TcpClient client;

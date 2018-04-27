@@ -36,7 +36,6 @@ int EbControl::ackStatus()
   int f_running = 0;
   int f_idle = 0;
 
-
   flags = flags + "s:";
   if (sender->getState() == RUNNING) {
     f_running++;
@@ -266,8 +265,6 @@ int EbControl::CommandStop()
       std::cerr << "#D EbC relase Reader RB" << std::endl;
     }
   }
-
-
 
   return 0;
 }

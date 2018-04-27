@@ -363,18 +363,18 @@ int BuilderThread::active_loop()
     }
 
     /*
-      {
+    {
       ReaderThread **tempreader = m_readers;
       std::cerr <<"#D BT: active_loop left: "
-      << "send buf: " << leftEventData()
-      << " read buf: ";
+    		<< "send buf: " << leftEventData()
+    		<< " read buf: ";
       for(int i=0; i<m_node_num; i++) {
-      std::cerr << i << ":"
-      << (*tempreader)->leftEventData()
-      << " ";
+    	std::cerr << i << ":"
+    		  << (*tempreader)->leftEventData()
+    		  << " ";
       }
       std::cerr << std::endl;
-      }
+    }
     */
 
     /** builder thread is down when all front-ends are down **/
@@ -400,9 +400,7 @@ int BuilderThread::active_loop()
 			 "EB: Err. All Front-ends are down.");
 	break;
       }
-
     }
-
 
     total_len = 0;
     //ReaderThread **readers = m_readers;
@@ -410,8 +408,7 @@ int BuilderThread::active_loop()
 
     for(int node=0; node<m_node_num; node++) {
       if (readers[node]->is_active) {
-	m_event_f[node] =
-	  readers[node]->peekReadFragData();
+	m_event_f[node] = readers[node]->peekReadFragData();
 	if (m_event_f[node]->getHeader() != (int)EV_MAGIC) {
 	  if( m_event_number > 0 ){
 	    std::stringstream msg;
@@ -429,12 +426,9 @@ int BuilderThread::active_loop()
 	nev_header->event_number = m_event_number;
 	m_event_f[node] = &null_event;
 	if (readers[node]->is_active4msg) {
-	  char emessage[128];
-	  sprintf(emessage,
-		  "#W PUT NULL EVENT !! node: %d",
-		  node);
-	  msock.sendString(MT_WARNING, emessage);
-	  fprintf(stderr, "%s\n", emessage);
+	  std::stringstream msg;
+	  msg << "#W PUT NULL EVENT !! node: " << node;
+	  msock.sendString(MT_WARNING, msg.str());
 	  readers[node]->is_active4msg = 0;
 	}
       }
@@ -478,28 +472,14 @@ int BuilderThread::active_loop()
       }
     }
 
-    if ((unsigned int)total_len !=
-	(total_frag_len +
-	 sizeof(struct event_header) / sizeof(unsigned int))
-	) {
-      std::cerr << "@@ ERROR: Total Len unmatching "
-		<< total_len << "/"
-		<< (total_frag_len
-		    + sizeof(struct event_header)
-		    / sizeof(unsigned int))
-		<< std::endl;
-
-      {
-	char messagestr[128];
-	sprintf(messagestr,
-		"#ERR. EB: Total length missmatch!! %d/%lu",
-		total_len,
-		total_frag_len
-		+ sizeof(struct event_header)
-		/ sizeof(unsigned int));
-	msock.sendString(MT_ERROR, messagestr);
-      }
-
+    if( (unsigned int)total_len !=
+	(total_frag_len + sizeof(struct event_header) / sizeof(unsigned int)) ){
+      std::stringstream msg;
+      msg << "#ERR. EB: Total length missmatch!! "
+	  << total_len << "/"
+	  << total_frag_len + sizeof(struct event_header) / sizeof(unsigned int);
+      std::cout << msg.str() << std::endl;
+      msock.sendString(MT_ERROR, msg.str());
       break;
     }
 

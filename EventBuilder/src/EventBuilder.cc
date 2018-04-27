@@ -107,31 +107,24 @@ int get_node_inf(char * filename, Node_map *node_map)
   std::string line;
 
   while (ifs.good()) {
-    getline(ifs, line, '\n');
+    std::getline(ifs, line, '\n');
     std::istringstream ss(line);
     if( (line.find('#')== std::string::npos) && (line.size() > 0)) {
       std::string host;
-      int    port;
-      int    rb_size;
-      int    rb_len;
+      int         port;
+      int         rb_size;
+      int         rb_len;
       std::string flag;
-
-      ss >> host;
-      ss >> port;
-      ss >> rb_size;
-      ss >> rb_len;
-      if (!ss.eof())
-	{
-	  ss >> flag;
-// 	  std::cout << host << " needs handshake " << std::endl;
-	}
-
+      ss >> host >> port >> rb_size >> rb_len;
+      if(!ss.eof()){
+	ss >> flag;
+	// std::cout << host << " needs handshake " << std::endl;
+      }
       node_map->insert( node_inf(host, port));
       NodeInfo nodeInfo(host, port, rb_size, rb_len, flag);
       node_info.push_back(nodeInfo);
     }
   }
-  ifs.close();
   return node_map->size();
 }
 
@@ -140,14 +133,15 @@ int open_ppdev()
 {
   int ret = 0;
   int fd = open("/dev/parport0", O_RDWR);
-  if(fd==-1) {
-    printf("open error?n");
+  if(fd==-1){
+    std::cerr << "open error?" << std::endl;
     ret = 1;
   }
-  else
+  else {
     ret = fd;
-  if(ioctl(fd,PPCLAIM)) {
-    printf("PPCLAIM error?n");
+  }
+  if(ioctl(fd,PPCLAIM)){
+    std::cerr << "PPCLAIM error?" << std::endl;
     close(fd);
     ret = 1;
   }
@@ -163,8 +157,7 @@ void close_ppdev(int fd)
 
 void sigpipehandler(int signum)
 {
-  fprintf(stderr, "Got SIGPIPE! %d\n", signum);
-  return;
+  std::cerr << "Got SIGPIPE! " << signum << std::endl;
 }
 
 int set_signal()
@@ -175,8 +168,8 @@ int set_signal()
   act.sa_handler = sigpipehandler;
   act.sa_flags |= SA_RESTART;
 
-  if(sigaction(SIGPIPE, &act, NULL) != 0 ) {
-    fprintf( stderr, "sigaction(2) error!\n" );
+  if( sigaction(SIGPIPE, &act, NULL) != 0 ){
+    std::cerr << "sigaction(2) error!" << std::endl;
     return -1;
   }
   return 0;
@@ -185,7 +178,7 @@ int set_signal()
 int main(int argc, char* argv[])
 {
   int event_buflen = max_event_len;
-  int quelen = 0;
+  int max_quelen   = 0;
 
   NodeInfo nodeInfo;
   std::vector<ReaderThread *> readers;
@@ -268,15 +261,20 @@ int main(int argc, char* argv[])
 	std::stringstream msg;
 	msg << "EB: node number is too much! ["
 	    << node_number << "/" << max_node_num << "]";
+	std::cerr << msg.str() << std::endl;
 	msock.sendString(MT_FATAL, msg.str());
 	return -1;
       }
 
       //     readers = new ReaderThread * [node_number];
       readers.resize(node_number);
+
       for(int node=0; node<node_number; node++) {
 	int node_buflen = node_info[node].getRingbufSize();
-	quelen = node_info[node].getRingbufLen();
+	int quelen = node_info[node].getRingbufLen();
+	max_quelen = std::max( max_quelen, quelen );
+	if( quelen != max_quelen ){
+	}
 	const std::string& flag = node_info[node].getSyncFlag();
 	if (flag.empty())
 	  readers[node] = new ReaderThread(node_buflen, quelen);
@@ -290,32 +288,38 @@ int main(int argc, char* argv[])
 	readers[node]->setName(name.str());
 	readers[node]->setHost(hostname, port, node);
 
-	std::cerr << "  hostname:" << node_info[node].getHostName();
-	std::cerr << "  RingBuf Size:" << node_buflen
-		  << "  RingBuf len:" << quelen
-		  << (flag.empty() ? "" : " +"+flag) << std::endl;
-	{
-	  char messagestr[128];
-	  sprintf(messagestr, "EB: node: %s, Bsize %d, Nque %d",
-		  node_info[node].getHostName().c_str(),
-		  node_buflen, quelen);
-	  msock.sendString(messagestr);
-	}
+	// std::cerr << "  hostname:" << node_info[node].getHostName();
+	// std::cerr << "  RingBuf Size:" << node_buflen
+	// 	  << "  RingBuf len:" << quelen << " "
+	// 	  << (flag.empty() ? "" : " +"+flag) << std::endl;
+	std::stringstream msg;
+	msg << "EB: node =" << std::setw(15) << hostname
+	    << "  port =" << std::setw(5) << port
+	    << "  Bsize =" << std::setw(6) << node_buflen
+	    << "  Nque =" << std::setw(6) << quelen;
+	std::cout << msg.str() << std::endl;
+	msock.sendString(msg.str());
       }
 
-      BuilderThread builder(event_buflen,quelen);
+      BuilderThread builder(event_buflen, max_quelen);
       builder.setName("## BuilderThread");
       builder.setDebugPrint(0);
       builder.setAllReaders(&readers[0], node_number);
+      {
+	std::stringstream msg;
+	msg << "## bulderThread: Bsize = " << event_buflen
+	    << " Nque = " << max_quelen;
+	std::cout << msg.str() << std::endl;
+	msock.sendString(msg.str());
+      }
 
 #ifdef  USE_PARAPORT
       builder.setParaFd(ppdev_fd);
 #endif
 
-      SenderThread  sender(event_buflen,quelen);
+      SenderThread  sender(event_buflen, max_quelen);
       sender.setName("== SenderThread");
       sender.setBuilder(&builder);
-
 
       EbControl controller;
       controller.setSlave(&sender);
@@ -337,6 +341,7 @@ int main(int argc, char* argv[])
       for(int node=0; node < node_number; node++)
 	readers[node]->start();
       std::cerr << "readers start" << std::endl;
+
       builder.start();
 
       WatchDog watchdog(&controller, &builder, &readers[0], node_number);

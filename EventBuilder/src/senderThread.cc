@@ -141,8 +141,7 @@ int SenderThread::active_loop()
 	  if (checkCommand()) break;
 	  try {
 	    if (sock.write(event->getBuf(), trans_byte) == 0) {
-	      std::cerr <<
-		"== SenderThread Error: write error occurred"
+	      std::cerr << "== SenderThread Error: write error occurred"
 			<< std::endl;
 	      writeerr = true;
 	      break;
@@ -150,8 +149,7 @@ int SenderThread::active_loop()
 	    sock.flush();
 	  } catch(kol::SocketException &e) {
 	    if (e.reason() == EWOULDBLOCK) {
-	      std::cerr <<
-		"== SenderThread::actrive_loop() socket time out!!"
+	      std::cerr << "== SenderThread::actrive_loop() socket time out!!"
 			<< std::endl;
 	      sock.iostate_good();
 	      retry = true;
@@ -164,11 +162,11 @@ int SenderThread::active_loop()
 	  }
 	} while (retry);
 
-	if (writeerr) break;
+	if (writeerr)
+	  break;
 
 	m_builder->releaseReadMergData();
 	m_event_number++;
-
       }
 
       std::cerr << "== SenderThread event loop finished" << std::endl;

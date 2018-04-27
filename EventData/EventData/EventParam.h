@@ -34,8 +34,7 @@
 #define EVENT_PARAM_H
 
 static const int    max_node_num     = 150;
-//static const size_t max_fragment_len = 5 * 1024;  //1024 * 20byte
-static const size_t max_fragment_len = 128 * 1024;  //1024 * 20byte
+static const size_t max_fragment_len = 5 * 1024;
 static const int    max_event_len = max_fragment_len * max_node_num;
 
 #endif
