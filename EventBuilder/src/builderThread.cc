@@ -196,9 +196,8 @@ int BuilderThread::waitReaders()
   int flag = 1;
   while(flag) {
     flag = 0;
-    ReaderThread **readers = m_readers;
     for(int node=0; node<m_node_num; node++) {
-      if (readers[node]->getState() != RUNNING) {
+      if (m_readers[node]->getState() != RUNNING) {
 	flag = 1;
       }
     }
@@ -332,16 +331,15 @@ int BuilderThread::active_loop()
   msock.sendString("EB: start");
 
   /* Activete ReaderThread flag */
-  ReaderThread **readers = m_readers;
   for(int node=0; node<m_node_num; node++) {
-    readers[node]->is_active = 1;
-    readers[node]->is_active4msg = 1;
+    m_readers[node]->is_active = 1;
+    m_readers[node]->is_active4msg = 1;
   }
 
   waitReaders();
   m_state = RUNNING;
   m_event_number = 0;
-  while(true){
+  while( true ){
     if(checkCommand() != 0)
       break;
     // if((m_event_number % 100) == 0){
@@ -378,19 +376,16 @@ int BuilderThread::active_loop()
     */
 
     /** builder thread is down when all front-ends are down **/
-    ReaderThread **readers = m_readers;
     int num_active = 0;
     for(int node=0; node<m_node_num; node++) {
-      if (readers[node]->is_active) {
+      if (m_readers[node]->is_active) {
 	num_active++;
       }
     }
     if (num_active == 0) {
-      // 			ReaderThread **readers = m_readers;
-      readers = m_readers;
       int is_noevent = 0;
       for(int node=0; node<m_node_num; node++) {
-	if (readers[node]->leftEventData() <= 0) is_noevent++;
+	if (m_readers[node]->leftEventData() <= 0) is_noevent++;
       }
 
       if (is_noevent) {
@@ -403,12 +398,10 @@ int BuilderThread::active_loop()
     }
 
     total_len = 0;
-    //ReaderThread **readers = m_readers;
-    readers = m_readers;
 
     for(int node=0; node<m_node_num; node++) {
-      if (readers[node]->is_active) {
-	m_event_f[node] = readers[node]->peekReadFragData();
+      if (m_readers[node]->is_active) {
+	m_event_f[node] = m_readers[node]->peekReadFragData();
 	if (m_event_f[node]->getHeader() != (int)EV_MAGIC) {
 	  if( m_event_number > 0 ){
 	    std::stringstream msg;
@@ -425,11 +418,11 @@ int BuilderThread::active_loop()
       } else {
 	nev_header->event_number = m_event_number;
 	m_event_f[node] = &null_event;
-	if (readers[node]->is_active4msg) {
+	if (m_readers[node]->is_active4msg) {
 	  std::stringstream msg;
 	  msg << "#W PUT NULL EVENT !! node: " << node;
 	  msock.sendString(MT_WARNING, msg.str());
-	  readers[node]->is_active4msg = 0;
+	  m_readers[node]->is_active4msg = 0;
 	}
       }
       total_len = total_len + m_event_f[node]->getLength();
@@ -458,7 +451,6 @@ int BuilderThread::active_loop()
     eheader->reserve      = (unsigned int)std::time(0);
 
     int total_frag_len = 0;
-    readers = m_readers;
     char *ptr = event_buf + sizeof(struct event_header);
     for(int node=0; node<m_node_num; node++) {
       int frag_len = m_event_f[node]->getLength();
@@ -466,9 +458,9 @@ int BuilderThread::active_loop()
 		  (m_event_f[node]->getBuf()),
 		  frag_len * 4);
       ptr += frag_len * sizeof(int);
-      total_frag_len = total_frag_len + frag_len;
-      if (readers[node]->is_active) {
-	readers[node]->releaseReadFragData();//rotate the node_rb
+      total_frag_len += frag_len;
+      if (m_readers[node]->is_active) {
+	m_readers[node]->releaseReadFragData(); //rotate the node_rb
       }
     }
 
@@ -489,7 +481,6 @@ int BuilderThread::active_loop()
 #ifdef USE_PARAPORT
     getOneShot();
 #endif
-
   }//while()
   std::cerr << "builder exited active_loop" << std::endl;
 

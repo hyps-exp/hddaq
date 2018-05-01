@@ -36,7 +36,7 @@ DEPENDS   = $(addprefix $(BLD_DIR)/, $(SOURCES:.cc=.d))
 ###Stopping make delete intermediate files
 .SECONDARY:
 
-all: $(BIN_DIR)/$(BIN_TGT) 
+all: $(BIN_DIR)/$(BIN_TGT)
 
 $(BIN_DIR)/$(BIN_TGT): $(addprefix $(BLD_DIR)/, $(BIN_OBJ))
 	@echo Linking $@ ...
