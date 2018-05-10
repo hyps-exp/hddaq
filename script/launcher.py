@@ -26,7 +26,7 @@ class ChildProc(Frame):
   #___________________________________________________________________________
   def __make_button(self):
     font1 = ('Helvetica', -20, '')
-    self.name_label = Label(self, text=self.name, font=font1, fg='blue', width=12)
+    self.name_label = Label(self, text=self.name, font=font1, fg='blue', width=15)
     self.status_label = Label(self, text='DEAD', font=font1, fg='black', width=10)
     self.start_button = Button(self, text='START', command = self.start)
     self.start_button.config(state=DISABLED)
@@ -79,7 +79,7 @@ class ControllerProc(Frame):
   #___________________________________________________________________________
   def __make_button(self):
     font1 = ('Helvetica', -20, '')
-    self.name_label = Label(self, text=self.name, font=font1, fg='blue', width=12)
+    self.name_label = Label(self, text=self.name, font=font1, fg='blue', width=15)
     self.status_label = Label(self, text='DEAD', font=font1, fg='black', width=10)
     self.start_button = Button(self, text='START', command=self.start)
     self.stop_button = Button(self, text='STOP', command=self.stop)
@@ -185,7 +185,9 @@ if __name__ == '__main__':
             '--idnumber=90000 datanode.txt')
   app.entry('DISTRIBUTOR', 'EventDistributor/bin/EventDistributor',
             '--node-id=80000')
-  app.entry('RECORDER', 'Recorder/bin/Recorder',
+  app.entry('RECORDER (.dat)', 'Recorder/bin/Recorder',
+            '--node-id=70000 --dir='+storage_path)
+  app.entry('RECORDER (.gz)', 'Recorder/bin/Recorder',
             '--node-id=70000 --compress --dir='+storage_path)
   app.controller_entry('CONTROLLER',
                        'Controller/controller.py \
