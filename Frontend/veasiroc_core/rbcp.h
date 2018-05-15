@@ -1,5 +1,5 @@
-#ifndef RBCP_INCLUDED_
-#define RBCP_INCLUDED_
+#ifndef RBCP_INCLUDED
+#define RBCP_INCLUDED
 
 #include <string>
 #include <exception>
@@ -33,4 +33,4 @@ class RBCPError : public std::runtime_error
     {}
 };
 
-#endif // RBCP_INCLUDED_
+#endif

@@ -9,7 +9,7 @@
 #include <netinet/in.h>
 #include <sys/select.h>
 #include "rbcp.h"
-#include "endian.h"
+#include "my_endian.h"
 
 struct RBCPHeader{
     static const uint8_t READ = 0xC0;

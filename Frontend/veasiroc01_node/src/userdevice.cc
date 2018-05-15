@@ -18,37 +18,26 @@ static const unsigned int udp_port = 4660;
 static const unsigned int tcp_port = 24;
 
 #include "rbcp.h"
-#include "endian.h"
+#include "my_endian.h"
+#include "RegisterMap.hh"
+#include "configLoader.hh"
+
 
 DaqMode g_daq_mode  = DM_NORMAL;
 std::string nick_name;
-#define DEBUG 0
 
 namespace
 {
+  // Local index -----------------------------------------
+  const int i_easiroc1 = 0;
+  const int i_easiroc2 = 1;
+
   // RBCP registers --------------------------------------
-  static const uint32_t DIRECT_CTRL_ADDRESS = 0x00000000;
-  static const uint32_t STATUS_REG_ADDRESS  = 0x00000077;
-
-  static const uint8_t daqModeBit    = 0x01;
-  static const uint8_t sendAdcBit    = 0x02;
-  static const uint8_t sendTdcBit    = 0x04;
-  static const uint8_t sendScalerBit = 0x08;
-
   bool isDaqMode  = false;
-  bool sendAdc    = true;
-  bool sendTdc    = true;
+  bool sendAdc    = false;
+  bool sendTdc    = false;
   bool sendScaler = false;
 
-  // Direct control register
-  enum indexRegEasiroc{
-    i_razChn,   i_valEvt, i_resetPA, i_pwrOn,
-    i_selectSc, i_loadSc, i_rstbSr,  i_rstbRead
-  };
-  enum indexRegModule{
-    i_startCycle1, i_startCycle2, i_userOutput, i_ledUser,
-    i_ledReady,    i_ledBusy,     i_selectHg,   i_selectProbe
-  };
   std::bitset<8> reg_easiroc1;
   std::bitset<8> reg_easiroc2;
   std::bitset<8> reg_module;
@@ -59,6 +48,7 @@ namespace
   static const int max_data_size = sizeof(unsigned int)*max_n_word;
 
   char ip[100];
+  std::string module_num;
   int  sock=0;
 
   //_________________________________________________________________________
@@ -126,20 +116,20 @@ namespace
   writeStatusRegister(uint8_t data = 0)
   {
     if(isDaqMode) {
-      data |= daqModeBit;
+      data |= daq_mode_bit;
     }
     if(sendAdc) {
-      data |= sendAdcBit;
+      data |= send_adc_bit;
     }
     if(sendTdc) {
-      data |= sendTdcBit;
+      data |= send_tdc_bit;
     }
     if(sendScaler) {
-      data |= sendScalerBit;
+      data |= send_scaler_bit;
     }
 
     RBCP rbcp(std::string(ip), udp_port);
-    rbcp.write(&data, STATUS_REG_ADDRESS, 1);
+    rbcp.write(&data, addr_status_reg, 1);
     //printf("status register %02X\n", data);
   }
 
@@ -155,8 +145,185 @@ namespace
     };
 
     RBCP rbcp(std::string(ip), udp_port);
-    rbcp.write(reg_direct, DIRECT_CTRL_ADDRESS, n_reg);
+    rbcp.write(reg_direct, addr_direct_ctrl, n_reg);
 
+  }
+
+  //_________________________________________________________________________
+  void
+  sendSlowControlSub(veasiroc::regRbcpType& reg1, veasiroc::regRbcpType& reg2)
+  {
+    reg_easiroc1.reset( i_loadSc );
+    reg_easiroc2.reset( i_loadSc );
+    reg_easiroc1.set( i_rstbSr );
+    reg_easiroc2.set( i_rstbSr );
+    reg_module.reset( i_startCycle1 );
+    reg_module.reset( i_startCycle2 );
+    sendDirectControl();
+
+    RBCP rbcp(std::string(ip), udp_port);
+
+    int n_reg = reg1.size();
+    const uint8_t *reg_slow1 = static_cast<const uint8_t*>(&reg1[0]);
+    rbcp.write(reg_slow1, addr_slow_ctrl1, n_reg);
+
+    n_reg = reg2.size();
+    const uint8_t *reg_slow2 = static_cast<const uint8_t*>(&reg2[0]);
+    rbcp.write(reg_slow2, addr_slow_ctrl2, n_reg);    
+
+    reg_module.set( i_startCycle1 );
+    reg_module.set( i_startCycle2 );
+    sendDirectControl();
+
+    sleep(1);
+
+    reg_easiroc1.set( i_loadSc );
+    reg_easiroc2.set( i_loadSc );
+    reg_module.reset( i_startCycle1 );
+    reg_module.reset( i_startCycle2 );
+    sendDirectControl();
+
+    reg_easiroc1.reset( i_loadSc );
+    reg_easiroc2.reset( i_loadSc );
+    sendDirectControl();
+  }
+
+  //_________________________________________________________________________
+  void
+  sendSlowControl()
+  {
+    reg_easiroc1.set( i_selectSc );
+    reg_easiroc2.set( i_selectSc );
+    
+    veasiroc::configLoader& g_conf = veasiroc::configLoader::get_instance();
+    veasiroc::regRbcpType reg_easiroc1 = g_conf.copy_screg(i_easiroc1);
+    veasiroc::regRbcpType reg_easiroc2 = g_conf.copy_screg(i_easiroc2);
+    
+    sendSlowControlSub(reg_easiroc1, reg_easiroc2);
+  }
+
+  //_________________________________________________________________________
+  void
+  resetReadRegister()
+  {
+    reg_easiroc1.reset( i_rstbRead );
+    reg_easiroc2.reset( i_rstbRead );
+    sendDirectControl();
+
+    reg_easiroc1.set( i_rstbRead );
+    reg_easiroc2.set( i_rstbRead );
+    sendDirectControl();
+  }
+
+  //_________________________________________________________________________
+  void
+  sendReadRegister()
+  {
+    veasiroc::configLoader& g_conf = veasiroc::configLoader::get_instance();
+    int i_easiroc = g_conf.get_index_readsc();
+    veasiroc::regRbcpType reg = g_conf.copy_readreg();
+    int n_reg = reg.size();
+
+    if(i_easiroc == i_easiroc1){
+      reg_module.reset( i_selectHg );
+    }else{
+      reg_module.set( i_selectHg );
+    }
+
+    resetReadRegister();
+
+    RBCP rbcp(std::string(ip), udp_port);
+    const uint8_t *reg_read = static_cast<const uint8_t*>(&reg[0]);    
+    if(i_easiroc == i_easiroc1){
+      rbcp.write(reg_read, addr_read_reg1, n_reg);
+    }else{
+      rbcp.write(reg_read, addr_read_reg2, n_reg);
+    }
+  }
+
+  //_________________________________________________________________________
+  void
+  sendProbeRegister()
+  {
+    veasiroc::configLoader& g_conf = veasiroc::configLoader::get_instance();
+    veasiroc::regRbcpType reg_probe = g_conf.copy_probereg();
+    veasiroc::regRbcpType reg_null  = g_conf.copy_probereg_null();
+
+    int i_easiroc = g_conf.get_index_probe();
+
+    reg_easiroc1.reset( i_selectSc );
+    reg_easiroc2.reset( i_selectSc );
+    
+    if(i_easiroc == i_easiroc1){
+      sendSlowControlSub(reg_probe, reg_null);
+    }else{
+      sendSlowControlSub(reg_null,  reg_probe);
+    }
+  }
+
+  //_________________________________________________________________________
+  void
+  resetProbeRegister()
+  {
+    veasiroc::configLoader& g_conf = veasiroc::configLoader::get_instance();
+    veasiroc::regRbcpType reg_null = g_conf.copy_probereg_null();
+
+    reg_easiroc1.reset( i_selectSc );
+    reg_easiroc2.reset( i_selectSc );
+
+    sendSlowControlSub(reg_null, reg_null);
+  }
+
+  //_________________________________________________________________________
+  void
+  sendPedestalSupp()
+  {
+    veasiroc::configLoader& g_conf = veasiroc::configLoader::get_instance();
+    veasiroc::regRbcpType reg = g_conf.copy_pedestal_suppression();
+    int n_reg = reg.size();
+
+    RBCP rbcp(std::string(ip), udp_port);
+    const uint8_t *reg_pede = static_cast<const uint8_t*>(&reg[0]);
+    rbcp.write(reg_pede, addr_pede_supp, n_reg);
+  }
+
+  //_________________________________________________________________________
+  void
+  resetPedestalSupp()
+  {
+    veasiroc::configLoader& g_conf = veasiroc::configLoader::get_instance();
+    veasiroc::regRbcpType reg = g_conf.copy_pedestal_suppression_null();
+    int n_reg = reg.size();
+
+    RBCP rbcp(std::string(ip), udp_port);
+    const uint8_t *reg_null = static_cast<const uint8_t*>(&reg[0]);
+    rbcp.write(reg_null, addr_pede_supp, n_reg);
+  }
+
+  //_________________________________________________________________________
+  void
+  sendSelectableLogic()
+  {
+    veasiroc::configLoader& g_conf = veasiroc::configLoader::get_instance();
+    veasiroc::regRbcpType reg = g_conf.copy_selectable_logic();
+    int n_reg = reg.size();
+
+    RBCP rbcp(std::string(ip), udp_port);
+    const uint8_t *reg_sel = static_cast<const uint8_t*>(&reg[0]);
+    rbcp.write(reg_sel, addr_selectable, n_reg);
+  }
+
+  //_________________________________________________________________________
+  void
+  sendTimeWindow()
+  {
+    veasiroc::configLoader& g_conf = veasiroc::configLoader::get_instance();
+    veasiroc::regRbcpType reg = g_conf.copy_time_window();
+    int n_reg = reg.size();
+
+    RBCP rbcp(std::string(ip), udp_port);
+    const uint8_t *reg_time = static_cast<const uint8_t*>(&reg[0]);
+    rbcp.write(reg_time, addr_time_window, n_reg);
   }
 
   //_________________________________________________________________________
@@ -256,8 +423,40 @@ open_device( NodeProp& nodeprop )
       iss.str( arg.substr(11) );
       iss >> ip;
     }
+
+    if( arg.substr(0,13) == "--module-num=" ){
+      iss.str( arg.substr(13) );
+      iss >> module_num;
+    }
+
+    if( arg.substr(0,5) == "--adc" ){
+      sendAdc = true;
+    }
+
+    if( arg.substr(0,5) == "--tdc" ){
+      sendTdc = true;
+    }
   }
 
+  std::string file_name[3] = {
+    "easiroc" + module_num + "/RegisterValue.yml",
+    "easiroc" + module_num + "/InputDAC.yml",
+    "easiroc" + module_num + "/PedestalSuppression.yml"
+  };
+
+  // initialize configLoader
+  veasiroc::configLoader& g_conf = veasiroc::configLoader::get_instance();
+  for(int i = 0; i<3; ++i){
+    if(-1 == g_conf.read_YAML(file_name[i])){
+      std::ostringstream oss;
+      oss << func_name << " No such YAML file(" << file_name[i] << ") : "
+	  << ip;
+      send_fatal_message( oss.str() );
+      std::cerr << oss.str() << std::endl; 
+      std::exit(-1);
+    }
+  }
+  
   // reset direct control registers
   reg_easiroc1.set(   i_rstbRead );
   reg_easiroc1.set(   i_rstbSr   );
@@ -287,6 +486,13 @@ open_device( NodeProp& nodeprop )
   reg_module.reset( i_startCycle1 );
 
   sendDirectControl();
+
+  sendSlowControl();
+  sendReadRegister();
+  sendProbeRegister();
+  sendPedestalSupp();
+  sendSelectableLogic();
+  sendTimeWindow();
 
   //Connection check -----------------------------------------------
   while(0 > (sock = ConnectSocket(ip) )){

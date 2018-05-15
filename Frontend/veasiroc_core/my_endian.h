@@ -64,6 +64,6 @@ namespace Endian
         ((uint8_t*)buf)[2] = (val >> 16) & 0xff;
         ((uint8_t*)buf)[3] = (val >> 24) & 0xff;
     }
-}
+};
 
-#endif // ENDIAN_H_INCLUDED_
+#endif
