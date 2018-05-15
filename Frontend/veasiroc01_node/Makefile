@@ -12,7 +12,7 @@ BIN_DIR		= bin
 BLD_DIR 	= build
 
 CXX		= g++
-CXXFLAGS	= -O3 -Wall -std=c++0x
+CXXFLAGS	= -O3 -Wall -std=gnu++0x -g
 CXXFLAGS	+= -DDEBUG
 
 INCLUDES	= \

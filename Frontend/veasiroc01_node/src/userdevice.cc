@@ -492,7 +492,9 @@ open_device( NodeProp& nodeprop )
   sendProbeRegister();
   sendPedestalSupp();
   sendSelectableLogic();
-  sendTimeWindow();
+  //  sendTimeWindow();
+
+  return;
 
   //Connection check -----------------------------------------------
   while(0 > (sock = ConnectSocket(ip) )){

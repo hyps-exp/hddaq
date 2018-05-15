@@ -43,7 +43,8 @@ regRbcpType
 configLoader::copy_pedestal_suppression_null()
 {
   copy_pedestal_suppression();
-  for_each(m_reg_rbcp.begin(), m_reg_rbcp.end(), [](uint8_t& val){val = 0;});
+  //  for(auto& val : m_reg_rbcp) val = 0;
+  for(uint32_t i = 0; i<m_reg_rbcp.size(); ++i) m_reg_rbcp[i] = 0;
 
   return m_reg_rbcp;
 }
@@ -101,7 +102,8 @@ regRbcpType
 configLoader::copy_probereg_null()
 {
   copy_probereg();
-  for_each(m_reg_rbcp.begin(), m_reg_rbcp.end(), [](uint8_t& val){val = 0;});
+  //  for(auto& val : m_reg_rbcp) val = 0;
+  for(uint32_t i = 0; i<m_reg_rbcp.size(); ++i) m_reg_rbcp[i] = 0;
 
   return m_reg_rbcp;
 }
@@ -138,7 +140,9 @@ configLoader::copy_screg(int i_easiroc)
   m_bit_rbcp.clear();
   m_reg_rbcp.clear();
   auto itr_end = m_screg_map[i_easiroc].end();
-  for( const auto& reg_name : m_screg_order){
+  //  for( const auto& reg_name : m_screg_order){
+  for( uint32_t i = 0; i<m_screg_order.size(); ++i){
+    auto& reg_name = m_screg_order[i];
     auto itr = m_screg_map[i_easiroc].find(reg_name);
     if(itr != itr_end){
       fill_bit(itr->second);
@@ -204,7 +208,9 @@ configLoader::copy_time_window()
 void
 configLoader::fill_bit(Register& cont)
 {
-  for(const auto& val : cont.reg){
+  //  for(const auto& val : cont.reg){
+  for(uint32_t i = 0; i<cont.reg.size(); ++i){
+    auto& val = cont.reg[i];
     for(int i = 0; i<cont.nbits; ++i){
       if(cont.bit_order == lsb2msb){
 	int bit = cont.active_low ^ ((val >> i) & 1 ? true : false);
@@ -803,8 +809,11 @@ configLoader::print(const regRbcpType& cont, const std::string& arg)
 	    << arg
 	    << std::endl;
   
-  for(const auto& val : cont){
-    printf(" - %x\n", val);
+  //  for(const auto& val : cont){
+  //    printf(" - %x\n", val);
+  //  }// for(reg_rbcp)
+  for(uint32_t i = 0; i<cont.size(); ++i){
+    printf(" - %x\n", cont[i]);
   }// for(reg_rbcp)
 }
 
@@ -886,7 +895,8 @@ configLoader::read_YAML( const std::string& filename)
       std::string              buf;
       std::vector<std::string> words;
       while(getline(line_to_word, buf, ':')) words.push_back(buf);
-      for(auto& i : words) while(i[0] == ' ') i.erase(0, 1);
+      //      for(auto& i : words) while(i[0] == ' ') i.erase(0, 1);
+      for(uint32_t i = 0; i<words.size(); ++i) while(words[i][0] == ' ') words[i].erase(0, 1);
       
       present_key = words[0];
       if(words.size() == 1 || words[1][0] == '#') continue;
