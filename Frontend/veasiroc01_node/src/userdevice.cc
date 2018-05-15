@@ -25,6 +25,7 @@ static const unsigned int tcp_port = 24;
 
 DaqMode g_daq_mode  = DM_NORMAL;
 std::string nick_name;
+std::string yaml_name[3];
 
 namespace
 {
@@ -415,6 +416,7 @@ open_device( NodeProp& nodeprop )
   g_daq_mode = nodeprop.getDaqMode();
 
   // load parameters
+  std::string reg_dir;
   const int argc = nodeprop.getArgc();
   for( int i=0; i<argc; ++i ){
     std::string arg = nodeprop.getArgv(i);
@@ -429,27 +431,46 @@ open_device( NodeProp& nodeprop )
       iss >> module_num;
     }
 
-    if( arg.substr(0,5) == "--adc" ){
-      sendAdc = true;
+    if( arg.substr(0,6) == "--adc=" ){
+      std::string on_off;
+      iss.str( arg.substr(6) );
+      iss >> on_off;
+      if(on_off == "on"){
+	sendAdc = true;	
+      }
     }
 
-    if( arg.substr(0,5) == "--tdc" ){
-      sendTdc = true;
+    if( arg.substr(0,6) == "--tdc=" ){
+      std::string on_off;
+      iss.str( arg.substr(6) );
+      iss >> on_off;
+      if(on_off == "on"){
+	sendTdc = true;	
+      }
+    }
+
+    if( arg.substr(0,10) == "--reg-dir=" ){
+      iss.str( arg.substr(10) );
+      iss >> reg_dir;
     }
   }
 
-  std::string file_name[3] = {
-    "easiroc" + module_num + "/RegisterValue.yml",
-    "easiroc" + module_num + "/InputDAC.yml",
-    "easiroc" + module_num + "/PedestalSuppression.yml"
-  };
+  if(reg_dir != "default"){
+    yaml_name[0]= reg_dir + "/RegisterValue/RegisterValue_" + module_num + ".yml";
+    yaml_name[1]= reg_dir + "/InputDAC/InputDAC_" + module_num + ".yml";
+    yaml_name[2]= reg_dir + "/PedeSup/PedeSup_No_" + module_num + ".yml";
+  }else{
+    yaml_name[0]= "./default_register/RegisterValue.yml";
+    yaml_name[1]= "./default_register/InputDAC.yml";
+    yaml_name[2]= "./default_register/PedestalSuppression.yml";
+  }
 
   // initialize configLoader
   veasiroc::configLoader& g_conf = veasiroc::configLoader::get_instance();
   for(int i = 0; i<3; ++i){
-    if(-1 == g_conf.read_YAML(file_name[i])){
+    if(-1 == g_conf.read_YAML(yaml_name[i])){
       std::ostringstream oss;
-      oss << func_name << " No such YAML file(" << file_name[i] << ") : "
+      oss << func_name << " No such YAML file(" << yaml_name[i] << ") : "
 	  << ip;
       send_fatal_message( oss.str() );
       std::cerr << oss.str() << std::endl; 
@@ -488,8 +509,10 @@ open_device( NodeProp& nodeprop )
   sendDirectControl();
 
   sendSlowControl();
-  sendReadRegister();
-  sendProbeRegister();
+  //  sendReadRegister();
+  //  sendProbeRegister();
+  resetReadRegister();
+  resetProbeRegister();
   sendPedestalSupp();
   sendSelectableLogic();
   //  sendTimeWindow();
@@ -520,9 +543,28 @@ init_device( NodeProp& nodeprop )
 
   //  event_num = 0;
 
+  // re-initialize configLoader
+  veasiroc::configLoader& g_conf = veasiroc::configLoader::get_instance();
+  for(int i = 0; i<3; ++i){
+    if(-1 == g_conf.read_YAML(yaml_name[i])){
+      std::ostringstream oss;
+      oss << func_name << " No such YAML file(" << yaml_name[i] << ") : "
+	  << ip;
+      send_fatal_message( oss.str() );
+      std::cerr << oss.str() << std::endl; 
+      std::exit(-1);
+    }
+  }
+
   switch(g_daq_mode){
   case DM_NORMAL:
     {
+      sendSlowControl();
+      resetReadRegister();
+      resetProbeRegister();
+      sendPedestalSupp();
+      sendSelectableLogic();
+
       while(0 > (sock = ConnectSocket(ip) )){
 	std::ostringstream oss;
 	oss << func_name << " Connection fail : " << ip;
@@ -542,6 +584,12 @@ init_device( NodeProp& nodeprop )
     }
   case DM_DUMMY:
     {
+      sendSlowControl();
+      sendReadRegister();
+      sendProbeRegister();
+      sendPedestalSupp();
+      sendSelectableLogic();
+
       return;
     }
   default:

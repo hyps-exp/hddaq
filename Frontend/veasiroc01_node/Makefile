@@ -12,8 +12,8 @@ BIN_DIR		= bin
 BLD_DIR 	= build
 
 CXX		= g++
-CXXFLAGS	= -O3 -Wall -std=gnu++0x -g
-CXXFLAGS	+= -DDEBUG
+CXXFLAGS	= -O3 -Wall -std=gnu++0x
+#CXXFLAGS	+= -DDEBUG
 
 INCLUDES	= \
 	-I. -I$(CORE_DIR) -I$(EASI_CORE_DIR)\

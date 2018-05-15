@@ -46,6 +46,10 @@ configLoader::copy_pedestal_suppression_null()
   //  for(auto& val : m_reg_rbcp) val = 0;
   for(uint32_t i = 0; i<m_reg_rbcp.size(); ++i) m_reg_rbcp[i] = 0;
 
+#if DEBUG
+  print(m_reg_rbcp, "Pedestal Supp. (NULL)");
+#endif
+
   return m_reg_rbcp;
 }
 
@@ -104,6 +108,10 @@ configLoader::copy_probereg_null()
   copy_probereg();
   //  for(auto& val : m_reg_rbcp) val = 0;
   for(uint32_t i = 0; i<m_reg_rbcp.size(); ++i) m_reg_rbcp[i] = 0;
+
+#if DEBUG
+  print(m_reg_rbcp, "Probe Slow Control (NULL)");
+#endif
 
   return m_reg_rbcp;
 }
