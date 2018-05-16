@@ -5,9 +5,11 @@
 #include <exception>
 #include <stdexcept>
 
+static const int udp_port = 4660;
+
 class RBCP {
  public:
-  RBCP(const std::string& host, int port);
+  RBCP(const std::string& host, int port = udp_port);
   void read(uint8_t* buf, uint32_t address, size_t dataLength);
   void write(const uint8_t* buf, uint32_t address, size_t dataLength);
 
