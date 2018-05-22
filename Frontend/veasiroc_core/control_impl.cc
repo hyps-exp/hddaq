@@ -141,10 +141,12 @@ sendProbeRegister(const std::string& ip)
 
   reg_easiroc1.reset( i_selectSc );
   reg_easiroc2.reset( i_selectSc );
-  
+
   if(i_easiroc == i_easiroc1){
+    reg_module.reset( i_selectProbe );
     sendSlowControlSub(ip, reg_probe, reg_null);
   }else{
+    reg_module.set( i_selectProbe );
     sendSlowControlSub(ip, reg_null,  reg_probe);
   }
 }

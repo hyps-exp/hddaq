@@ -14,7 +14,8 @@ adc=on
 tdc=on
 
 #for i in $(seq 16 55)
-for i in $(seq 96 100)
+#for i in $(seq 96 100)
+for i in $(seq 16 17) $(seq 19 31) $(seq 96 100)
 do
   if [ $i -eq 18 ]; then continue; fi
       
