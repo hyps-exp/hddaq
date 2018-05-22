@@ -2,14 +2,12 @@
 
 include ../common.mk
 
-INCLUDES += -I../DevTool \
-            -I../RingBuffer \
+INCLUDES += -I../RingBuffer \
             -I../EventData \
             -I../ControlThread \
             -I../Message \
             -I../kol
-LIBS     += -L../DevTool/lib -lDevTool \
-            -L../RingBuffer/lib -lRingBuffer \
+LIBS     += -L../RingBuffer/lib -lRingBuffer \
             -L../EventData/lib -lEventData \
             -L../ControlThread/lib -lControlThread \
             -L../Message/lib -lMessage \

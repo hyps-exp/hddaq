@@ -48,10 +48,11 @@
  */
 
 #include <cerrno>
+#include <sstream>
 
 #include "EventBuilder/EventBuilder.h"
 #include "EventBuilder/senderThread.h"
-
+#include "Message/GlobalMessageClient.h"
 
 SenderThread::SenderThread(int buflen, int quelen)
 {
@@ -77,7 +78,7 @@ void SenderThread::setSemPost()
 int SenderThread::waitBuilder()
 {
   while(m_builder->getState() != RUNNING) {
-    usleep(10000);
+    ::usleep(10000);
   }
   return 0;
 }
@@ -92,6 +93,7 @@ int SenderThread::run()
 
 int SenderThread::active_loop()
 {
+  GlobalMessageClient& msock = GlobalMessageClient::getInstance();
   std::cerr << "== SenderThread: entered active_loop" << std::endl;
 
   while (true) {
@@ -102,11 +104,20 @@ int SenderThread::active_loop()
       kol::TcpServer server(eventbuilder_port);
 
       m_state = IDLE;
-      std::cerr <<
-	"== SenderThread: waiting for connection from client port:" <<
-	eventbuilder_port << std::endl;
+      {
+	std::stringstream msg;
+	msg << "== SenderThread: waiting for connection from client port:"
+	    << eventbuilder_port;
+	// std::cerr << msg << std::endl;
+	msock.sendString(MT_NORMAL, msg.str());
+      }
       kol::TcpSocket sock = server.accept();
-      std::cerr << "== sender: accepted" << std::endl;
+      {
+	std::stringstream msg;
+	msg << "== sender: accepted";
+	// std::cerr << msg << std::endl;
+	msock.sendString(MT_NORMAL, msg.str());
+      }
       server.shutdown();
       server.close();
 
@@ -141,21 +152,21 @@ int SenderThread::active_loop()
 	  if (checkCommand()) break;
 	  try {
 	    if (sock.write(event->getBuf(), trans_byte) == 0) {
-	      std::cerr << "== SenderThread Error: write error occurred"
-			<< std::endl;
+	      // std::cerr << "== SenderThread Error: write error occurred"
+	      // 		<< std::endl;
 	      writeerr = true;
 	      break;
 	    }
 	    sock.flush();
 	  } catch(kol::SocketException &e) {
 	    if (e.reason() == EWOULDBLOCK) {
-	      std::cerr << "== SenderThread::actrive_loop() socket time out!!"
-			<< std::endl;
+	      // std::cerr << "== SenderThread::actrive_loop() socket time out!!"
+	      // 		<< std::endl;
 	      sock.iostate_good();
 	      retry = true;
 	    } else {
-	      std::cerr << "== SenderThread::active_loop() write Err. : "
-			<< e.what() << std::endl;
+	      // std::cerr << "== SenderThread::active_loop() write Err. : "
+	      // 		<< e.what() << std::endl;
 	      writeerr = true;
 	      break;
 	    }
@@ -169,7 +180,7 @@ int SenderThread::active_loop()
 	m_event_number++;
       }
 
-      std::cerr << "== SenderThread event loop finished" << std::endl;
+      // std::cerr << "== SenderThread event loop finished" << std::endl;
       ///temp////setSemPost();
       //sock.shutdown();
       sock.close();
