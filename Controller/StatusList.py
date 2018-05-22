@@ -74,10 +74,21 @@ class StatusList:
     self.is_recorder = 0
   #_____________________________________________________________________________
   def make_statusline(self, istatus):
-    tmp      = istatus.nickname[0:10]
-    nickname = tmp + ' ' * (10 - len(tmp))
+    tmp      = istatus.nickname[0:16]
+    nickname = tmp + ' ' * (16 - len(tmp))
     ssrcid = ' ' * (9 - len(str(istatus.src_id))) + str(istatus.src_id)
     sstatus = '    ' + istatus.status + ' ' * (10 - len(istatus.status))
+    '''added for scroll bar control'''
+    if 'BLD-' in nickname and len(istatus.info.split()) >= 3:
+      rlist = istatus.info.split()
+      ret = string.join([nickname, ssrcid, sstatus,
+                         rlist[0], rlist[1], '\n'])
+      del rlist[0:2]
+      for i, s in enumerate(rlist):
+        ret += '   {0:18}'.format(s)
+        if i % 5 == 0: ret += '\n'
+      return ret
+    ''' '''
     return string.join([nickname, ssrcid, sstatus, istatus.info, '\n'])
   #_____________________________________________________________________________
   def update_list(self, linebuf):

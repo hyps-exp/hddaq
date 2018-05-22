@@ -15,6 +15,7 @@ import MessageHandler
 import MessageWindow
 import CommentWindow
 import StatusList
+import DataSynchronizer
 
 #_______________________________________________________________________________
 class Controller(Frame):
@@ -22,7 +23,7 @@ class Controller(Frame):
   def __init__(self, path):
     Frame.__init__(self)
     self.path = path
-    self.master.title('HDDAQ Controller')
+    self.master.title('HDDAQ Controller (' + os.uname()[1] + ')')
     self.master.resizable(0,1)
     self.pack(fill=Y, expand=True)
     '''make widgets'''
@@ -60,36 +61,38 @@ class Controller(Frame):
     menu4 = Menu(menubar, tearoff=0)
     menu5 = Menu(menubar, tearoff=0)
     menu6 = Menu(menubar, tearoff=0)
+    menu10 = Menu(menubar, tearoff=0)
     menubar.add_cascade(label='Control',menu=self.menu1)
     menubar.add_cascade(label='Comment',menu=menu2)
     menubar.add_cascade(label='Message',menu=menu3)
     menubar.add_cascade(label='DAQ mode',menu=menu4)
     menubar.add_cascade(label='Options',menu=menu5)
-    menubar.add_cascade(state=DISABLED,label='                                         ')
-    menubar.add_cascade(state=DISABLED,label='                                         ')
-    menubar.add_cascade(label='Force control',menu=menu6)
+    menubar.add_cascade(state=DISABLED,label=' ' * 66)
+    menubar.add_cascade(label='Data Sync',menu=menu6)
+    if len(secondary_path_list) == 0:
+      menubar.entryconfig('Data Sync', state=DISABLED)
+    menubar.add_cascade(label='Force control',menu=menu10)
     '''control'''
     self.menu1.add_command(label='Clean List', command=self.clean_list_command)
     self.menu1.add_separator()
-    self.menu1.add_command(label='Restart Frontend',
-                           command=lambda:msgh.send_message('fe_end\0'))
-    self.menu1.add_separator()
-    if len(storage_path_list) > 1:
+    if len(primary_path_list) > 1:
       self.menu1.add_command(label='Switch Disk', command=self.switch_disk)
     else:
       self.menu1.add_command(label='Switch Disk', state=DISABLED)
     self.menu1.add_separator()
+    self.menu1.add_command(label='Restart Frontend',
+                           command=lambda:msgh.send_message('fe_end\0'))
     self.menu1.add_command(label='Quit', command=self.master.quit)
     '''force control'''
-    menu6.add_command(label='Force Restart Frontend',
+    menu10.add_command(label='Force Restart Frontend',
                       command=lambda:msgh.send_message('fe_exit\0'))
-    menu6.add_separator()
-    menu6.add_command(label='Force Start', command=self.start_command)
-    menu6.add_command(label='Force Stop', command=self.stop_command)
-    menu6.add_separator()
-    menu6.add_command(label='Force Trig. ON', command=self.trigon_command)
-    menu6.add_command(label='Force Trig. OFF', command=self.trigoff_command)
-    menu6.add_command(label='Force MTM reset', command=MTMController.mtm_reset)
+    menu10.add_separator()
+    menu10.add_command(label='Force Start', command=self.start_command)
+    menu10.add_command(label='Force Stop', command=self.stop_command)
+    menu10.add_separator()
+    menu10.add_command(label='Force Trig. ON', command=self.trigon_command)
+    menu10.add_command(label='Force Trig. OFF', command=self.trigoff_command)
+    menu10.add_command(label='Force MTM reset', command=MTMController.mtm_reset)
     '''comment'''
     menu2.add_command(label='Write Comment', command=self.write_run_comment)
     menu2.add_command(label='Load Last Comment', command=self.load_last_comment)
@@ -127,12 +130,15 @@ class Controller(Frame):
                           onvalue=1, offvalue=0, variable=self.auto_trig_on)
     menu5.add_checkbutton(label='Auto Restart',
                           onvalue=1, offvalue=0, variable=self.auto_restart)
-    if len(storage_path_list) > 1:
+    if len(primary_path_list) > 1:
       menu5.add_checkbutton(label='Auto Disk Switch',
                             onvalue=1, offvalue=0,
                             variable=self.auto_disk_switch)
     else:
       menu5.add_checkbutton(label='Auto Disk Switch', state=DISABLED)
+    '''dsync'''
+    menu6.add_command(label='Control Window',
+                      command=dsync.msg_win.deiconify)
   #___________________________________________________________________________
   def __make_labels(self):
     '''DAQ label'''
@@ -212,7 +218,8 @@ class Controller(Frame):
     flabels = Frame(self)
     flabels.pack(side=TOP, fill=X)
     lstatus = Label(flabels, anchor='w',
-                    text='Nick Name     Node ID    Status     Information')
+                    text='{0:20} {1:9} {2:10} {3}'
+                    .format('Nick Name', 'Node ID', 'Status', 'Information'))
     lstatus.pack(side=LEFT)
     lstatus.config(font=('Courier', -12, 'bold'))
     self.nodenum = Label(flabels, text='0 Nodes ')
@@ -226,9 +233,6 @@ class Controller(Frame):
     self.sttext.tag_config('warning', foreground='yellow')
     self.sttext.tag_config('fatal', foreground='red')
     self.sttext.pack(side=LEFT, fill=BOTH, expand=True)
-    # self.sbsttext = Scrollbar(fsttext, command=self.sttext.yview)
-    # self.sttext.config(yscrollcommand=self.sbsttext.set)
-    # self.sbsttext.pack(side=LEFT, fill=Y)
   #___________________________________________________________________________
   def check_files(self):
     self.message_dir = self.path+'/Messages'
@@ -267,7 +271,7 @@ class Controller(Frame):
     self.set_maxevent(maxevent)
     if mode=='auto': self.write_run_comment('START*')
     else           : self.write_run_comment('START ')
-    self.set_starttime( time.strftime('%Y %m/%d %H:%M:%S') )
+    self.set_starttime(time.strftime('%Y %m/%d %H:%M:%S'))
     MTMController.mtm_reset()
     self.daq_start_flag = 1
     self.master_controller_flag = 1
@@ -286,7 +290,7 @@ class Controller(Frame):
     msgh.send_message('stop\0')
     if mode=='auto': self.write_run_comment('STOP* ')
     else           : self.write_run_comment('STOP  ')
-    if len(storage_path_list) > 1:
+    if len(primary_path_list) > 1:
       self.menu1.entryconfig('Switch Disk',
                              command=self.switch_disk, state=NORMAL)
     self.menu1.entryconfig('Restart Frontend',
@@ -377,12 +381,16 @@ class Controller(Frame):
     self.is_switching = True
     self.cur_path = os.path.realpath(args.data_path)
     self.new_path = self.cur_path
-    for index, item in enumerate(storage_path_list):
+    for index, item in enumerate(primary_path_list):
       if self.cur_path == item:
-        n = len(storage_path_list)
-        self.new_path = storage_path_list[(index + 1) % n]
+        n = len(primary_path_list)
+        self.new_path = primary_path_list[(index + 1) % n]
     print('switch_disk : {0} -> {1}'.format(self.cur_path, self.new_path))
     if self.new_path != self.cur_path:
+      if not os.path.exists(self.new_path + '/misc'):
+        os.makedirs(self.new_path + '/misc')
+      if not os.path.exists(self.new_path + '/Messages'):
+        os.makedirs(self.new_path + '/Messages')
       files = ['/misc/comment.txt',
                '/misc/runno.txt',
                '/misc/maxevent.txt',
@@ -390,10 +398,11 @@ class Controller(Frame):
                '/misc/starttime.txt',
                '/recorder.log']
       for f in files:
-        try:
-          shutil.copy2(self.cur_path + f, self.new_path + f)
-        except shutil.SameFileError:
-          pass
+        if os.path.isfile(self.cur_path + f):
+          try:
+            shutil.copy2(self.cur_path + f, self.new_path + f)
+          except:
+            print(sys.exc_info())
     os.remove(args.data_path)
     os.symlink(self.new_path, args.data_path)
     self.is_switching = False
@@ -411,8 +420,8 @@ class Controller(Frame):
     used = st.f_frsize * (st.f_blocks - st.f_bfree) / 1000000000
     total = st.f_frsize * st.f_blocks / 1000000000
     usage = float(used) * 100 / total
-    info = 'Data Storage Path: {0}\n(Used: {1}/{2} GB  {3:.1f}%)' \
-        .format(os.path.realpath(args.data_path), used, total, usage)
+    info = ('Data Storage Path: {0}\n(Used: {1}/{2} GB  {3:.1f}%)'
+            .format(os.path.realpath(args.data_path), used, total, usage))
     if usage < 75.0:
       fg_color = 'black'
       bg_color = '#d9d9d9'
@@ -425,8 +434,8 @@ class Controller(Frame):
       fg_color = 'red'
       bg_color = 'black'
       flush = True
-    bg = self.disklink.cget("bg")
-    fg = self.disklink.cget("fg")
+    bg = self.disklink.cget('bg')
+    fg = self.disklink.cget('fg')
     if flush and bg == bg_color and fg == fg_color:
       bg_color = fg
       fg_color = bg
@@ -478,18 +487,17 @@ class Controller(Frame):
   #___________________________________________________________________________
   def update_status_window(self):
     self.sttext.config(state=NORMAL)
-    # first, last = self.sttext.yview()
+    pos = self.sttext.yview()
     self.sttext.delete(1.0, END)
     nlines = 0
-    for index, item in enumerate(status.statuslist):
+    for item in status.statuslist:
       statusline = status.make_statusline(item)
       sttag = 'normal'
       if item.status in ('NOUPDATE', 'DEAD') : sttag = 'fatal'
       self.sttext.insert(END, statusline, sttag)
       nlines += 1
     self.sttext.config(state=DISABLED)
-    self.sttext.see(END)
-    # self.sttext.yview_moveto(first)
+    self.sttext.yview_moveto(pos[0])
     self.nodenum.config(text=str(nlines)+' Nodes ')
   #___________________________________________________________________________
   def update_evnum_window(self):
@@ -512,6 +520,13 @@ class Controller(Frame):
       self.btrigoff.config(state=DISABLED)
       self.maxevent_e.config(state=NORMAL)
       self.daq_stop_flag = 0
+      if len(primary_path_list) > 1:
+        self.menu1.entryconfig('Switch Disk',
+                               command=self.switch_disk, state=NORMAL)
+      self.menu1.entryconfig('Restart Frontend',
+                             command=lambda:msgh.send_message('fe_end\0'),
+                             state=NORMAL)
+      self.menu1.entryconfig('Quit',  command=self.master.quit, state=NORMAL)
       '''
       master flag is changed here for logging messages
       which come after stop command
@@ -519,6 +534,10 @@ class Controller(Frame):
       if self.master_controller_flag == 1:
         self.master_controller_flag = 0
     elif self.daq_state == StatusList.S_RUNNING:
+      self.menu1.entryconfig('Switch Disk', state=DISABLED)
+      self.menu1.entryconfig('Restart Frontend', state=DISABLED)
+      if self.master_controller_flag == 1:
+        self.menu1.entryconfig('Quit', state=DISABLED)
       if status.is_recorder == 1:
         if self.master_controller_flag == 1:
           self.label.config(text='DAQ: RUNNING [MASTER]', fg='green', bg='black')
@@ -559,7 +578,7 @@ class Controller(Frame):
   #___________________________________________________________________________
   def under_transition_checker(self):
     if not self.daq_state in (StatusList.S_IDLE, StatusList.S_RUNNING):
-      if( self.master_controller_flag == 1 ):
+      if self.master_controller_flag == 1:
         now = time.time()
         diff = now - self.undertransition_timestamp
         if diff > 4 :
@@ -573,9 +592,9 @@ class Controller(Frame):
       self.after(500, self.updater)
     '''Message'''
     linebuf = msgh.get_message()
-    if ( self.master_controller_flag == 1 ):
-      msgfile = self.message_dir + '/msglog_run' \
-          + str(self.get_runno()).zfill(5) + '.txt'
+    if self.master_controller_flag == 1:
+      msgfile = (self.message_dir + '/msglog_run'
+                 + str(self.get_runno()).zfill(5) + '.txt')
       msgw.AddSaveMessage(msgfile, linebuf)
     else:
       msgw.AddMessage(linebuf)
@@ -590,13 +609,14 @@ class Controller(Frame):
     self.update_comment_window()
     self.update_starttime_window()
     self.update_global_state()
-    if status.check_null_nickname() : msgh.send_message('anyone\0')
+    if status.check_null_nickname():
+      msgh.send_message('anyone\0')
     '''
     Check event number stop and auto restart flag
     (only for the master controller that issued start command)
     '''
-    if ( self.daq_state == StatusList.S_RUNNING and
-         self.master_controller_flag == 1 ):
+    if (self.daq_state == StatusList.S_RUNNING and
+        self.master_controller_flag == 1):
       maxevent = int(self.maxevent_e.get())
       current  = int(status.dist_evnum)
       if current >= maxevent and maxevent != -1:
@@ -605,9 +625,18 @@ class Controller(Frame):
           self.daq_auto_restart_flag=1
     '''Auto restart'''
     if self.daq_state == StatusList.S_IDLE:
-      if( self.daq_auto_restart_flag==1 ):
+      if self.daq_auto_restart_flag==1:
         self.daq_auto_restart_flag=0
         self.start_command('auto')
+    '''Auto Data Sync'''
+    dsync.update()
+    linebuf = dsync.get_message()
+    if len(linebuf) > 0:
+      dsync_log = (self.message_dir + '/dsync_run'
+                   + str(self.get_runno()).zfill(5) + '.txt')
+      dsync.AddSaveMessage(dsync_log, linebuf)
+    else:
+      dsync.AddMessage(linebuf)
     '''500ms repetition'''
     self.after(500, self.updater)
 
@@ -626,7 +655,7 @@ if __name__ == '__main__':
                       The data storage path.
                       If you switch disks, this must be a symbolic link.
                       ''')
-  parser.add_argument('--data-path-list', default='/tmp/datapath.txt',
+  parser.add_argument('--data-path-list', default='./datapath.txt',
                       help='''
                       The text file which the list of
                       data storage path is written.
@@ -640,10 +669,20 @@ if __name__ == '__main__':
   '''
   set storage path
   '''
-  storage_path_list = []
+  primary_path_list = []
+  secondary_path_list = []
   if os.path.isfile(args.data_path_list):
     with open(args.data_path_list, 'r') as f:
-      storage_path_list = f.read().split()
+      for line in f.readlines():
+        line = line.split()
+        if (len(line) == 0 or
+            line[0][0] == '#' or
+            not os.path.isdir(line[1])):
+          continue
+        if line[0][0].upper() == 'P':
+          primary_path_list.append(line[1])
+        if line[0][0].upper() == 'S':
+          secondary_path_list.append(line[1])
   if not os.path.isdir(args.data_path):
     print('no such directory : ' + args.data_path + '\n')
     parser.print_usage()
@@ -652,6 +691,9 @@ if __name__ == '__main__':
   launch contoller, message handler and statuslist
   '''
   msgw = MessageWindow.MessageWindow()
+  dsync = DataSynchronizer.DataSynchronizer(args.data_path,
+                                            primary_path_list,
+                                            secondary_path_list)
   app = Controller(args.data_path)
   msgh = MessageHandler.MessageHandler(args.cmsgd_host, args.cmsgd_port)
   status = StatusList.StatusList()
@@ -659,11 +701,17 @@ if __name__ == '__main__':
   play sound comman while under stansition state
   usage:  os.system(sound_command)
   '''
-  sound_file = os.path.abspath(os.path.dirname(__file__)) \
-      + '/sound/under_transition.wav'
-  sound_command = 'aplay ' + sound_file
+  sound_file = (os.path.abspath(os.path.dirname(__file__))
+                + '/sound/under_transition.wav')
+  if 'eb0' in os.uname()[1]:
+    sound_command = 'aplay ' + sound_file
+  else:
+    sound_command = 'ssh eb0 aplay ' + sound_file
   '''
   mainloop
   '''
-  app.updater()
-  app.mainloop()
+  try:
+    app.updater()
+    app.mainloop()
+  except:
+    print(sys.exc_info())
