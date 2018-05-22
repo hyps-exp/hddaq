@@ -276,11 +276,12 @@ open_device( NodeProp& nodeprop )
     }
   }
 
+  resetDirectControl(ip);
   sendSlowControl(ip);
   sendReadRegister(ip);
   sendProbeRegister(ip);
-  resetReadRegister(ip);
-  resetProbeRegister(ip);
+  //  resetReadRegister(ip);
+  //  resetProbeRegister(ip);
   sendPedestalSupp(ip);
   sendSelectableLogic(ip);
   //  sendTimeWindow();
@@ -327,9 +328,12 @@ init_device( NodeProp& nodeprop )
   switch(g_daq_mode){
   case DM_NORMAL:
     {
+      resetDirectControl(ip);
       sendSlowControl(ip);
-      resetReadRegister(ip);
-      resetProbeRegister(ip);
+      //      resetReadRegister(ip);
+      //      resetProbeRegister(ip);
+      sendReadRegister(ip);
+      sendProbeRegister(ip);
       sendPedestalSupp(ip);
       sendSelectableLogic(ip);
 
@@ -352,6 +356,7 @@ init_device( NodeProp& nodeprop )
     }
   case DM_DUMMY:
     {
+      resetDirectControl(ip);
       sendSlowControl(ip);
       sendReadRegister(ip);
       sendProbeRegister(ip);
