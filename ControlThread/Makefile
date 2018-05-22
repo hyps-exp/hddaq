@@ -1,12 +1,11 @@
 # Makefile for CotrolThread
 
-CXX	 = g++
-CXXFLAGS = -O2 -Wall
+include ../common.mk
 
-INCLUDES = -I. -I../Message -I../kol
-LIBS	 = -L./lib -lMessage \
-           -L../kol/lib -lkol \
-           -lpthread
+INCLUDES += -I../Message \
+            -I../kol
+LIBS	 += -L./lib -lMessage \
+            -L../kol/lib -lkol
 
 FLAGS    = $(CXXFLAGS) $(INCLUDES)
 
@@ -16,7 +15,7 @@ BLD_DIR  = build
 SRC_DIR  = src
 
 BIN_TGT  =
-BIN_OBJ  = 
+BIN_OBJ  =
 LIB_TGT  = libControlThread.a
 LIB_OBJ  = consoleThread.o controlThread.o GlobalInfo.o NodeId.o statableThread.o
 
@@ -33,7 +32,7 @@ $(LIB_DIR)/$(LIB_TGT): $(addprefix $(BLD_DIR)/, $(LIB_OBJ))
 	@echo Creating $@ ...
 	@mkdir -p $(LIB_DIR)
 	@ar cr $@ $^
-	@ranlib $@ 
+	@ranlib $@
 
 $(BIN_DIR)/%: $(BLD_DIR)/%.o
 	@echo Linking $@ ...

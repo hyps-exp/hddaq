@@ -1,9 +1,9 @@
-# Makefile for EventData
+# Makefile for DevTool
 
 include ../common.mk
 
-INCLUDES += -I../kol
-LIBS     += -L../kol/lib -lkol
+INCLUDES +=
+LIBS     +=
 
 FLAGS    = $(CXXFLAGS) $(INCLUDES)
 
@@ -14,8 +14,8 @@ SRC_DIR = src
 
 BIN_TGT =
 BIN_OBJ =
-LIB_TGT = libEventData.a
-LIB_OBJ = EventBuffer.o
+LIB_TGT = libDevTool.a
+LIB_OBJ = DevTool.o StopWatch.o
 
 SOURCES   = $(notdir $(wildcard $(SRC_DIR)/*.cc))
 DEPENDS   = $(addprefix $(BLD_DIR)/, $(SOURCES:.cc=.d))
@@ -23,7 +23,8 @@ DEPENDS   = $(addprefix $(BLD_DIR)/, $(SOURCES:.cc=.d))
 ###Stopping make delete intermediate files
 .SECONDARY:
 
-all: $(LIB_DIR)/$(LIB_TGT)
+all: $(LIB_DIR)/$(LIB_TGT) \
+     $(addprefix $(BIN_DIR)/, $(BIN_TGT))
 
 $(LIB_DIR)/$(LIB_TGT): $(addprefix $(BLD_DIR)/, $(LIB_OBJ))
 	@echo Creating $@ ...
