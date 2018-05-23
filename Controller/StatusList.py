@@ -10,8 +10,9 @@ S_IDLE       = 0
 S_RUNNING    = 1
 S_TRANSITION = 2
 
-RECD_ID = 70000
-DIST_ID = 80000
+REC_ID = 70000
+DST_ID = 80000
+BLD_ID = 90000
 
 #_______________________________________________________________________________
 class Status:
@@ -79,14 +80,17 @@ class StatusList:
     ssrcid = ' ' * (9 - len(str(istatus.src_id))) + str(istatus.src_id)
     sstatus = '    ' + istatus.status + ' ' * (10 - len(istatus.status))
     '''added for scroll bar control'''
-    if 'BLD-' in nickname and len(istatus.info.split()) >= 3:
+    if istatus.src_id == BLD_ID and len(istatus.info.split()) >= 3:
       rlist = istatus.info.split()
-      ret = string.join([nickname, ssrcid, sstatus,
-                         rlist[0], rlist[1], '\n'])
+      nreaders = len(rlist) - 4
+      ret = ('{0} {1} {2} {3} {4} {5:5} readers\n'
+             .format(nickname, ssrcid, sstatus,
+                     rlist[0], rlist[1], nreaders))
       del rlist[0:2]
       for i, s in enumerate(rlist):
         ret += '   {0:18}'.format(s)
-        if i % 5 == 0: ret += '\n'
+        if i % 5 == 0:
+          ret += '\n'
       return ret
     ''' '''
     return string.join([nickname, ssrcid, sstatus, istatus.info, '\n'])
@@ -110,9 +114,9 @@ class StatusList:
         self.__change_status(newentry, now, body)
         self.statuslist.append(newentry)
         self.statuslist.sort(self.__cmp_src_id)
-        if src_id == RECD_ID:  #Recorder
+        if src_id == REC_ID:  #Recorder
           self.is_recorder = 1
-      if src_id == DIST_ID:  #Event Distributor
+      if src_id == DST_ID:  #Event Distributor
         sbody = body.split()
         m = re.findall(r'[0-9]+',sbody[1])
         self.dist_evnum = m[0]

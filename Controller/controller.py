@@ -495,7 +495,10 @@ class Controller(Frame):
       sttag = 'normal'
       if item.status in ('NOUPDATE', 'DEAD') : sttag = 'fatal'
       self.sttext.insert(END, statusline, sttag)
-      nlines += 1
+      if (item.src_id != StatusList.REC_ID and
+          item.src_id != StatusList.DST_ID and
+          item.src_id != StatusList.BLD_ID):
+        nlines += 1
     self.sttext.config(state=DISABLED)
     self.sttext.yview_moveto(pos[0])
     self.nodenum.config(text=str(nlines)+' Nodes ')
