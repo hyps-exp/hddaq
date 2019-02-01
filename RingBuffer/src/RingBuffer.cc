@@ -39,6 +39,7 @@
  *
  *
  */
+
 #include <iostream>
 #include "RingBuffer/RingBuffer.h"
 
@@ -125,7 +126,7 @@ RingBuffer::writeBufPeek() {
 ////
 int
 RingBuffer::writeBufRelease() {
-  //std::cerr << "writeBufRelease()" << std::endl;
+  // std::cerr << "writeBufRelease()" << std::endl;
   m_rwlock.lock();
   m_write_ptr = (m_write_ptr + 1)%m_quelen;
   m_len = m_len + 1;

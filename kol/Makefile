@@ -1,10 +1,9 @@
 # Makefile for kol
 
-CXX	  = g++
-CXXFLAGS  = -O2 -Wall
+include ../common.mk
 
-INCLUDES  = -I.
-LIBS	  =
+INCLUDES  +=
+LIBS	  +=
 
 FLAGS     = $(CXXFLAGS) $(INCLUDES)
 
@@ -13,7 +12,7 @@ BLD_DIR   = build
 SRC_DIR   = src
 
 LIB_TGT   = libkol.a
-LIB_OBJ   = koltcp.o kolthread.o kolsocket.o koluri.o 
+LIB_OBJ   = koltcp.o kolthread.o kolsocket.o koluri.o
 
 SOURCES   = $(notdir $(wildcard $(SRC_DIR)/*.cc))
 DEPENDS   = $(addprefix $(BLD_DIR)/, $(SOURCES:.cc=.d))

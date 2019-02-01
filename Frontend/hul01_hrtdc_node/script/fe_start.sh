@@ -8,13 +8,16 @@ cd $bin_dir
 ./message.sh > /dev/null 2> /dev/null &
 
 sleep 1
+#start hulRM
+$HOME/HUL_RM/bin/set_nimio 192.168.10.63
 
-for i in $(seq 1 1)
+#start hulhrtdc
+for i in $(seq 1 2)
 do
     nodeid=`expr $((0x602)) + $i`
     nickname=hul01hr-`expr + $i`
     dataport=`expr 9001 + $i` 
-    sitcp_ip=192.168.10.`expr 63 + $i`
+    sitcp_ip=192.168.10.`expr 65 + $i`
     min_window=10
     max_window=50
 
@@ -24,6 +27,6 @@ do
 	$dataport \
 	$sitcp_ip \
 	$min_window \
-	$max_window 
-#	>/dev/null 2>/dev/null &
+	$max_window \
+	>/dev/null 2>/dev/null &
 done

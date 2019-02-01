@@ -80,7 +80,7 @@
 #include "EventBuilder/watchdog.h"
 #include "EventBuilder/EbControl.h"
 
-//#define USE_PARAPORT
+// #define USE_PARAPORT
 #ifdef  USE_PARAPORT
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -96,7 +96,9 @@ typedef Node_map::value_type node_inf;
 typedef std::vector<NodeInfo> Node_info;
 Node_info node_info;
 
-int get_node_inf(char * filename, Node_map *node_map)
+const int k_quelen = 200;
+
+int get_node_inf(const char* filename, Node_map* node_map)
 {
   std::ifstream ifs(filename, std::ios::in);
   if(!ifs) {
@@ -120,7 +122,7 @@ int get_node_inf(char * filename, Node_map *node_map)
 	ss >> flag;
 	// std::cout << host << " needs handshake " << std::endl;
       }
-      node_map->insert( node_inf(host, port));
+      node_map->insert( node_inf(host, port) );
       NodeInfo nodeInfo(host, port, rb_size, rb_len, flag);
       node_info.push_back(nodeInfo);
     }
@@ -132,7 +134,7 @@ int get_node_inf(char * filename, Node_map *node_map)
 int open_ppdev()
 {
   int ret = 0;
-  int fd = open("/dev/parport0", O_RDWR);
+  int fd = ::open("/dev/parport0", O_RDWR);
   if(fd==-1){
     std::cerr << "open error?" << std::endl;
     ret = 1;
@@ -140,9 +142,9 @@ int open_ppdev()
   else {
     ret = fd;
   }
-  if(ioctl(fd,PPCLAIM)){
+  if(::ioctl(fd,PPCLAIM)){
     std::cerr << "PPCLAIM error?" << std::endl;
-    close(fd);
+    ::close(fd);
     ret = 1;
   }
   return ret;
@@ -150,8 +152,8 @@ int open_ppdev()
 
 void close_ppdev(int fd)
 {
-  ioctl(fd, PPRELEASE);
-  close(fd);
+  ::ioctl(fd, PPRELEASE);
+  ::close(fd);
 }
 #endif
 
@@ -178,7 +180,6 @@ int set_signal()
 int main(int argc, char* argv[])
 {
   int event_buflen = max_event_len;
-  int max_quelen   = 0;
 
   NodeInfo nodeInfo;
   std::vector<ReaderThread *> readers;
@@ -194,12 +195,11 @@ int main(int argc, char* argv[])
   int nodeid;
   std::string nickname = NodeId::getNodeId(NODETYPE_EB, &nodeid);
 
-  char nodemapname[128];
-  std::strcpy(nodemapname, "nodemap.txt");
-  for (int i = 1 ; i < argc ; i++) {
+  std::string nodemapname = "nodemap.txt";
+  for(int i=1 ; i<argc ; i++){
     std::string arg = argv[i];
-    if (arg[i] != '-') {
-      strncpy(nodemapname, argv[i], 128);
+    if( arg.size() > 0 && arg[0] != '-' ){
+      nodemapname = argv[i];
     } else {
       bool is_match = false;
       if (arg.substr(0, 11) == "--idnumber=") {
@@ -254,7 +254,7 @@ int main(int argc, char* argv[])
   try
     {
       // int node_number = get_node_inf(argv[1], &node_map);
-      int node_number = get_node_inf(nodemapname, &node_map);
+      int node_number = get_node_inf(nodemapname.c_str(), &node_map);
       if(node_number == -1)
 	return -1;
       if(node_number > max_node_num){
@@ -272,9 +272,6 @@ int main(int argc, char* argv[])
       for(int node=0; node<node_number; node++) {
 	int node_buflen = node_info[node].getRingbufSize();
 	int quelen = node_info[node].getRingbufLen();
-	max_quelen = std::max( max_quelen, quelen );
-	if( quelen != max_quelen ){
-	}
 	const std::string& flag = node_info[node].getSyncFlag();
 	if (flag.empty())
 	  readers[node] = new ReaderThread(node_buflen, quelen);
@@ -301,14 +298,14 @@ int main(int argc, char* argv[])
 	msock.sendString(msg.str());
       }
 
-      BuilderThread builder(event_buflen, max_quelen);
+      BuilderThread builder(event_buflen, k_quelen);
       builder.setName("## BuilderThread");
       builder.setDebugPrint(0);
       builder.setAllReaders(&readers[0], node_number);
       {
 	std::stringstream msg;
 	msg << "## bulderThread: Bsize = " << event_buflen
-	    << " Nque = " << max_quelen;
+	    << " Nque = " << k_quelen;
 	std::cout << msg.str() << std::endl;
 	msock.sendString(msg.str());
       }
@@ -317,7 +314,7 @@ int main(int argc, char* argv[])
       builder.setParaFd(ppdev_fd);
 #endif
 
-      SenderThread  sender(event_buflen, max_quelen);
+      SenderThread  sender(event_buflen, k_quelen);
       sender.setName("== SenderThread");
       sender.setBuilder(&builder);
 
