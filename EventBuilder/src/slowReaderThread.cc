@@ -44,12 +44,11 @@ SlowReaderThread::getRingBufferDepth()
 void
 SlowReaderThread::initBuffer()
 {
-//   while (m_mutex.trylock()!=0)
-//     {
-// //       std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-//       usleep(1);
-//     }
-//   m_mutex.lock();
+  //   while (m_mutex.trylock()!=0)
+  //     {
+  //       usleep(1);
+  //     }
+  //   m_mutex.lock();
   m_entries = 0;
   m_buf.clear();
   m_null.clear();
@@ -62,7 +61,6 @@ SlowReaderThread::initBuffer()
 int
 SlowReaderThread::leftEventData()
 {
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
   return m_entries;
 }
 
@@ -70,7 +68,7 @@ SlowReaderThread::leftEventData()
 int
 SlowReaderThread::releaseReadFragData()
 {
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
+
   m_entries = 0;
   return m_mutex.unlock();
 }
@@ -79,8 +77,7 @@ SlowReaderThread::releaseReadFragData()
 int
 SlowReaderThread::releaseWriteFragData()
 {
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-  m_entries = 1; 
+  m_entries = 1;
   return m_mutex.unlock();
 }
 
@@ -88,15 +85,13 @@ SlowReaderThread::releaseWriteFragData()
 EventBuffer*
 SlowReaderThread::peekReadFragData()
 {
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
   while (m_mutex.trylock()!=0)
     {
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-  usleep(100000);
+      usleep(100000);
     }
 
-//   m_mutex.lock();
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
+  //   m_mutex.lock();
+
   if (m_entries==0)
     {
       event_header* ev = reinterpret_cast<event_header*>(m_null.getBuf());
@@ -113,7 +108,7 @@ SlowReaderThread::peekReadFragData()
     }
   else
     {
-	return &m_buf;
+      return &m_buf;
     }
 }
 
@@ -121,7 +116,6 @@ SlowReaderThread::peekReadFragData()
 EventBuffer*
 SlowReaderThread::peekWriteFragData()
 {
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
   while (m_entries>0)
     {
       ::timespec req;
@@ -130,20 +124,16 @@ SlowReaderThread::peekWriteFragData()
       ::nanosleep(&req, 0);
     }
 
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
   while (m_mutex.trylock()!=0)
     {
-	if (checkCommand()!=0)
-	  return &m_null;
+      if (checkCommand()!=0)
+	return &m_null;
       ::timespec req;
       req.tv_sec  = 0;
       req.tv_nsec = 1;
       ::nanosleep(&req, 0);
     }
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-  
+
   //   m_mutex.lock();
   return &m_buf;
 }
@@ -155,64 +145,51 @@ SlowReaderThread::updateEventData(kol::TcpClient& client,
 				  int trans_byte,
 				  int rest_byte)
 {
+  GlobalMessageClient & msock = GlobalMessageClient::getInstance();
 
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-	GlobalMessageClient & msock = GlobalMessageClient::getInstance();
-	
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-	EventBuffer* event_f = peekWriteFragData();
-	if (event_f!=&m_buf)
-	  return -2;
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-	char* event_buf      = event_f->getBuf();
-	memcpy(event_buf, header, HEADER_BYTE_SIZE);
-	int status = -1;
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-	while (true) {
-		if (checkCommand()) break;
-		try {
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-			if (rest_byte>0) {
-				if (!client.read(event_buf + HEADER_BYTE_SIZE,
-						 trans_byte)) break;
-				if (!client.ignore(rest_byte)) break;
-			} else if (!client.read(event_buf + HEADER_BYTE_SIZE, 
-						trans_byte)) break;
-			status = 0;
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-			break;
-		} catch (kol::SocketException& e) {
-			if (e.reason() ==  EWOULDBLOCK) {
-				//std::cerr
-				//<< "#D2 Data socket timeout. retry"
-				//<< std::endl;
-			  client.iostate_good();
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-			  continue;
-			} 
-			std::ostringstream msg;
-			msg << "EB: Reader data reading error: "
-			    << e.what()
-			    << " host: " << m_host;
-			msock.sendString(MT_ERROR, msg);
-			std::cerr << msg.str() << std::endl;
-			status = -1;
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-			break;
-		}
-	}
+  EventBuffer* event_f = peekWriteFragData();
+  if (event_f!=&m_buf)
+    return -2;
 
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-	if (status==0) {
-	  event_header* ev = reinterpret_cast<event_header*>(event_buf);
-	  ev->event_number = m_event_number;
-	  if (releaseWriteFragData() != 0) {
-			std::cerr
-			<< "ERROR: m_node_rb.writeBufRelease()"
-			<< std::endl;
-		}
-	}
+  char* event_buf      = event_f->getBuf();
+  memcpy(event_buf, header, HEADER_BYTE_SIZE);
+  int status = -1;
 
-//   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-	return status;
+  while (true) {
+    if (checkCommand()) break;
+    try {
+      if (rest_byte>0) {
+	if (!client.read(event_buf + HEADER_BYTE_SIZE,
+			 trans_byte)) break;
+	if (!client.ignore(rest_byte)) break;
+      } else if (!client.read(event_buf + HEADER_BYTE_SIZE,
+			      trans_byte)) break;
+      status = 0;
+      break;
+    } catch (kol::SocketException& e) {
+      if (e.reason() ==  EWOULDBLOCK) {
+	// std::cerr << "#D2 Data socket timeout. retry" << std::endl;
+	client.iostate_good();
+	continue;
+      }
+      std::ostringstream msg;
+      msg << "EB: Reader data reading error: "
+	  << e.what()
+	  << " host: " << m_host;
+      msock.sendString(MT_ERROR, msg);
+      std::cerr << msg.str() << std::endl;
+      status = -1;
+      break;
+    }
+  }
+
+  if (status==0) {
+    event_header* ev = reinterpret_cast<event_header*>(event_buf);
+    ev->event_number = m_event_number;
+    if (releaseWriteFragData() != 0) {
+      std::cerr << "ERROR: m_node_rb.writeBufRelease()" << std::endl;
+    }
+  }
+
+  return status;
 }

@@ -2,7 +2,7 @@
 /**
  *  @file   EventBuilder.h
  *  @brief
- *  @author Ken Sakashita 
+ *  @author Ken Sakashita
  *  @date
  *  @note   divided from commonParam.h
  *
@@ -38,14 +38,14 @@
 static const int    eventbuilder_port  = 8900;
 
 struct event_header {
-	unsigned int magic;
-	unsigned int size;
-	unsigned int event_number;
-	unsigned int run_number;
-	unsigned int node_id;
-	unsigned int type;
-	unsigned int nblock;
-	unsigned int reserve;
+  unsigned int magic;
+  unsigned int size;
+  unsigned int event_number;
+  unsigned int run_number;
+  unsigned int node_id;
+  unsigned int type;
+  unsigned int nblock;
+  unsigned int reserve;
 };
 
 const int g_EVENT_MAGIC = 0x45564e54;

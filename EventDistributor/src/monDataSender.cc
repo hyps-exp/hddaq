@@ -58,50 +58,50 @@
 
 //______________________________________________________________________________
 MonDataSender::MonDataSender(DistReader& reader)
-: DataSender(reader)
+  : DataSender(reader)
 {
-	std::cerr << m_name << " created\n";
+  std::cerr << m_name << " created\n";
 }
 
 //______________________________________________________________________________
 MonDataSender::~MonDataSender()
 {
-	std::cerr << m_name << " deleted\n";
+  std::cerr << m_name << " deleted\n";
 }
 
 //______________________________________________________________________________
 void MonDataSender::notify()
 {
-	m_list_mutex.lock();
-	for (std::list<SenderThread*>::iterator 
-		i = m_sender_list.begin(), iEnd = m_sender_list.end();
-		 i!=iEnd; ++i) {
-		SenderThread* t  = *i;
-		if (!t)
-			continue;
-		if (t->isBusy()) {
-			//if (checkCommand()!=0) return;
-			if (checkCommand()!=0) break;
-			else continue;
-		}
-		t->update(m_common_data);
-	}
-	m_list_mutex.unlock();
-	return;
+  m_list_mutex.lock();
+  for (std::list<SenderThread*>::iterator
+	 i = m_sender_list.begin(), iEnd = m_sender_list.end();
+       i!=iEnd; ++i) {
+    SenderThread* t  = *i;
+    if (!t)
+      continue;
+    if (t->isBusy()) {
+      //if (checkCommand()!=0) return;
+      if (checkCommand()!=0) break;
+      else continue;
+    }
+    t->update(m_common_data);
+  }
+  m_list_mutex.unlock();
+  return;
 }
 
 //______________________________________________________________________________
 EventBuffer* MonDataSender::read()
 {
-//   EventBuffer* b =m_dist_reader.getMonData();
- 	return m_dist_reader.getMonData();
-//  	return b;
+  //   EventBuffer* b =m_dist_reader.getMonData();
+  return m_dist_reader.getMonData();
+  //  	return b;
 
 }
 
 //______________________________________________________________________________
 void MonDataSender::releaseReader()
 {
- 	m_dist_reader.releaseMonData();
-	return;
+  m_dist_reader.releaseMonData();
+  return;
 }

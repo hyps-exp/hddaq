@@ -1,15 +1,15 @@
 // -*- C++ -*-
 /**
  *	@file	 MessageSocket.h
- *	@brief	
+ *	@brief
  *	@author Yasuchi Nagasaka <nagasaka@cc.it-hiroshima.ac.jp>
- *	@date	 
+ *	@date
  *
  *	$Id: MessageSocket.h,v 1.2 2009/12/10 10:37:29 igarashi Exp $
  *	$Log: MessageSocket.h,v $
  *	Revision 1.2  2009/12/10 10:37:29  igarashi
  *	Many bugs were fixed
- *	
+ *
  *	Revision 1.1.1.1	2008/05/14 15:05:43	igarashi
  *	Network DAQ Software Prototype 1.5
  *
@@ -41,45 +41,45 @@
 
 class MessageSocket {
 public:
-	MessageSocket (const kol::TcpSocket & socket);
-	MessageSocket ();
-	~MessageSocket ();
+  MessageSocket (const kol::TcpSocket & socket);
+  MessageSocket ();
+  ~MessageSocket ();
 
-	int close ()
-	{
-		std::cerr << "#D MessageSocket::close" << std::endl;
+  int close ()
+  {
+    std::cerr << "#D MessageSocket::close" << std::endl;
 
-		m_sock.shutdown ();
-		m_sock.close ();
-		return 0;
-	}
-	int sendMessage (Message msg);
-	Message recvMessage ();
-	kol::TcpSocket * getSock()
-	{
-		//return m_sock;
-		return &m_sock;
-	}
+    m_sock.shutdown ();
+    m_sock.close ();
+    return 0;
+  }
+  int sendMessage (Message msg);
+  Message recvMessage ();
+  kol::TcpSocket * getSock()
+  {
+    //return m_sock;
+    return &m_sock;
+  }
 
-	//int gcount()
-	//{
-	//	return m_gcount;
-	//}
+  //int gcount()
+  //{
+  //	return m_gcount;
+  //}
 
-	bool IsGood()
-	{
-		return m_isgood;
-	}
-	bool setIsGood(bool status)
-	{
-		return m_isgood = status;
-	}
+  bool IsGood()
+  {
+    return m_isgood;
+  }
+  bool setIsGood(bool status)
+  {
+    return m_isgood = status;
+  }
 
 private:
-	// kol::TcpSocket * m_sock;
-	kol::TcpSocket m_sock;
-	// int m_gcount;
-	bool m_isgood;
+  // kol::TcpSocket * m_sock;
+  kol::TcpSocket m_sock;
+  // int m_gcount;
+  bool m_isgood;
 
 };
 

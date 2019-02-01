@@ -41,48 +41,48 @@
 //______________________________________________________________________________
 DataServer::DataServer(int port,
                        DataSender& dataSender)
-: m_port(port),
-  m_data_sender(dataSender)
+  : m_port(port),
+    m_data_sender(dataSender)
 {
-	std::cerr << "DataServer created\n";
+  std::cerr << "DataServer created\n";
 }
 
 //______________________________________________________________________________
 DataServer::~DataServer()
 {
-	std::cerr << "DataServer deleted\n";
+  std::cerr << "DataServer deleted\n";
 }
 
 //______________________________________________________________________________
 int DataServer::run()
 {
-	std::cerr <<"dataServer Port:" << m_port << std::endl;
+  std::cerr <<"dataServer Port:" << m_port << std::endl;
 
-	while (1) {
-		kol::TcpServer server(m_port);
+  while (1) {
+    kol::TcpServer server(m_port);
 
-		try {
-			while (server.good()) {
-				kol::TcpSocket sock = server.accept();
-				new SenderThread(sock, m_data_sender);
-				std::cerr << "Data Server accepted..."
-					<< std::endl;
-				std::cerr << "dataServer("
-					  << m_data_sender.getName()
-					  << ":" << m_port << ")"
-					  << " Num of Clients = "
-					  << m_data_sender.getSenderNum()
-					  << std::endl;
-			}
-		} catch(kol::SocketException &e) {
-			std::cerr << "ERROR: DataServer:" << e.what()
-			<< std::endl;
-			perror("#W DataServer::run ");
-		}
-		server.shutdown();
-		server.close();
-		sleep(1);
-	}
+    try {
+      while (server.good()) {
+	kol::TcpSocket sock = server.accept();
+	new SenderThread(sock, m_data_sender);
+	std::cerr << "Data Server accepted..."
+		  << std::endl;
+	std::cerr << "dataServer("
+		  << m_data_sender.getName()
+		  << ":" << m_port << ")"
+		  << " Num of Clients = "
+		  << m_data_sender.getSenderNum()
+		  << std::endl;
+      }
+    } catch(kol::SocketException &e) {
+      std::cerr << "ERROR: DataServer:" << e.what()
+		<< std::endl;
+      perror("#W DataServer::run ");
+    }
+    server.shutdown();
+    server.close();
+    sleep(1);
+  }
 
-	return 0;
+  return 0;
 }
