@@ -189,3 +189,19 @@ easiroc06 : Input8bitDAC_6.txt
 easiroc07 : Input8bitDAC_7.txt
 easiroc08 : Input8bitDAC_8.txt
 easiroc09 : Input8bitDAC_9.txt
+
+Thu Feb  1 04:13:10 JST 2018
+
+bin_dir   : /home/axis/hddaq/Frontend/fe_easiroc01_node/script
+param_dir : /home/axis/hddaq/Frontend/fe_easiroc01_node/script/Input8bitDAC
+temp_dir  : inputdac_g30_temp24.0
+easiroc00 : Input8bitDAC_0.txt
+easiroc01 : Input8bitDAC_1.txt
+easiroc02 : Input8bitDAC_2.txt
+easiroc03 : Input8bitDAC_3.txt
+easiroc04 : Input8bitDAC_4.txt
+easiroc05 : Input8bitDAC_5.txt
+easiroc06 : Input8bitDAC_6.txt
+easiroc07 : Input8bitDAC_7.txt
+easiroc08 : Input8bitDAC_8.txt
+easiroc09 : Input8bitDAC_9.txt
