@@ -1,4 +1,4 @@
-1;2501;0c#!/bin/sh
+#!/bin/sh
 
 bin_dir=$(dirname `readlink -f $0`)
 
@@ -13,15 +13,13 @@ reg_dir=${HOME}/vme-easiroc-registers
 adc=on
 tdc=on
 
-#for i in $(seq 16 55)
-#for i in $(seq 96 100)
-for i in $(seq 16 17) $(seq 19 31) $(seq 96 100)
+for i in $(seq 54 74)
 do
   if [ $i -eq 18 ]; then continue; fi
-
+      
     nodeid=`expr 2000 + $i`
     nickname=veasiroc$i
-    dataport=`expr 9100 + $i`
+    dataport=`expr 9100 + $i` 
     sitcp_ip=192.168.11.$i
     module_num=$i
 

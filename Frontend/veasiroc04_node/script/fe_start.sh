@@ -16,6 +16,9 @@ tdc=on
 for i in $(seq 75 95)
 do
   if [ $i -eq 18 ]; then continue; fi
+#  if [ $i -eq 82 ]; then continue; fi
+#  if [ $i -eq 86 ]; then continue; fi
+#  if [ $i -eq 91 ]; then continue; fi
 
     nodeid=`expr 2000 + $i`
     nickname=veasiroc$i

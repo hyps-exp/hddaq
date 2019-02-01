@@ -140,7 +140,7 @@ namespace
     isDaqMode = false;
     writeStatusRegister();
   }
-  
+
   //_________________________________________________________________________
   int
   receiveNByte(uint8_t* buf, size_t bytes)
@@ -193,7 +193,7 @@ namespace
   {
     return receiveNByte(buf, length * 4);
   }
-  
+
 }
 
 //___________________________________________________________________________
@@ -234,7 +234,7 @@ open_device( NodeProp& nodeprop )
       iss.str( arg.substr(6) );
       iss >> on_off;
       if(on_off == "on"){
-	sendAdc = true;	
+	sendAdc = true;
       }
     }
 
@@ -243,7 +243,7 @@ open_device( NodeProp& nodeprop )
       iss.str( arg.substr(6) );
       iss >> on_off;
       if(on_off == "on"){
-	sendTdc = true;	
+	sendTdc = true;
       }
     }
 
@@ -268,11 +268,11 @@ open_device( NodeProp& nodeprop )
   for(int i = 0; i<3; ++i){
     if(-1 == g_conf.read_YAML(yaml_name[i])){
       std::ostringstream oss;
-      oss << func_name << " No such YAML file(" << yaml_name[i] << ") : "
+      oss << func_name << " YAML Read error (" << yaml_name[i] << ") : "
 	  << ip;
       send_fatal_message( oss.str() );
-      std::cerr << oss.str() << std::endl; 
-      std::exit(-1);
+      std::cerr << oss.str() << std::endl;
+      //      std::exit(-1);
     }
   }
 
@@ -317,10 +317,10 @@ init_device( NodeProp& nodeprop )
   for(int i = 0; i<3; ++i){
     if(-1 == g_conf.read_YAML(yaml_name[i])){
       std::ostringstream oss;
-      oss << func_name << " No such YAML file(" << yaml_name[i] << ") : "
+      oss << func_name << " YAML Read error (" << yaml_name[i] << ") : "
 	  << ip;
       send_fatal_message( oss.str() );
-      std::cerr << oss.str() << std::endl; 
+      std::cerr << oss.str() << std::endl;
       std::exit(-1);
     }
   }
