@@ -92,14 +92,13 @@
 #include "Message/GlobalMessageClient.h"
 #include "ControlThread/GlobalInfo.h"
 
-#define USE_PARAPORT
+// #define USE_PARAPORT
 #ifdef USE_PARAPORT
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <linux/ppdev.h>
 #include <linux/parport.h>
 #endif
-
 
 BuilderThread::BuilderThread(int buflen, int quelen)
  :m_node_num(0), m_debug_print(1000)
@@ -185,9 +184,9 @@ void BuilderThread::setParaFd(int fd_para)
 void BuilderThread::getOneShot()
 {
   int dat = 128;
-  ioctl(m_fd_para, PPWDATA, &dat);
+  ::ioctl(m_fd_para, PPWDATA, &dat);
   dat = 0;
-  ioctl(m_fd_para, PPWDATA, &dat);
+  ::ioctl(m_fd_para, PPWDATA, &dat);
 }
 #endif
 
@@ -360,20 +359,21 @@ int BuilderThread::active_loop()
       }
     }
 
-    /*
     {
-      ReaderThread **tempreader = m_readers;
-      std::cerr <<"#D BT: active_loop left: "
-    		<< "send buf: " << leftEventData()
-    		<< " read buf: ";
-      for(int i=0; i<m_node_num; i++) {
-    	std::cerr << i << ":"
-    		  << (*tempreader)->leftEventData()
-    		  << " ";
-      }
-      std::cerr << std::endl;
+      // ReaderThread **tempreader = m_readers;
+      // ofs << leftEventData();
+      // std::cerr <<"#D BT: active_loop left: "
+      // 		<< "send buf: " << leftEventData()
+      // 		<< " read buf: ";
+      // for(int i=0; i<m_node_num; i++) {
+      // 	ofs << " " << m_readers[i]->leftEventData();
+      // 	// std::cerr << i << ":"
+      // 	// 	  << (*tempreader)->leftEventData()
+      // 	// 	  << " ";
+      // }
+      // // std::cerr << std::endl;
+      // ofs << std::endl;
     }
-    */
 
     /** builder thread is down when all front-ends are down **/
     int num_active = 0;
@@ -454,7 +454,7 @@ int BuilderThread::active_loop()
     char *ptr = event_buf + sizeof(struct event_header);
     for(int node=0; node<m_node_num; node++) {
       int frag_len = m_event_f[node]->getLength();
-      std::memcpy(ptr, reinterpret_cast< char *>
+      std::memcpy(ptr, reinterpret_cast<char*>
 		  (m_event_f[node]->getBuf()),
 		  frag_len * 4);
       ptr += frag_len * sizeof(int);
@@ -465,11 +465,11 @@ int BuilderThread::active_loop()
     }
 
     if( (unsigned int)total_len !=
-	(total_frag_len + sizeof(struct event_header) / sizeof(unsigned int)) ){
+    	(total_frag_len + sizeof(struct event_header) / sizeof(unsigned int)) ){
       std::stringstream msg;
       msg << "#ERR. EB: Total length missmatch!! "
-	  << total_len << "/"
-	  << total_frag_len + sizeof(struct event_header) / sizeof(unsigned int);
+    	  << total_len << "/"
+    	  << total_frag_len + sizeof(struct event_header) / sizeof(unsigned int);
       std::cout << msg.str() << std::endl;
       msock.sendString(MT_ERROR, msg.str());
       break;
@@ -481,6 +481,7 @@ int BuilderThread::active_loop()
 #ifdef USE_PARAPORT
     getOneShot();
 #endif
+
   }//while()
   std::cerr << "builder exited active_loop" << std::endl;
 

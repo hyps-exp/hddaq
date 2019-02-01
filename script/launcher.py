@@ -116,7 +116,7 @@ class App(Frame):
   #___________________________________________________________________________
   def __init__(self):
     Frame.__init__(self)
-    self.master.title('HDDAQ Launcher (eb0)')
+    self.master.title('HDDAQ Launcher (' + os.uname()[1] + ')')
     self.pack(fill=BOTH, expand=True)
     self.childlist = []
     self.controllerlist = []

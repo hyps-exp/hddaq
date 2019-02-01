@@ -1,12 +1,10 @@
 # Makefile for RingBuffer
 
-CXX      = g++
-CXXFLAGS = -O2 -Wall
+include ../common.mk
 
-INCLUDES = -I. -I../kol -I../EventData
-LIBS     = -L../kol/lib -lkol \
-           -L../EventData -lEventData \
-           -lpthread
+INCLUDES += -I../kol -I../EventData
+LIBS     += -L../kol/lib -lkol \
+            -L../EventData -lEventData \
 
 FLAGS    = $(CXXFLAGS) $(INCLUDES)
 
@@ -33,7 +31,7 @@ $(LIB_DIR)/$(LIB_TGT): $(addprefix $(BLD_DIR)/, $(LIB_OBJ))
 	@echo Creating $@ ...
 	@mkdir -p $(LIB_DIR)
 	@ar cr $@ $^
-	@ranlib $@ 
+	@ranlib $@
 
 $(BIN_DIR)/%: $(BLD_DIR)/%.o
 	@echo Linking $@ ...
