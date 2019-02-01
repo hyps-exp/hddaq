@@ -373,16 +373,16 @@ init_device( NodeProp& nodeprop )
       }
 
       fModule.WriteModule(TRM::mid, TRM::laddr_sel_trig,
-			  TRM::reg_L1Ext | TRM::reg_L2Ext | TRM::reg_ClrExt |
-			  TRM::reg_EnL2  | TRM::reg_EnJ0 );
+			  TRM::reg_L1Ext | TRM::reg_L2J0 | TRM::reg_ClrJ0
+			  | TRM::reg_EnL2 | TRM::reg_EnJ0 );
 
       fModule.WriteModule(DCT::mid, DCT::laddr_evb_reset, 0x1);
       if(en_up)   set_tdc_window(max_time_window, min_time_window, fModule, MIFU::mid);
       if(en_down) set_tdc_window(max_time_window, min_time_window, fModule, MIFD::mid);
 
       fModule.WriteModule(IOM::mid, IOM::laddr_extL1,  IOM::reg_i_nimin1);
-      fModule.WriteModule(IOM::mid, IOM::laddr_extL2,  IOM::reg_i_nimin2);
-      fModule.WriteModule(IOM::mid, IOM::laddr_extClr, IOM::reg_i_nimin3);
+      //fModule.WriteModule(IOM::mid, IOM::laddr_extL2,  IOM::reg_i_nimin2);
+      //fModule.WriteModule(IOM::mid, IOM::laddr_extClr, IOM::reg_i_nimin3);
 
       ddr_initialize(fModule);
       if(en_up)   CalibLUT(fModule, MIFU::mid);

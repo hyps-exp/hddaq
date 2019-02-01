@@ -1,11 +1,9 @@
 # Makefile for EventData
 
-CXX      = g++
-CXXFLAGS = -O2 -Wall
+include ../common.mk
 
-INCLUDES = -I. -I../kol
-LIBS     = -L../kol/lib -lkol \
-	   -lpthread
+INCLUDES += -I../kol
+LIBS     += -L../kol/lib -lkol
 
 FLAGS    = $(CXXFLAGS) $(INCLUDES)
 
@@ -31,7 +29,7 @@ $(LIB_DIR)/$(LIB_TGT): $(addprefix $(BLD_DIR)/, $(LIB_OBJ))
 	@echo Creating $@ ...
 	@mkdir -p $(LIB_DIR)
 	@ar cr $@ $^
-	@ranlib $@ 
+	@ranlib $@
 
 $(BIN_DIR)/%: $(BLD_DIR)/%.o
 	@echo Linking $@ ...
