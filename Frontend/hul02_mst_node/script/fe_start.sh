@@ -15,8 +15,12 @@ do
     nickname=hul02mst-`expr + $i`
     dataport=`expr 9030 + $i` 
     sitcp_ip=192.168.11.`expr 11 + $i`
-    min_window=37
-    max_window=188
+    min_window=20
+    max_window=35
+    prescale=100
+#    timer=300
+    timer=450
+    bypass=1
     master=--slave
     if [ $i -eq 1 ]; then
 	master=--master
@@ -29,6 +33,9 @@ do
 	$sitcp_ip \
 	$min_window \
 	$max_window \
+	$prescale \
+        $timer \
+	$bypass \
 	$master \
 	>/dev/null 2>/dev/null &
 done

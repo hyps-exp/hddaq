@@ -28,6 +28,7 @@ namespace
   char ip[100];
   unsigned int min_time_window;
   unsigned int max_time_window;
+  unsigned int enable_block = 0xff;
   bool flag_master = false;;
   
   int  sock=0;
@@ -197,6 +198,18 @@ open_device( NodeProp& nodeprop )
       iss >> max_time_window;
     }
 
+    if( arg.substr(0,15) == "--only-leading=" ){
+      iss.str( arg.substr(15) );
+      int flag;
+      iss >> flag;
+
+      if(flag){
+	enable_block = 0xf;
+      }else{
+	enable_block = 0xff;
+      }
+    }
+
     // J0 bus master flag
     if( arg.substr(0,8) == "--master" ){
       flag_master = true;
@@ -276,7 +289,7 @@ init_device( NodeProp& nodeprop )
       }
 
       fModule.WriteModule(DCT::mid, DCT::laddr_evb_reset, 0x1);
-      fModule.WriteModule(TDC::mid, TDC::laddr_enblock, 0xff);
+      fModule.WriteModule(TDC::mid, TDC::laddr_enblock, enable_block);
       set_tdc_window(max_time_window, min_time_window, fModule);
 
       fModule.WriteModule(IOM::mid, IOM::laddr_nimout1, IOM::reg_o_ModuleBusy);

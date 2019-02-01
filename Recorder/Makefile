@@ -1,23 +1,20 @@
 # Makefile for Recorder
 
-CXX	 = g++
-CXXFLAGS = -O2 -Wall
+include ../common.mk
 
-INCLUDES = -I. \
-           -I../EventDistributor \
-           -I../EventBuilder \
-           -I../RingBuffer \
-           -I../EventData \
-           -I../ControlThread \
-           -I../Message \
-           -I../kol
-
-LIBS	 = -L../RingBuffer/lib -lRingBuffer \
-           -L../EventData/lib -lEventData \
-           -L../ControlThread/lib -lControlThread \
-           -L../Message/lib -lMessage \
-           -L../kol/lib -lkol \
-           -lpthread -lz
+INCLUDES += -I../EventDistributor \
+            -I../EventBuilder \
+            -I../RingBuffer \
+            -I../EventData \
+            -I../ControlThread \
+            -I../Message \
+            -I../kol
+LIBS     += -L../RingBuffer/lib -lRingBuffer \
+            -L../EventData/lib -lEventData \
+            -L../ControlThread/lib -lControlThread \
+            -L../Message/lib -lMessage \
+            -L../kol/lib -lkol \
+            -lz
 
 FLAGS    = $(CXXFLAGS) $(INCLUDES)
 
@@ -37,7 +34,7 @@ DEPENDS   = $(addprefix $(BLD_DIR)/, $(SOURCES:.cc=.d))
 ###Stopping make delete intermediate files
 .SECONDARY:
 
-all: $(BIN_DIR)/$(BIN_TGT) 
+all: $(BIN_DIR)/$(BIN_TGT)
 
 $(BIN_DIR)/$(BIN_TGT): $(addprefix $(BLD_DIR)/, $(BIN_OBJ))
 	@echo Linking $@ ...

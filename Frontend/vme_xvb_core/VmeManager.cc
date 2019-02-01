@@ -103,6 +103,7 @@ VmeManager::Open( void )
   // each type of VmeModule
   CreateMapWindow<CaenV775>();
   CreateMapWindow<CaenV792>();
+  CreateMapWindow<CaenV1724>();
   CreateMapWindow<NoticeTDC64M>();
   CreateMapWindow<RM>();
   CreateMapWindow<RMME>();

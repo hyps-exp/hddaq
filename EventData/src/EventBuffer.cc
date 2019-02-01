@@ -3,7 +3,7 @@
  *  @file   EventBuffer.cc
  *  @brief
  *  @author Kazuo NAKAYOSHI <kazuo.nakayoshi@kek.jp>
- *  @date   
+ *  @date
  *  @note   Modified by Ken Sakashita <kensh@post.kek.jp>
  *
  *  $Id: EventBuffer.cc,v 1.3 2010/06/28 08:31:50 igarashi Exp $
@@ -40,14 +40,13 @@
 
 #include "EventData/EventBuffer.h"
 
-EventBuffer::EventBuffer(int len) 
+EventBuffer::EventBuffer(int len)
 {
   assert(len > 0);
   if(len > 0) {
     m_buf = new char[len];
     m_len = len;
     memset(m_buf, 0, len);
-      //printf("!!!!!!!!! EventBuf Created\n");
   }
   else {
     m_buf = 0;
@@ -55,16 +54,15 @@ EventBuffer::EventBuffer(int len)
   }
 }
 
-EventBuffer::~EventBuffer() 
-{ 
+EventBuffer::~EventBuffer()
+{
   assert(m_len > 0);
-  if(m_buf) 
-    delete[] m_buf; 
+  if(m_buf)
+    delete[] m_buf;
   m_buf = 0;
-  //printf("!!!!!!!!! EventBuf Deleted\n");
 }
 
-EventBuffer::EventBuffer(const EventBuffer &from) 
+EventBuffer::EventBuffer(const EventBuffer &from)
 {
   if(from.m_len > 0) {
     m_buf = new char[from.m_len];
@@ -74,7 +72,7 @@ EventBuffer::EventBuffer(const EventBuffer &from)
   else {
     m_buf = 0;
     m_len = 0;
-    }
+  }
 }
 
 ////
@@ -85,12 +83,12 @@ EventBuffer::clear()
 }
 
 ////
-EventBuffer& 
+EventBuffer&
 EventBuffer::operator=(const EventBuffer &from)
 {
-  if (&from == this) 
+  if (&from == this)
     return *this;
-  
+
   delete[] m_buf;
   m_buf = 0;
   if(from.m_len > 0) {

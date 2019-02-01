@@ -66,12 +66,12 @@ public:
   virtual ~SenderThread();
   void setBuilder(BuilderThread *builder);
   void setSemPost();
- 
-protected: 
+
+protected:
   int active_loop();
   int run();
   int waitBuilder();
-  
+
 private:
   BuilderThread * m_builder;
 };

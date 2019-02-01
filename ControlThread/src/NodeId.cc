@@ -15,51 +15,51 @@
 
 NodeId::NodeId()
 {
-	std::cerr << "NodeId constructed" << std::endl;
+  std::cerr << "NodeId constructed" << std::endl;
 }
 
 NodeId::~NodeId()
 {
-	std::cerr << "NodeId destructed" << std::endl;
+  std::cerr << "NodeId destructed" << std::endl;
 }
 
 
 std::string NodeId::getNodeId(int ntype, int *nodeid)
 {
 
-	char hostname[256];
-	if (gethostname(hostname, 255) != 0) {
-		perror("NodeID::getNodeId");
-		return 0;
-	}
-	
-	struct hostent *he;
-	he = gethostbyname(hostname);
-	if (he == NULL) {
-		perror("NodeId::getNodeId gethostbyname");
-		return 0;
-	}
-	/*
-	std::cout << "h_name " << he->h_name << std::endl;
-	std::cout << "h_length " << he->h_length << std::endl;
-	int a1 = **(he->h_addr_list) & 0xff;
-	int a2 = *(*(he->h_addr_list) + 1) & 0xff;
-	int a3 = *(*(he->h_addr_list) + 2) & 0xff;
-	int a4 = *(*(he->h_addr_list) + 3) & 0xff;
-	std::cout << "h_addr " << a1 << " " << a2 << " " << a3 << " " << a4 << std::endl;
-	std::cout << "h_addr2 " << (int)*(he->h_addr_list + 1) << std::endl;
-	*/
+  char hostname[256];
+  if (gethostname(hostname, 255) != 0) {
+    perror("NodeID::getNodeId");
+    return 0;
+  }
 
-	pid_t pid = getpid();
-	*nodeid = ((ntype & 0xff) << 16)
-		| (*(*(he->h_addr_list) + he->h_length - 1) & 0xff) << 8
-		| (pid & 0xff);
+  struct hostent *he;
+  he = gethostbyname(hostname);
+  if (he == NULL) {
+    perror("NodeId::getNodeId gethostbyname");
+    return 0;
+  }
+  /*
+    std::cout << "h_name " << he->h_name << std::endl;
+    std::cout << "h_length " << he->h_length << std::endl;
+    int a1 = **(he->h_addr_list) & 0xff;
+    int a2 = *(*(he->h_addr_list) + 1) & 0xff;
+    int a3 = *(*(he->h_addr_list) + 2) & 0xff;
+    int a4 = *(*(he->h_addr_list) + 3) & 0xff;
+    std::cout << "h_addr " << a1 << " " << a2 << " " << a3 << " " << a4 << std::endl;
+    std::cout << "h_addr2 " << (int)*(he->h_addr_list + 1) << std::endl;
+  */
 
-	std::ostringstream oss;
-	oss << NODENAMEKEY[ntype] << "-" << std::hex << *nodeid;
-	std::string nickname = oss.str();
+  pid_t pid = getpid();
+  *nodeid = ((ntype & 0xff) << 16)
+    | (*(*(he->h_addr_list) + he->h_length - 1) & 0xff) << 8
+    | (pid & 0xff);
 
-	return nickname;
+  std::ostringstream oss;
+  oss << NODENAMEKEY[ntype] << "-" << std::hex << *nodeid;
+  std::string nickname = oss.str();
+
+  return nickname;
 }
 
 
@@ -67,11 +67,11 @@ std::string NodeId::getNodeId(int ntype, int *nodeid)
 int main(int argc, char* argv[])
 {
 
-	int nodeid;
+  int nodeid;
 
-	std::string nick = NodeId::getNodeId(NODETYPE_EB, &nodeid);
-	std::cout << "node: " << nick << " id:" << nodeid << std::endl;
+  std::string nick = NodeId::getNodeId(NODETYPE_EB, &nodeid);
+  std::cout << "node: " << nick << " id:" << nodeid << std::endl;
 
-	return 0;
+  return 0;
 }
 #endif

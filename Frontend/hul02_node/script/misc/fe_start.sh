@@ -15,8 +15,10 @@ do
     nickname=hul02misc-`expr + $i`
     dataport=`expr 9020 + $i` 
     sitcp_ip=192.168.11.`expr 13 + $i`
-    min_window=37
-    max_window=188
+    min_window=0
+#    max_window=188
+    max_window=261
+    only_leading=0
     master=--slave
 
     $bin_dir/frontend.sh \
@@ -26,6 +28,7 @@ do
 	$sitcp_ip \
 	$min_window \
 	$max_window \
+	$only_leading \
 	$master \
 	>/dev/null 2>/dev/null &
 done
