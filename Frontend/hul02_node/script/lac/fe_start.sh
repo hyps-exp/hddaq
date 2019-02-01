@@ -9,33 +9,29 @@ cd $bin_dir
 
 sleep 1
 
-for i in $(seq 1 1)
+for i in $(seq 8 8)
 do
-    nodeid=`expr $((0x640)) + $i`
-    nickname=hul02mst-`expr + $i`
-    dataport=`expr 9030 + $i` 
-    sitcp_ip=192.168.11.`expr 11 + $i`
-    min_window=20
-    max_window=35
-    prescale=100
-#    timer=300
-    timer=450
-    bypass=1
+    nodeid=`expr $((0x610)) + $i`
+    # nickname=hul02lac-`expr + $i`
+    nickname=hul02lac
+    dataport=`expr 9000 + $i` 
+    sitcp_ip=192.168.11.`expr 100 + $i`
+    min_window=0
+    max_window=188
+    only_leading=0
     master=--slave
     if [ $i -eq 1 ]; then
 	master=--master
     fi
 
-    $bin_dir/frontend_mst.sh \
+    $bin_dir/frontend.sh \
 	$nickname \
 	$nodeid \
 	$dataport \
 	$sitcp_ip \
 	$min_window \
 	$max_window \
-	$prescale \
-        $timer \
-	$bypass \
+	$only_leading \
 	$master \
 	>/dev/null 2>/dev/null &
 done
