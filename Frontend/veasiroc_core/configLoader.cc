@@ -66,7 +66,7 @@ configLoader::copy_probereg()
   probeType type     =  static_cast<probeType>((itr_type->second).reg[0]);
   uint32_t  position =  (itr_channel->second).reg[0];
   if(position > 31) position -= position;
-  
+
   switch(type){
   case is_out_pa_hg:
     position = position*2;
@@ -157,7 +157,7 @@ configLoader::copy_screg(int i_easiroc)
     }else{
       // Not found
       std::cerr << "#E: "
-		<< func_name 
+		<< func_name
 		<< " No such register key [" << reg_name << "]"
 		<< std::endl;
     }
@@ -275,7 +275,7 @@ configLoader::initialize_alias()
 {
   // Power register
   m_reg_alias["Enable"]   = 1;
-  m_reg_alias["Diable"]   = 0;
+  m_reg_alias["Disable"]  = 0;
 
   // DAC slop
   m_reg_alias["fine"]     = 1;
@@ -284,7 +284,7 @@ configLoader::initialize_alias()
   // RS or discri
   m_reg_alias["RS"]       = 1;
   m_reg_alias["trigger"]  = 0;
-  
+
   // T&D bias, LG PA bias
   m_reg_alias["weakbias"] = 1;
   m_reg_alias["highbias"] = 0;
@@ -367,7 +367,7 @@ configLoader::initialize_other_register()
 
   {
     const std::string name = "HG";
-    Register cont = {16, msb2lsb, false, 
+    Register cont = {16, msb2lsb, false,
 		     {
 		       0, 0, 0, 0, 0, 0, 0, 0,
 		       0, 0, 0, 0, 0, 0, 0, 0,
@@ -383,7 +383,7 @@ configLoader::initialize_other_register()
 
   {
     const std::string name = "LG";
-    Register cont = {16, msb2lsb, false, 
+    Register cont = {16, msb2lsb, false,
 		     {
 		       0, 0, 0, 0, 0, 0, 0, 0,
 		       0, 0, 0, 0, 0, 0, 0, 0,
@@ -428,7 +428,7 @@ configLoader::initialize_slowcontrol_register()
 
   {
     const std::string name = "Input 8-bit DAC";
-    Register cont = {9, lsb2msb, false, 
+    Register cont = {9, lsb2msb, false,
 		     {
 		       256, 256, 256, 256, 256, 256, 256, 256,
 		       256, 256, 256, 256, 256, 256, 256, 256,
@@ -514,7 +514,7 @@ configLoader::initialize_slowcontrol_register()
 
   {
     const std::string name = "DisablePA & In_calib_EN";
-    Register cont = {2, msb2lsb, false, 
+    Register cont = {2, msb2lsb, false,
 		     {
 		       0, 0, 0, 0, 0, 0, 0, 0,
 		       0, 0, 0, 0, 0, 0, 0, 0,
@@ -648,7 +648,7 @@ configLoader::initialize_slowcontrol_register()
 
   {
     const std::string name = "Discriminator Mask";
-    Register cont = {1, lsb2msb, true, 
+    Register cont = {1, lsb2msb, true,
 		     {
 		       0, 0, 0, 0, 0, 0, 0, 0,
 		       0, 0, 0, 0, 0, 0, 0, 0,
@@ -816,7 +816,7 @@ configLoader::print(const regRbcpType& cont, const std::string& arg)
 	    << func_name << " "
 	    << arg
 	    << std::endl;
-  
+
   //  for(const auto& val : cont){
   //    printf(" - %x\n", val);
   //  }// for(reg_rbcp)
@@ -831,7 +831,7 @@ configLoader::translate_bit2reg()
 {
   const size_t nbit_byte = 8;
   const size_t nloop     = m_bit_rbcp.size()/nbit_byte;
-  
+
   for(uint32_t i = 0; i<nloop; ++i){
     uint8_t val = 0;
     for(uint32_t j = 0; j<nbit_byte; ++j){
@@ -899,16 +899,16 @@ configLoader::read_YAML( const std::string& filename)
     if(line.find("- ") == std::string::npos){
       present_type  = is_associative;
       present_index = 0;
-      
+
       std::string              buf;
       std::vector<std::string> words;
       while(getline(line_to_word, buf, ':')) words.push_back(buf);
       //      for(auto& i : words) while(i[0] == ' ') i.erase(0, 1);
       for(uint32_t i = 0; i<words.size(); ++i) while(words[i][0] == ' ') words[i].erase(0, 1);
-      
+
       present_key = words[0];
       if(words.size() == 1 || words[1][0] == '#') continue;
-      
+
       std::stringstream word_to_reg(words[1]);
       word_to_reg >> present_reg;
     }else{
@@ -921,13 +921,13 @@ configLoader::read_YAML( const std::string& filename)
     }
 
     int i_easiroc = static_cast<int>(present_mode);
-    auto itr = present_mode == is_module ? 
+    auto itr = present_mode == is_module ?
       m_otherreg_map.find(present_key) : m_screg_map[i_easiroc].find(present_key);
-    
+
     if(present_mode == is_easiroc1){
 #if DEBUG
-      std::cout << "EASIROC1::" 
-		<< present_key << "::" 
+      std::cout << "EASIROC1::"
+		<< present_key << "::"
 		<< present_reg << " (" << present_index << ")"
 		<< std::endl;
 #endif
@@ -935,14 +935,14 @@ configLoader::read_YAML( const std::string& filename)
       if(itr == m_screg_map[0].end()){
 	std::cerr << "#E: " << func_name
 		  << " No such key (" << present_key << ")"
-		  << std::endl;	
-	
+		  << std::endl;
+
 	return -1;
       }
     }else if(present_mode == is_easiroc2){
 #if DEBUG
-      std::cout << "EASIROC2::" 
-		<< present_key << "::" 
+      std::cout << "EASIROC2::"
+		<< present_key << "::"
 		<< present_reg << " (" << present_index << ")"
 		<< std::endl;
 #endif
@@ -950,13 +950,13 @@ configLoader::read_YAML( const std::string& filename)
       if(itr == m_screg_map[1].end()){
 	std::cerr << "#E: " << func_name
 		  << " No such key (" << present_key << ")"
-		  << std::endl;	
-	
+		  << std::endl;
+
 	return -1;
       }
     }else if(present_mode == is_module){
 #if DEBUG
-      std::cout << present_key << "::" 
+      std::cout << present_key << "::"
 		<< present_reg << " (" << present_index << ")"
 		<< std::endl;
 #endif
@@ -964,8 +964,8 @@ configLoader::read_YAML( const std::string& filename)
       if(itr == m_otherreg_map.end()){
 	std::cerr << "#E: " << func_name
 		  << " No such key (" << present_key << ")"
-		  << std::endl;	
-	
+		  << std::endl;
+
 	return -1;
       }
     }
@@ -985,9 +985,9 @@ configLoader::read_YAML( const std::string& filename)
       reg_to_val >> val;
       cont.reg[present_index] = val;
     }
-      
+
     if(present_type == is_array) ++present_index;
-      
+
   }// while(getline)
 
   return 0;

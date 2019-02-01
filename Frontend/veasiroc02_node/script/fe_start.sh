@@ -13,13 +13,13 @@ reg_dir=${HOME}/vme-easiroc-registers
 adc=on
 tdc=on
 
-for i in $(seq 56 95)
+for i in $(seq 32 53)
 do
   if [ $i -eq 18 ]; then continue; fi
-      
+
     nodeid=`expr 2000 + $i`
     nickname=veasiroc$i
-    dataport=`expr 9100 + $i` 
+    dataport=`expr 9100 + $i`
     sitcp_ip=192.168.11.$i
     module_num=$i
 
