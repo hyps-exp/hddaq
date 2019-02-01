@@ -275,7 +275,7 @@ configLoader::initialize_alias()
 {
   // Power register
   m_reg_alias["Enable"]   = 1;
-  m_reg_alias["Diable"]   = 0;
+  m_reg_alias["Disable"]  = 0;
 
   // DAC slop
   m_reg_alias["fine"]     = 1;
