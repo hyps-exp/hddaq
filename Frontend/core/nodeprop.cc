@@ -4,7 +4,7 @@
 #include "nodeprop.h"
 #include "MessageHelper.h"
 
-NodeProp::NodeProp(int nodeid, std::string nickname, int data_port)
+NodeProp::NodeProp(int nodeid, std::string nickname, int data_port, bool noupdate)
   : m_argc(0),
     m_state(INITIAL),
     m_daq_mode(DM_NORMAL),
@@ -14,7 +14,8 @@ NodeProp::NodeProp(int nodeid, std::string nickname, int data_port)
     m_event_size(0),
     m_data_port(data_port),
     m_nickname(nickname),
-    m_update_flag(false)
+    m_update_flag(false),
+    m_noupdate_flag(noupdate)
 {
   access_mutex = new kol::Mutex;
 }
@@ -48,10 +49,14 @@ void NodeProp::setUpdate(bool new_value)
 }
 bool NodeProp::getUpdate()
 {
-  access_mutex->lock();
-  bool ret = m_update_flag;
-  access_mutex->unlock();
-  return ret;
+  if(m_noupdate_flag){
+    return true;
+  }else{
+    access_mutex->lock();
+    bool ret = m_update_flag;
+    access_mutex->unlock();
+    return ret;
+  }
 }
 
 void NodeProp::setState(State new_state)

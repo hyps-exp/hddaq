@@ -38,7 +38,7 @@ private:
   // Extended data : RBCP_ADDR[15:0]
   // original data : RBCP_WD[7:0]
 
-  char*        ipAddr_;
+  const char*  ipAddr_;
   unsigned int port_;
   rbcp_header* sendHeader_;
   int          disp_mode_;
@@ -47,7 +47,7 @@ private:
   unsigned int rd_word_;
 
 public:
-  FPGAModule( char*        ipAddr,
+  FPGAModule( const char*  ipAddr,
 	      unsigned int port,
 	      rbcp_header* sendHeader,
 	      int          disp_mode = 1 );

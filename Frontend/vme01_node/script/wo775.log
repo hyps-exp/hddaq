@@ -1,0 +1,1007 @@
+read start (ns)  : 1523845979
+ read end (sec)   : 972036932
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 101315
+ read start (sec) : 972769037
+ read start (ns)  : 1523845979
+ read end (sec)   : 972869851
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 100814
+ read start (sec) : 973603742
+ read start (ns)  : 1523845979
+ read end (sec)   : 973704930
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 101188
+ read start (sec) : 974437477
+ read start (ns)  : 1523845979
+ read end (sec)   : 974538075
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 100598
+ read start (sec) : 975270764
+ read start (ns)  : 1523845979
+ read end (sec)   : 975359474
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 88710
+ read start (sec) : 976106368
+ read start (ns)  : 1523845979
+ read end (sec)   : 976195148
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 88780
+ read start (sec) : 976939395
+ read start (ns)  : 1523845979
+ read end (sec)   : 977039984
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 100589
+ read start (sec) : 977774166
+ read start (ns)  : 1523845979
+ read end (sec)   : 977874792
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 100626
+ read start (sec) : 978607817
+ read start (ns)  : 1523845979
+ read end (sec)   : 978695930
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 88113
+ read start (sec) : 979441594
+ read start (ns)  : 1523845979
+ read end (sec)   : 979530110
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 88516
+ read start (sec) : 980276601
+ read start (ns)  : 1523845979
+ read end (sec)   : 980378105
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 101504
+ read start (sec) : 981110491
+ read start (ns)  : 1523845979
+ read end (sec)   : 981198521
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 88030
+ read start (sec) : 981945242
+ read start (ns)  : 1523845979
+ read end (sec)   : 982034031
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 88789
+ read start (sec) : 982778746
+ read start (ns)  : 1523845979
+ read end (sec)   : 982867669
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 88923
+ read start (sec) : 983612870
+ read start (ns)  : 1523845979
+ read end (sec)   : 983713301
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 100431
+ read start (sec) : 984447662
+ read start (ns)  : 1523845979
+ read end (sec)   : 984550676
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 103014
+ read start (sec) : 985281614
+ read start (ns)  : 1523845979
+ read end (sec)   : 985370713
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 89099
+ read start (sec) : 986116376
+ read start (ns)  : 1523845979
+ read end (sec)   : 986204141
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 87765
+ read start (sec) : 986949603
+ read start (ns)  : 1523845979
+ read end (sec)   : 987050346
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 100743
+ read start (sec) : 987784475
+ read start (ns)  : 1523845979
+ read end (sec)   : 987885522
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 101047
+ read start (sec) : 988618457
+ read start (ns)  : 1523845979
+ read end (sec)   : 988707447
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 88990
+ read start (sec) : 989451767
+ read start (ns)  : 1523845979
+ read end (sec)   : 989540724
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 88957
+ read start (sec) : 990286334
+ read start (ns)  : 1523845979
+ read end (sec)   : 990374293
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 87959
+ read start (sec) : 991120123
+ read start (ns)  : 1523845979
+ read end (sec)   : 991208602
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 88479
+ read start (sec) : 991955449
+ read start (ns)  : 1523845979
+ read end (sec)   : 992044544
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 89095
+ read start (sec) : 992789998
+ read start (ns)  : 1523845979
+ read end (sec)   : 992878907
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 88909
+ read start (sec) : 993622992
+ read start (ns)  : 1523845979
+ read end (sec)   : 993724007
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 101015
+ read start (sec) : 994457779
+ read start (ns)  : 1523845979
+ read end (sec)   : 994546128
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 88349
+ read start (sec) : 995291641
+ read start (ns)  : 1523845979
+ read end (sec)   : 995379944
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 88303
+ read start (sec) : 996125706
+ read start (ns)  : 1523845979
+ read end (sec)   : 996214427
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 88721
+ read start (sec) : 996959687
+ read start (ns)  : 1523845979
+ read end (sec)   : 997063363
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 103676
+ read start (sec) : 997793831
+ read start (ns)  : 1523845979
+ read end (sec)   : 997894650
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 100819
+ read start (sec) : 998628301
+ read start (ns)  : 1523845979
+ read end (sec)   : 998716933
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 88632
+ read start (sec) : 999461804
+ read start (ns)  : 1523845979
+ read end (sec)   : 999564398
+ read end (ns)    : 1523845979
+ difference (sec) : 0
+ difference (ns)  : 102594
+ read start (sec) : 297428
+ read start (ns)  : 1523845980
+ read end (sec)   : 397780
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100352
+ read start (sec) : 1130562
+ read start (ns)  : 1523845980
+ read end (sec)   : 1231414
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100852
+ read start (sec) : 1964887
+ read start (ns)  : 1523845980
+ read end (sec)   : 2053521
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88634
+ read start (sec) : 2800047
+ read start (ns)  : 1523845980
+ read end (sec)   : 2888866
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88819
+ read start (sec) : 3633317
+ read start (ns)  : 1523845980
+ read end (sec)   : 3733845
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100528
+ read start (sec) : 4467143
+ read start (ns)  : 1523845980
+ read end (sec)   : 4569179
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 102036
+ read start (sec) : 5301408
+ read start (ns)  : 1523845980
+ read end (sec)   : 5389893
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88485
+ read start (sec) : 6136683
+ read start (ns)  : 1523845980
+ read end (sec)   : 6225765
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 89082
+ read start (sec) : 6970601
+ read start (ns)  : 1523845980
+ read end (sec)   : 7073243
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 102642
+ read start (sec) : 7805099
+ read start (ns)  : 1523845980
+ read end (sec)   : 7905976
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100877
+ read start (sec) : 8639186
+ read start (ns)  : 1523845980
+ read end (sec)   : 8740155
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100969
+ read start (sec) : 9471948
+ read start (ns)  : 1523845980
+ read end (sec)   : 9562454
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 90506
+ read start (sec) : 10305870
+ read start (ns)  : 1523845980
+ read end (sec)   : 10406257
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100387
+ read start (sec) : 11141143
+ read start (ns)  : 1523845980
+ read end (sec)   : 11242022
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100879
+ read start (sec) : 11975169
+ read start (ns)  : 1523845980
+ read end (sec)   : 12077466
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 102297
+ read start (sec) : 12809724
+ read start (ns)  : 1523845980
+ read end (sec)   : 12898774
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 89050
+ read start (sec) : 13644215
+ read start (ns)  : 1523845980
+ read end (sec)   : 13744814
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100599
+ read start (sec) : 14477278
+ read start (ns)  : 1523845980
+ read end (sec)   : 14567612
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 90334
+ read start (sec) : 15312003
+ read start (ns)  : 1523845980
+ read end (sec)   : 15400564
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88561
+ read start (sec) : 16146392
+ read start (ns)  : 1523845980
+ read end (sec)   : 16234828
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88436
+ read start (sec) : 16979160
+ read start (ns)  : 1523845980
+ read end (sec)   : 17081982
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 102822
+ read start (sec) : 17814560
+ read start (ns)  : 1523845980
+ read end (sec)   : 17915019
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100459
+ read start (sec) : 18647578
+ read start (ns)  : 1523845980
+ read end (sec)   : 18735696
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88118
+ read start (sec) : 19482607
+ read start (ns)  : 1523845980
+ read end (sec)   : 19585547
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 102940
+ read start (sec) : 20317227
+ read start (ns)  : 1523845980
+ read end (sec)   : 20418220
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100993
+ read start (sec) : 21150339
+ read start (ns)  : 1523845980
+ read end (sec)   : 21251044
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100705
+ read start (sec) : 21984633
+ read start (ns)  : 1523845980
+ read end (sec)   : 22074815
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 90182
+ read start (sec) : 22819961
+ read start (ns)  : 1523845980
+ read end (sec)   : 22920774
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100813
+ read start (sec) : 23653536
+ read start (ns)  : 1523845980
+ read end (sec)   : 23754682
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 101146
+ read start (sec) : 24487665
+ read start (ns)  : 1523845980
+ read end (sec)   : 24590630
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 102965
+ read start (sec) : 25321666
+ read start (ns)  : 1523845980
+ read end (sec)   : 25422507
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100841
+ read start (sec) : 26155228
+ read start (ns)  : 1523845980
+ read end (sec)   : 26243998
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88770
+ read start (sec) : 26989467
+ read start (ns)  : 1523845980
+ read end (sec)   : 27079511
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 90044
+ read start (sec) : 27824262
+ read start (ns)  : 1523845980
+ read end (sec)   : 27925031
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100769
+ read start (sec) : 28659156
+ read start (ns)  : 1523845980
+ read end (sec)   : 28748170
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 89014
+ read start (sec) : 29493421
+ read start (ns)  : 1523845980
+ read end (sec)   : 29582301
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88880
+ read start (sec) : 30326551
+ read start (ns)  : 1523845980
+ read end (sec)   : 30426866
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100315
+ read start (sec) : 31159958
+ read start (ns)  : 1523845980
+ read end (sec)   : 31260445
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100487
+ read start (sec) : 31995411
+ read start (ns)  : 1523845980
+ read end (sec)   : 32097092
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 101681
+ read start (sec) : 32829914
+ read start (ns)  : 1523845980
+ read end (sec)   : 32918540
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88626
+ read start (sec) : 33664169
+ read start (ns)  : 1523845980
+ read end (sec)   : 33765092
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100923
+ read start (sec) : 34497847
+ read start (ns)  : 1523845980
+ read end (sec)   : 34598696
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100849
+ read start (sec) : 35332412
+ read start (ns)  : 1523845980
+ read end (sec)   : 35420769
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88357
+ read start (sec) : 36165999
+ read start (ns)  : 1523845980
+ read end (sec)   : 36254555
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88556
+ read start (sec) : 37000692
+ read start (ns)  : 1523845980
+ read end (sec)   : 37100999
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100307
+ read start (sec) : 37834775
+ read start (ns)  : 1523845980
+ read end (sec)   : 37936235
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 101460
+ read start (sec) : 38668898
+ read start (ns)  : 1523845980
+ read end (sec)   : 38757866
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88968
+ read start (sec) : 39503317
+ read start (ns)  : 1523845980
+ read end (sec)   : 39592256
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88939
+ read start (sec) : 40337675
+ read start (ns)  : 1523845980
+ read end (sec)   : 40438546
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100871
+ read start (sec) : 41170316
+ read start (ns)  : 1523845980
+ read end (sec)   : 41270999
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100683
+ read start (sec) : 42005953
+ read start (ns)  : 1523845980
+ read end (sec)   : 42094659
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88706
+ read start (sec) : 42840016
+ read start (ns)  : 1523845980
+ read end (sec)   : 42928324
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88308
+ read start (sec) : 43672665
+ read start (ns)  : 1523845980
+ read end (sec)   : 43773421
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100756
+ read start (sec) : 44507828
+ read start (ns)  : 1523845980
+ read end (sec)   : 44608509
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100681
+ read start (sec) : 45342435
+ read start (ns)  : 1523845980
+ read end (sec)   : 45442746
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100311
+ read start (sec) : 46176183
+ read start (ns)  : 1523845980
+ read end (sec)   : 46265075
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88892
+ read start (sec) : 47010209
+ read start (ns)  : 1523845980
+ read end (sec)   : 47110962
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100753
+ read start (sec) : 47845171
+ read start (ns)  : 1523845980
+ read end (sec)   : 47945757
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100586
+ read start (sec) : 48678482
+ read start (ns)  : 1523845980
+ read end (sec)   : 48779106
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100624
+ read start (sec) : 49512939
+ read start (ns)  : 1523845980
+ read end (sec)   : 49601477
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88538
+ read start (sec) : 50347520
+ read start (ns)  : 1523845980
+ read end (sec)   : 50448413
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100893
+ read start (sec) : 51181067
+ read start (ns)  : 1523845980
+ read end (sec)   : 51269400
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88333
+ read start (sec) : 52016220
+ read start (ns)  : 1523845980
+ read end (sec)   : 52104437
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88217
+ read start (sec) : 52849331
+ read start (ns)  : 1523845980
+ read end (sec)   : 52938028
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88697
+ read start (sec) : 53683283
+ read start (ns)  : 1523845980
+ read end (sec)   : 53783244
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 99961
+ read start (sec) : 54516865
+ read start (ns)  : 1523845980
+ read end (sec)   : 54617588
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100723
+ read start (sec) : 55352649
+ read start (ns)  : 1523845980
+ read end (sec)   : 55441115
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88466
+ read start (sec) : 56187034
+ read start (ns)  : 1523845980
+ read end (sec)   : 56275210
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88176
+ read start (sec) : 57020793
+ read start (ns)  : 1523845980
+ read end (sec)   : 57121713
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100920
+ read start (sec) : 57854359
+ read start (ns)  : 1523845980
+ read end (sec)   : 57954296
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 99937
+ read start (sec) : 58687879
+ read start (ns)  : 1523845980
+ read end (sec)   : 58776691
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88812
+ read start (sec) : 59523395
+ read start (ns)  : 1523845980
+ read end (sec)   : 59623983
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100588
+ read start (sec) : 60356789
+ read start (ns)  : 1523845980
+ read end (sec)   : 60456936
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100147
+ read start (sec) : 61190869
+ read start (ns)  : 1523845980
+ read end (sec)   : 61279269
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88400
+ read start (sec) : 62025271
+ read start (ns)  : 1523845980
+ read end (sec)   : 62113675
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88404
+ read start (sec) : 62858704
+ read start (ns)  : 1523845980
+ read end (sec)   : 62947148
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88444
+ read start (sec) : 63692857
+ read start (ns)  : 1523845980
+ read end (sec)   : 63794033
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 101176
+ read start (sec) : 64527367
+ read start (ns)  : 1523845980
+ read end (sec)   : 64627686
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100319
+ read start (sec) : 65362655
+ read start (ns)  : 1523845980
+ read end (sec)   : 65451018
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88363
+ read start (sec) : 66195874
+ read start (ns)  : 1523845980
+ read end (sec)   : 66284242
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88368
+ read start (sec) : 67030989
+ read start (ns)  : 1523845980
+ read end (sec)   : 67132308
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 101319
+ read start (sec) : 67864518
+ read start (ns)  : 1523845980
+ read end (sec)   : 67953019
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88501
+ read start (sec) : 68699277
+ read start (ns)  : 1523845980
+ read end (sec)   : 68799723
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100446
+ read start (sec) : 69533530
+ read start (ns)  : 1523845980
+ read end (sec)   : 69621814
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88284
+ read start (sec) : 70367866
+ read start (ns)  : 1523845980
+ read end (sec)   : 70456169
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88303
+ read start (sec) : 71202256
+ read start (ns)  : 1523845980
+ read end (sec)   : 71304017
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 101761
+ read start (sec) : 72035329
+ read start (ns)  : 1523845980
+ read end (sec)   : 72124332
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 89003
+ read start (sec) : 72869665
+ read start (ns)  : 1523845980
+ read end (sec)   : 72958027
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88362
+ read start (sec) : 73704549
+ read start (ns)  : 1523845980
+ read end (sec)   : 73805342
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100793
+ read start (sec) : 74537113
+ read start (ns)  : 1523845980
+ read end (sec)   : 74637519
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100406
+ read start (sec) : 75371374
+ read start (ns)  : 1523845980
+ read end (sec)   : 75459481
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88107
+ read start (sec) : 76205690
+ read start (ns)  : 1523845980
+ read end (sec)   : 76294174
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88484
+ read start (sec) : 77041360
+ read start (ns)  : 1523845980
+ read end (sec)   : 77142216
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100856
+ read start (sec) : 77875606
+ read start (ns)  : 1523845980
+ read end (sec)   : 77976406
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100800
+ read start (sec) : 78708173
+ read start (ns)  : 1523845980
+ read end (sec)   : 78797281
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 89108
+ read start (sec) : 79543430
+ read start (ns)  : 1523845980
+ read end (sec)   : 79633897
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 90467
+ read start (sec) : 80378076
+ read start (ns)  : 1523845980
+ read end (sec)   : 80478920
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100844
+ read start (sec) : 81210770
+ read start (ns)  : 1523845980
+ read end (sec)   : 81311004
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100234
+ read start (sec) : 82045208
+ read start (ns)  : 1523845980
+ read end (sec)   : 82135563
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 90355
+ read start (sec) : 82880291
+ read start (ns)  : 1523845980
+ read end (sec)   : 82969274
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88983
+ read start (sec) : 83713626
+ read start (ns)  : 1523845980
+ read end (sec)   : 83814459
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100833
+ read start (sec) : 84548036
+ read start (ns)  : 1523845980
+ read end (sec)   : 84650798
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 102762
+ read start (sec) : 85381848
+ read start (ns)  : 1523845980
+ read end (sec)   : 85470340
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88492
+ read start (sec) : 86216686
+ read start (ns)  : 1523845980
+ read end (sec)   : 86305328
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88642
+ read start (sec) : 87051316
+ read start (ns)  : 1523845980
+ read end (sec)   : 87151861
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100545
+ read start (sec) : 87885574
+ read start (ns)  : 1523845980
+ read end (sec)   : 87985511
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 99937
+ read start (sec) : 88718965
+ read start (ns)  : 1523845980
+ read end (sec)   : 88807917
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88952
+ read start (sec) : 89554877
+ read start (ns)  : 1523845980
+ read end (sec)   : 89643058
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88181
+ read start (sec) : 90386932
+ read start (ns)  : 1523845980
+ read end (sec)   : 90475968
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 89036
+ read start (sec) : 91220980
+ read start (ns)  : 1523845980
+ read end (sec)   : 91321620
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100640
+ read start (sec) : 92055757
+ read start (ns)  : 1523845980
+ read end (sec)   : 92144066
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88309
+ read start (sec) : 92889261
+ read start (ns)  : 1523845980
+ read end (sec)   : 92977697
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88436
+ read start (sec) : 93723260
+ read start (ns)  : 1523845980
+ read end (sec)   : 93823218
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 99958
+ read start (sec) : 94558062
+ read start (ns)  : 1523845980
+ read end (sec)   : 94658520
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100458
+ read start (sec) : 95391988
+ read start (ns)  : 1523845980
+ read end (sec)   : 95492965
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100977
+ read start (sec) : 96225962
+ read start (ns)  : 1523845980
+ read end (sec)   : 96314396
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88434
+ read start (sec) : 97061193
+ read start (ns)  : 1523845980
+ read end (sec)   : 97161773
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100580
+ read start (sec) : 97894080
+ read start (ns)  : 1523845980
+ read end (sec)   : 97994760
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100680
+ read start (sec) : 98728471
+ read start (ns)  : 1523845980
+ read end (sec)   : 98817708
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 89237
+ read start (sec) : 99563720
+ read start (ns)  : 1523845980
+ read end (sec)   : 99652277
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88557
+ read start (sec) : 100397147
+ read start (ns)  : 1523845980
+ read end (sec)   : 100497362
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100215
+ read start (sec) : 101230982
+ read start (ns)  : 1523845980
+ read end (sec)   : 101319309
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88327
+ read start (sec) : 102066527
+ read start (ns)  : 1523845980
+ read end (sec)   : 102155283
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88756
+ read start (sec) : 102899163
+ read start (ns)  : 1523845980
+ read end (sec)   : 102987673
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88510
+ read start (sec) : 103734681
+ read start (ns)  : 1523845980
+ read end (sec)   : 103835472
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100791
+ read start (sec) : 104569153
+ read start (ns)  : 1523845980
+ read end (sec)   : 104669937
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100784
+ read start (sec) : 105402134
+ read start (ns)  : 1523845980
+ read end (sec)   : 105490630
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88496
+ read start (sec) : 106237452
+ read start (ns)  : 1523845980
+ read end (sec)   : 106325701
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 88249
+ read start (sec) : 107070729
+ read start (ns)  : 1523845980
+ read end (sec)   : 107171134
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100405
+ read start (sec) : 107905371
+ read start (ns)  : 1523845980
+ read end (sec)   : 108006201
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100830
+ read start (sec) : 108739763
+ read start (ns)  : 1523845980
+ read end (sec)   : 108840430
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100667
+ read start (sec) : 109573780
+ read start (ns)  : 1523845980
+ read end (sec)   : 109674784
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 101004
+ read start (sec) : 110406941
+ read start (ns)  : 1523845980
+ read end (sec)   : 110507075
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 100134
+ read start (sec) : 121165917
+ read start (ns)  : 1523845980
+ read end (sec)   : 121266978
+ read end (ns)    : 1523845980
+ difference (sec) : 0
+ difference (ns)  : 101061

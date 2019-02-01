@@ -7,7 +7,7 @@
 #include "UDPRBCP.hh"
 
 //______________________________________________________________________________
-FPGAModule::FPGAModule( char*        ipAddr,
+FPGAModule::FPGAModule( const char*  ipAddr,
 			unsigned int port,
 			rbcp_header* sendHeader,
 			int          disp_mode )
@@ -71,7 +71,7 @@ FPGAModule::ReadModule( unsigned int module_id,
 //______________________________________________________________________________
 int FPGAModule::ReadModule_nByte( unsigned int module_id,
 				  unsigned int local_address,
-				  unsigned int length )
+				  unsigned int nByte )
 {
   rd_data_.clear();
   unsigned int udp_addr
@@ -80,7 +80,7 @@ int FPGAModule::ReadModule_nByte( unsigned int module_id,
 
   UDPRBCP udpMan(ipAddr_, port_, sendHeader_,
 		 static_cast<UDPRBCP::rbcp_debug_mode>(disp_mode_));
-  udpMan.SetRD(udp_addr, length);
+  udpMan.SetRD(udp_addr, nByte);
   int ret;
   if((ret = udpMan.DoRBCP()) > -1){ udpMan.CopyRD(rd_data_); }
 

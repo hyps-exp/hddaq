@@ -1,9 +1,9 @@
 // -*- C++ -*-
-/*
+/**
  *  @file   cmsgd.cc
- *  @brief  
+ *  @brief
  *  @author Kenji Hosomi <hosomi@lambda.phys.tohoku.ac.jp>
- *  @date 2007/08/10   
+ *  @date 2007/08/10
  *
  */
 
@@ -25,7 +25,7 @@
 #include "Message/Message.h"
 #include "Message/MessageSocket.h"
 #include "Message/MessageClient.h"
-#include "cmsgd.h"
+#include "Message/cmsgd.h"
 
 typedef std::vector<std::string>::iterator ArgItr;
 
@@ -35,9 +35,9 @@ kol::Mutex            g_mutex; // global mutex (for std::cout,std::cerr)
 int          g_port            = 8882;
 bool         g_verbose         = false;
 unsigned int g_retry_interval  = 1; // [sec]
-unsigned int g_timeout         = 6; // [sec] 
-// if the value of timeout is very small (<=5 sec), 
-// calling of recvMessage() always throws an exception 
+unsigned int g_timeout         = 6; // [sec]
+// if the value of timeout is very small (<=5 sec),
+// calling of recvMessage() always throws an exception
 
 const std::string k_opt_DR      = "-DR";
 const std::string k_opt_UR      = "-UR";
@@ -69,7 +69,7 @@ std::list<msgnode_t>     g_nodelist;
 const std::string k_socket_exception_gcount_0 = "gcount() = 0";
 
 //______________________________________________________________________________
-// node connection status 
+// node connection status
 //______________________________________________________________________________
 // good
 const std::string k_node_connect   = " connect ";
@@ -82,7 +82,7 @@ const std::string k_node_unconnect = "unconnect";
 const std::string k_node_timeout   = " timeout ";
 
 //______________________________________________________________________________
-void 
+void
 sigpipehandler(int signum)
 {
   if (g_verbose)
@@ -91,21 +91,21 @@ sigpipehandler(int signum)
 }
 
 //______________________________________________________________________________
-int 
+int
 set_signal()
 {
   struct sigaction act;
-  
-  memset(&act, 0, sizeof(struct sigaction));  
-  act.sa_handler = sigpipehandler; 
+
+  memset(&act, 0, sizeof(struct sigaction));
+  act.sa_handler = sigpipehandler;
   act.sa_flags |= SA_RESTART;
 
   if (sigaction(SIGPIPE, &act, NULL) != 0 )
     {
       std::cerr << "#E sigaction(2) error!" << std::endl;
       return -1;
-    } 
-	
+    }
+
   return 0;
 }
 
@@ -123,9 +123,9 @@ msgnode_t::show_status() const
     color = k_yellow;
 
   std::cout.setf(std::ios_base::left);
-  std::cout << "   connection: " 
-	    << std::setfill(' ') << std::setw(16) << hostname 
-	    << " " << std::setfill(' ') << std::setw(6) << port 
+  std::cout << "   connection: "
+	    << std::setfill(' ') << std::setw(16) << hostname
+	    << " " << std::setfill(' ') << std::setw(6) << port
 	    << " [ " << color << status << k_default_color << " ]"
 	    << std::endl;
   std::cout.unsetf(std::ios_base::left);
@@ -157,7 +157,7 @@ CMessageUpstreamThread::close()
     return;
 
   g_dnsock_mutex.lock();
-  for (std::list<MessageClient>::iterator i=g_dnsocklist.begin(); 
+  for (std::list<MessageClient>::iterator i=g_dnsocklist.begin();
        i!=g_dnsocklist.end();)
     {
       if (m_sock!=&(*i))
@@ -165,8 +165,8 @@ CMessageUpstreamThread::close()
       else
 	{
 	  g_mutex.lock();
-	  std::cout << "#D CMessageUpstreamThread::close() " 
-		    << " erase dnsock " 
+	  std::cout << "#D CMessageUpstreamThread::close() "
+		    << " erase dnsock "
 		    << m_node.hostname
 		    << std::endl;
 	  g_mutex.unlock();
@@ -201,7 +201,7 @@ CMessageUpstreamThread::connect()
 	  g_dnsocklist.push_back(sock);
 	  m_sock = &g_dnsocklist.back();
 	  g_dnsock_mutex.unlock();
-	  
+
 	  timeval timeoutv;
 	  timeoutv.tv_sec  = g_timeout;
 	  timeoutv.tv_usec = 0;
@@ -209,7 +209,7 @@ CMessageUpstreamThread::connect()
 			     &timeoutv, sizeof(timeoutv));
 	}
     }
-  catch (const std::exception& e) 
+  catch (const std::exception& e)
     {
       if (g_verbose)
 	{
@@ -218,7 +218,7 @@ CMessageUpstreamThread::connect()
 		    << k_default_color << " error @ connect()\n"
 		    << " " << m_node.hostname << " " << m_node.port << ": "
 		    << "\n" << e.what() << std::endl;
-	  g_mutex.unlock(); 
+	  g_mutex.unlock();
 	}
       return false;
     }
@@ -244,7 +244,7 @@ bool
 CMessageUpstreamThread::forwardMessage()
 {
   Message msg;
-  try 
+  try
     {
       recvMessage(msg);
       if (m_node.status==k_node_timeout)
@@ -254,7 +254,7 @@ CMessageUpstreamThread::forwardMessage()
 	{
 	  if (m_ref_flag == 1)
 	    reflectMessage(msg);
-	  
+
 	  sendMessage(msg);
 	}
       else
@@ -274,10 +274,10 @@ CMessageUpstreamThread::forwardMessage()
 		<< k_default_color << " error @ forwardMessage()\n"
 		<< " " << m_node.hostname << " " << m_node.port << ": "
 		<< "\n" << e.what() << std::endl;
-      g_mutex.unlock(); 
+      g_mutex.unlock();
       return false;
     }
-  
+
   return true;
 }
 
@@ -285,8 +285,8 @@ CMessageUpstreamThread::forwardMessage()
 void
 CMessageUpstreamThread::recvMessage(Message& msg)
 {
-  try 
-    {  
+  try
+    {
       msg  = m_sock->recvMessage();
       if (m_node.status==k_node_timeout)
 	{
@@ -294,7 +294,7 @@ CMessageUpstreamThread::recvMessage(Message& msg)
 	  m_node.status = k_node_connect;
 	  m_node.show_status();
 	  g_mutex.unlock();
-	  
+
 	  if (g_verbose)
 	    {
 	      std::ostringstream oss;
@@ -309,7 +309,7 @@ CMessageUpstreamThread::recvMessage(Message& msg)
     {
       std::string err_msg = e.what();
       std::ostringstream oss;
-      oss << k_bg_purple << "\n#E CMessageUpstreamThread:" 
+      oss << k_bg_purple << "\n#E CMessageUpstreamThread:"
 	  << " msgd -> cmsgd:" << k_default_color
 	  << " " << m_node.hostname << ": " << e.what();
 
@@ -358,17 +358,17 @@ CMessageUpstreamThread::reflectMessage(const Message& msg)
     {
       g_mutex.lock();
       std::cerr << k_bg_purple<< "#E CMessageUpstreamThread:"
-		<< " cmsgd -> msgd: " 
+		<< " cmsgd -> msgd: "
 		<< k_default_color << " error @ reflectMessage()\n"
 		<< " " << m_node.hostname << " " << m_node.port << ": "
 		<< "\n" << e.what() << std::endl;
-      g_mutex.unlock(); 
+      g_mutex.unlock();
     }
   return;
 }
 
 //______________________________________________________________________________
-int 
+int
 CMessageUpstreamThread::run()
 {
   int n_retry = 0;
@@ -379,7 +379,7 @@ CMessageUpstreamThread::run()
 	  if (n_retry==0 || g_verbose)
 	    {
 	      g_mutex.lock();
-	      std::cout << "#D trying new connection to " 
+	      std::cout << "#D trying new connection to "
 			<< m_node.hostname << std::endl;
 	      g_mutex.unlock();
 	    }
@@ -411,7 +411,7 @@ CMessageUpstreamThread::run()
       close();
       throw;
     }
-  
+
   close();
   g_mutex.lock();
   std::cout << "#D CMessageUpstreamThreadd::run() " << m_node.hostname
@@ -426,7 +426,7 @@ CMessageUpstreamThread::sendMessage(Message& msg,
 				    const std::string& str)
 {
   g_upsock_mutex.lock();
-  for (std::list<MessageSocket>::iterator it=g_upsocklist.begin(); 
+  for (std::list<MessageSocket>::iterator it=g_upsocklist.begin();
        it!=g_upsocklist.end();)
     {
       MessageSocket& ctrl_sock = *it;
@@ -448,12 +448,12 @@ CMessageUpstreamThread::sendMessage(Message& msg,
 	      g_mutex.lock();
 	      std::cerr << k_bg_purple << "#E CMessageUpstreamThread:"
 			<< " cmsgd -> ctrl:" << k_default_color
-			<< " " << m_node.hostname << " " << e.what() 
+			<< " " << m_node.hostname << " " << e.what()
 			<< " erase a DAQ controller from list"
 			<< std::endl;
 	      g_mutex.unlock();
 	    }
-	  it = g_upsocklist.erase(it);	      
+	  it = g_upsocklist.erase(it);
 	}
     }
   g_upsock_mutex.unlock();
@@ -505,19 +505,19 @@ bool
 CMessageDownstreamThread::forwardMessage()
 {
   Message msg;
-  try 
+  try
     {
       recvMessage(msg);
       const std::string& msg_str = msg.getMessage();
 
       g_mutex.lock();
-      std::cout << "\n#D cmsgd: received Message from DAQ controller = " 
+      std::cout << "\n#D cmsgd: received Message from DAQ controller = "
 		<< k_bg_cyan << msg_str	<< k_default_color << std::endl;
       g_mutex.unlock();
 
       if (msg_str == "status")
 	printStatus();
-	  
+
       if (msg.getHeader()==g_MESSAGE_MAGIC)
 	{
 	  if (m_ref_flag == 1)
@@ -531,8 +531,8 @@ CMessageDownstreamThread::forwardMessage()
   catch (const std::exception& e)
     {
       g_mutex.lock();
-      std::cerr << k_bg_brown << "#E CMessageDownstreamThread:" 
-		<< k_default_color << " error @ forwardMessage()\n" 
+      std::cerr << k_bg_brown << "#E CMessageDownstreamThread:"
+		<< k_default_color << " error @ forwardMessage()\n"
 		<< e.what() << std::endl;
       g_mutex.unlock();
       return false;
@@ -568,11 +568,11 @@ CMessageDownstreamThread::printStatus() const
   int n_dnsock = g_dnsocklist.size();
   g_dnsock_mutex.unlock();
 
-  std::cout << "\n entries in upstream-list  : " 
+  std::cout << "\n entries in upstream-list  : "
 	    << std::setfill(' ') << std::setw(4) << n_upsock
-	    << "\n entries in downstream-list: " 
+	    << "\n entries in downstream-list: "
 	    << std::setfill(' ') << std::setw(4) << n_dnsock
-	    << "\n" << std::setfill(' ') << std::setw(5) << n_connect 
+	    << "\n" << std::setfill(' ') << std::setw(5) << n_connect
 	    << " connect"
 	    << "\n" << std::setfill(' ') << std::setw(5) << n_unconnect
 	    << " unconnect (closed by peer, msgd is down, etc.)"
@@ -612,15 +612,15 @@ CMessageDownstreamThread::recvMessage(Message& msg)
 void
 CMessageDownstreamThread::reflectMessage(const Message& msg)
 {
-  try 
+  try
     {
       m_ctrl.sendMessage(msg);
     }
   catch (const std::exception& e)
     {
       g_mutex.lock();
-      std::cerr << k_bg_brown 
-		<< "#E CMessageDownstreamThread:" 
+      std::cerr << k_bg_brown
+		<< "#E CMessageDownstreamThread:"
 		<< " cmsgd -> ctrl: " << k_default_color
 		<< " error @ reflectMessage()\n" << e.what() << std::endl;
       g_mutex.unlock();
@@ -629,25 +629,25 @@ CMessageDownstreamThread::reflectMessage(const Message& msg)
 }
 
 //______________________________________________________________________________
-int 
+int
 CMessageDownstreamThread::run()
 {
-  try 
+  try
     {
       while (forwardMessage());
     }
   catch (...)
     {
       g_mutex.lock();
-      std::cerr << k_bg_brown 
-		<< "#E CMessageDownstreamThread:" 
-		<< k_default_color << "  unknown error occurred in run()" 
+      std::cerr << k_bg_brown
+		<< "#E CMessageDownstreamThread:"
+		<< k_default_color << "  unknown error occurred in run()"
 		<< std::endl;
       g_mutex.unlock();
       close();
       throw;
     }
-  
+
   close();
   g_mutex.lock();
   std::cout << "#D downstream thread exit run()" << std::endl;
@@ -676,7 +676,7 @@ CMessageDownstreamThread::sendMessage(const Message& msg)
       catch(const std::exception& e)
 	{
 	  g_mutex.lock();
-	  std::cerr << k_bg_brown 
+	  std::cerr << k_bg_brown
 		    << "#E CMessageDownstreamThread:"
 		    << " cmsgd -> msgd: " << k_default_color
 		    << " error @ sendMessage()" << " "
@@ -748,7 +748,7 @@ int main(int argc, char* argv[])
 	      itrlist.push_back(i);
 	    }
 	}
-      
+
       for (std::vector<ArgItr>::iterator i=itrlist.begin();
 	   i!=itrlist.end(); ++i)
 	{
@@ -773,7 +773,7 @@ int main(int argc, char* argv[])
       std::ifstream ifs(argvs.back().c_str(), std::ios::in);
       if (!ifs)
 	{
-	  std::cout  <<  "cmsgd: unable to open msgnode file : "  
+	  std::cout  <<  "cmsgd: unable to open msgnode file : "
 		     << argvs.back().c_str()
 		     << std::endl;
 	  return -1;
@@ -796,15 +796,15 @@ int main(int argc, char* argv[])
 	}
       ifs.close();
 
-      // run upstream thread 
+      // run upstream thread
       for (std::list<msgnode_t>::iterator i=g_nodelist.begin();
 	   i!=g_nodelist.end(); ++i)
 	g_thread.post(new CMessageUpstreamThread(*i, URflag));
-      
+
       //run server
       std::cout << "#D server port for DAQ controller = " << g_port << std::endl;
       kol::TcpServer server(g_port);
-      while (true) 
+      while (true)
 	{
 	  MessageSocket daq_ctrl(server.accept());
 
@@ -814,7 +814,7 @@ int main(int argc, char* argv[])
 		     << k_default_color << std::endl;
 	  g_mutex.unlock();
 
-	  // run downstream thread 
+	  // run downstream thread
 	  g_upsock_mutex.lock();
 	  g_upsocklist.push_back(daq_ctrl);
 	  g_thread.post(new CMessageDownstreamThread(g_upsocklist.back(),
@@ -827,7 +827,7 @@ int main(int argc, char* argv[])
       const std::string msg = e.what();
       if (msg == "See usage")
 	{
-	std::cout << "Usage: " << argv[0] 
+	std::cout << "Usage: " << argv[0]
 		  << " [" << k_opt_h << "," << k_opt_help << "]"
 		  << " [" << k_opt_DR << "]"
 		  << " [" << k_opt_UR << "]"
@@ -835,52 +835,52 @@ int main(int argc, char* argv[])
 		  << " [" << k_opt_timeout << "sec.]"
 		  << " [" << k_opt_port << "integer]"
 		  << " [" << k_opt_v << "]"
-		  << " nodefile" 
+		  << " nodefile"
 		  << std::endl;
 
 	std::cout << "\n description\n"
-		  << std::setw(12) 
+		  << std::setw(12)
 		  << " option :\n"
 
-		  << std::setw(12) 
+		  << std::setw(12)
 		  <<k_opt_DR
 		  << " : reflect message to downside"
 		  << "\n"
 
-		  << std::setw(12) 
+		  << std::setw(12)
 		  << k_opt_UR
 		  << " : reflect message to upside"
 		  << "\n"
 
-		  << std::setw(12) 
+		  << std::setw(12)
 		  << k_opt_retry
 		  << " : retry interval [sec] for new connection to msgd"
 		  << " (default = " << g_retry_interval << ")"
 		  << "\n"
 
-		  << std::setw(12) 
+		  << std::setw(12)
 		  << k_opt_timeout
 		  << " : timeout value [sec] for receiving from msgd"
 		  << " (default = " << g_timeout << ")"
 		  << "\n"
 
-		  << std::setw(12) 
+		  << std::setw(12)
 		  << k_opt_port
 		  << " : server port for DAQ controller "
 		  << " (default = " << g_port << ")"
 		  << "\n"
-	
-		  << std::setw(12) 
+
+		  << std::setw(12)
 		  << k_opt_v
 		  << " : verbose output mode"
 		  << "\n"
 
-		  << std::setw(12) 
+		  << std::setw(12)
 		  << (k_opt_h +", "+ k_opt_help)
 		  << " : print this message "
 		  << std::endl;
 	}
-      else 
+      else
 	std::cerr << "#E main()\n" << msg << std::endl;
     }
   catch (const std::exception& e)
