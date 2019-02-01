@@ -12,9 +12,9 @@ namespace vme
 
 //____________________________________________________________________________
 void
-SetMasterHeader( GEF_UINT32  data_size,
-		 GEF_UINT32  nblock,
-		 GEF_UINT32* position )
+SetMasterHeader( dtype32  data_size,
+		 dtype32  nblock,
+		 dtype32* position )
 {
   MasterHeader vme_master_header;
   vme_master_header.m_magic     = MasterMagic;
@@ -25,9 +25,9 @@ SetMasterHeader( GEF_UINT32  data_size,
 
 //____________________________________________________________________________
 void
-SetModuleHeader( GEF_UINT64  vme_address,
-		 GEF_UINT64  data_size,
-		 GEF_UINT32* ptr )
+SetModuleHeader( dtype64  vme_address,
+		 dtype64  data_size,
+		 dtype32* ptr )
 {
   ModuleHeader vme_module_header;
   vme_module_header.m_magic               = ModuleMagic;

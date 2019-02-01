@@ -3,7 +3,7 @@
  *  @file   EventParam.h
  *  @brief
  *  @author Kazuo NAKAYOSHI <kazuo.nakayoshi@kek.jp>
- *  @date   
+ *  @date
  *  @note   Modified by Ken Sakashita <kensh@post.kek.jp>
  *
  *  $Id: EventParam.h,v 1.2 2009/12/15 09:51:08 igarashi Exp $
@@ -33,9 +33,8 @@
 #ifndef EVENT_PARAM_H
 #define EVENT_PARAM_H
 
-static const int    max_node_num     = 50;
-//static const size_t max_fragment_len = 5 * 1024;  //1024 * 20byte
-static const size_t max_fragment_len = 128 * 1024;  //1024 * 20byte
+static const int    max_node_num     = 150;
+static const size_t max_fragment_len = 5 * 1024;
 static const int    max_event_len = max_fragment_len * max_node_num;
 
 #endif

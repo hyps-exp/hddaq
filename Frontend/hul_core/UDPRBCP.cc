@@ -12,7 +12,7 @@
 #include<sys/select.h>
 #include<netinet/in.h>
 
-UDPRBCP::UDPRBCP(char* ipAddr, unsigned int port, rbcp_header* sendHeader,
+UDPRBCP::UDPRBCP(const char* ipAddr, unsigned int port, rbcp_header* sendHeader,
 		 rbcp_debug_mode mode)
   :
   ipAddr_(ipAddr),
