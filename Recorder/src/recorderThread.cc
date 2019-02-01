@@ -76,316 +76,316 @@ using namespace  hddaq::unpacker;
 
 RecorderThread::RecorderThread()
 {
-	std::cerr << "Recorder Created" << std::endl;
+  std::cerr << "Recorder Created" << std::endl;
 }
 
 RecorderThread::RecorderThread(std::string hostname, int port)
-	: m_port(port), m_hostname(hostname)
+  : m_port(port), m_hostname(hostname)
 {
-	std::cerr << "Recorder Created" << std::endl;
+  std::cerr << "Recorder Created" << std::endl;
 }
 
 
 RecorderThread::~RecorderThread()
 {
-	std::cerr << "Recorder Deleted" << std::endl;
+  std::cerr << "Recorder Deleted" << std::endl;
 }
 
 void RecorderThread::setDirectoryName(const std::string& dir_name)
 {
-	if (dir_name.empty()) return;
-	if (dir_name[dir_name.size()-1]=='/') m_dir_name = dir_name;
-	else m_dir_name = dir_name + "/";
+  if (dir_name.empty()) return;
+  if (dir_name[dir_name.size()-1]=='/') m_dir_name = dir_name;
+  else m_dir_name = dir_name + "/";
 }
 
 
 void RecorderThread::setHostname(const std::string& hostname)
 {
-	m_hostname = hostname;
+  m_hostname = hostname;
 }
 
 void RecorderThread::setPortNo(int port)
 {
-	m_port = port;
+  m_port = port;
 }
 
 void RecorderThread::setRecordMode(int rec_mode)
 {
-	m_rec_mode = rec_mode;
+  m_rec_mode = rec_mode;
 }
 
 int RecorderThread::getRecordMode()
 {
-	return m_rec_mode;
+  return m_rec_mode;
 }
 
 int RecorderThread::active_loop()
 {
 
-	//std::cerr << "#D one" << std::endl;
-	GlobalMessageClient & msock = GlobalMessageClient::getInstance();
-	//std::cerr << "#D two" << std::endl;
+  //std::cerr << "#D one" << std::endl;
+  GlobalMessageClient & msock = GlobalMessageClient::getInstance();
+  //std::cerr << "#D two" << std::endl;
 
-	std::cerr << "recorderThread: entered active_loop with port="
-		<< m_port << std::endl;
-	int run_number = getRunNumber();
-	std::vector<unsigned int> data;
+  std::cerr << "recorderThread: entered active_loop with port="
+	    << m_port << std::endl;
+  int run_number = getRunNumber();
+  std::vector<unsigned int> data;
+  try {
+
+    std::cerr << "RUN NO: " << run_number << " ";
+    std::string fname;
+
+    fname = makeFileName(run_number);
+    if (m_rec_mode == REC_COMPRESS) {
+      fname += ".gz";
+    }
+    std::cerr << "filename: " << fname << std::endl;
+
+    std::string messageStr = "Rec: record start " + fname;
+    msock.sendString(messageStr);
+
+
+
+    kol::TcpClient client(m_hostname.c_str(), m_port);
+    unsigned int header[2];
+    // 		static unsigned int data[max_event_len];
+    data.clear();
+    //unsigned int *data = new unsigned int[max_event_len];
+
+
+    struct timeval timeoutv;
+    //socklen_t optlen;
+    //client.getsockopt(SOL_SOCKET, SO_RCVTIMEO, &timeoutv, &optlen);
+    //std::cout << "#D timeout " << timeoutv.tv_sec << " "
+    //		<< timeoutv.tv_usec << " " << optlen << std::endl;
+    //timeoutv.tv_sec = 10;
+    timeoutv.tv_sec = 5;
+    timeoutv.tv_usec = 0;
+    client.setsockopt(SOL_SOCKET, SO_RCVTIMEO, &timeoutv,
+		      sizeof(timeoutv));
+
+    m_state = RUNNING;
+    m_event_number = 0;
+
+    std::ostream *ofsp = 0;
+    if (m_rec_mode == REC_COMPRESS) {
+      ofsp = new OGZFileStream(fname.c_str(), std::ios::out | std::ios::binary);
+    } else {
+      ofsp = new std::ofstream(fname.c_str(), std::ios::out | std::ios::binary);
+    }
+    if (! *ofsp) {
+      std::cerr << "ERROR: unable to create or write file"
+		<< std::endl;
+      return -1;
+    }
+    Logger logger(m_event_number,
+		  run_number, m_dir_name+"recorder.log");
+
+    while (true) {
+      while (true) {
+	if (checkCommand()!=0) break;
 	try {
-
-		std::cerr << "RUN NO: " << run_number << " ";
-		std::string fname;
-
-		fname = makeFileName(run_number);
-		if (m_rec_mode == REC_COMPRESS) {
-			fname += ".gz";
-		}
-		std::cerr << "filename: " << fname << std::endl;
-
-		std::string messageStr = "Rec: record start " + fname;
-		msock.sendString(messageStr);
-
-
-
-		kol::TcpClient client(m_hostname.c_str(), m_port);
-		unsigned int header[2];
-// 		static unsigned int data[max_event_len];
-		data.clear();
-		//unsigned int *data = new unsigned int[max_event_len];
-
-
-		struct timeval timeoutv;
-		//socklen_t optlen;
-		//client.getsockopt(SOL_SOCKET, SO_RCVTIMEO, &timeoutv, &optlen);
-		//std::cout << "#D timeout " << timeoutv.tv_sec << " "
-		//		<< timeoutv.tv_usec << " " << optlen << std::endl;
-		//timeoutv.tv_sec = 10;
-		timeoutv.tv_sec = 5;
-		timeoutv.tv_usec = 0;
-		client.setsockopt(SOL_SOCKET, SO_RCVTIMEO, &timeoutv,
-			sizeof(timeoutv));
-
-		m_state = RUNNING;
-		m_event_number = 0;
-
-		std::ostream *ofsp = 0;
-		if (m_rec_mode == REC_COMPRESS) {
-			ofsp = new OGZFileStream(fname.c_str(), std::ios::out | std::ios::binary);
-		} else {
- 			ofsp = new std::ofstream(fname.c_str(), std::ios::out | std::ios::binary);
-		}
-		if (! *ofsp) {
-			std::cerr << "ERROR: unable to create or write file"
-				<< std::endl;
-			return -1;
-		}
-		Logger logger(m_event_number,
-			      run_number, m_dir_name+"recorder.log");
-
-		while (true) {
-			while (true) {
-				if (checkCommand()!=0) break;
-				try {
-					client.read(reinterpret_cast<char *>(header), sizeof(header));
-					break;
-				} catch(kol::SocketException & e) {
-					if (e.reason() == EWOULDBLOCK) {
-						//std::cerr << "#D Data socket timeout. retry "
-						//	<< std::endl;
-						client.iostate_good();
-					} else {
-						std::ostringstream msgss;
-						msgss << "#W Data socket err. "
-							<< e.what() << " "
-							<< std::dec << e.reason();
-						msock.sendString(MT_WARNING, msgss);
-						std::cerr << msgss.str() << std::endl;
-						throw e;
-					}
-				}
-			}
-			if (checkCommand()!=0) break;
-
-			if (checkTcp(client, m_name)!=0) break;
-
-			checkHeader(header[0], m_name);
-
-			size_t recv_byte = (header[1] - 2)*sizeof(unsigned int);
-			if (checkDataSize(max_event_len*sizeof(unsigned int),
-					  recv_byte, m_name)!=0)
-				continue;
-			data.resize(recv_byte/sizeof(unsigned int));
-			try {
-				if (!client.read(reinterpret_cast<char *>(&data[0]), recv_byte))
-					break;
-			} catch(kol::SocketException & e) {
-				std::ostringstream msgss;
-				msgss << "#E Rec: Data socket data body read err."
-					<< e.what() << " " << e.reason();
-				msock.sendString(MT_ERROR, msgss);
-				std::cerr << msgss.str() << std::endl;
-				break;
-			}
-			unsigned int received_size = client.gcount();
-			if (received_size != recv_byte) {
-				std::ostringstream msgss;
-				msgss << "#E Rec: read data misssmatch : "
-					<< std::dec << client.gcount()
-					<< "/" << recv_byte;
-				msock.sendString(MT_ERROR, msgss);
-				std::cerr << msgss.str() << std::endl;
-				break;
-			}
-
-/*
-		if (checkCopperData((data + 1), ((receved_size/4) - 1))) {
-				std::cerr << "#Error: broken data structure!!" << std::endl;
-				break;
-		}
-*/
-			ofsp->write(reinterpret_cast<char *>(header), sizeof(header));
-			ofsp->write(reinterpret_cast<char *>(&data[0]), recv_byte);
-			logger += (sizeof(header) + recv_byte);
-			//std::cerr << '.';
-			m_event_number++;
-		}
-		delete ofsp;
-		ofsp = 0;
-		::chmod(fname.c_str(), S_IRUSR | S_IRGRP | S_IROTH);
-		std::cerr << "file   closed" << std::endl;
-		client.close();
-		std::cerr << "client closed" << std::endl;
-
-		messageStr = "Rec: " + fname + " closed";
-		msock.sendString(messageStr);
-
-	} catch(std::exception & e) {
-		std::cerr << "@@ Recorder Error: ";
-		std::cerr << e.what() << std::endl;
-		std::string messageStr = "#ERR. Rec: " + std::string(e.what());
-		msock.sendString(MT_ERROR, messageStr);
+	  client.read(reinterpret_cast<char *>(header), sizeof(header));
+	  break;
+	} catch(kol::SocketException & e) {
+	  if (e.reason() == EWOULDBLOCK) {
+	    //std::cerr << "#D Data socket timeout. retry "
+	    //	<< std::endl;
+	    client.iostate_good();
+	  } else {
+	    std::ostringstream msgss;
+	    msgss << "#W Data socket err. "
+		  << e.what() << " "
+		  << std::dec << e.reason();
+	    msock.sendString(MT_WARNING, msgss);
+	    std::cerr << msgss.str() << std::endl;
+	    throw e;
+	  }
 	}
+      }
+      if (checkCommand()!=0) break;
 
-	std::cerr << "recorderThread: exited active_loop" << std::endl;
+      if (checkTcp(client, m_name)!=0) break;
 
-	m_state = IDLE;
-	return 0;
+      checkHeader(header[0], m_name);
+
+      size_t recv_byte = (header[1] - 2)*sizeof(unsigned int);
+      if (checkDataSize(max_event_len*sizeof(unsigned int),
+			recv_byte, m_name)!=0)
+	continue;
+      data.resize(recv_byte/sizeof(unsigned int));
+      try {
+	if (!client.read(reinterpret_cast<char *>(&data[0]), recv_byte))
+	  break;
+      } catch(kol::SocketException & e) {
+	std::ostringstream msgss;
+	msgss << "#E Rec: Data socket data body read err."
+	      << e.what() << " " << e.reason();
+	msock.sendString(MT_ERROR, msgss);
+	std::cerr << msgss.str() << std::endl;
+	break;
+      }
+      unsigned int received_size = client.gcount();
+      if (received_size != recv_byte) {
+	std::ostringstream msgss;
+	msgss << "#E Rec: read data misssmatch : "
+	      << std::dec << client.gcount()
+	      << "/" << recv_byte;
+	msock.sendString(MT_ERROR, msgss);
+	std::cerr << msgss.str() << std::endl;
+	break;
+      }
+
+      /*
+	if (checkCopperData((data + 1), ((receved_size/4) - 1))) {
+	std::cerr << "#Error: broken data structure!!" << std::endl;
+	break;
+	}
+      */
+      ofsp->write(reinterpret_cast<char *>(header), sizeof(header));
+      ofsp->write(reinterpret_cast<char *>(&data[0]), recv_byte);
+      logger += (sizeof(header) + recv_byte);
+      //std::cerr << '.';
+      m_event_number++;
+    }
+    delete ofsp;
+    ofsp = 0;
+    ::chmod(fname.c_str(), S_IRUSR | S_IRGRP | S_IROTH);
+    std::cerr << "file   closed" << std::endl;
+    client.close();
+    std::cerr << "client closed" << std::endl;
+
+    messageStr = "Rec: " + fname + " closed";
+    msock.sendString(messageStr);
+
+  } catch(std::exception & e) {
+    std::cerr << "@@ Recorder Error: ";
+    std::cerr << e.what() << std::endl;
+    std::string messageStr = "#ERR. Rec: " + std::string(e.what());
+    msock.sendString(MT_ERROR, messageStr);
+  }
+
+  std::cerr << "recorderThread: exited active_loop" << std::endl;
+
+  m_state = IDLE;
+  return 0;
 
 }
 
 std::string RecorderThread::makeFileName(int run_no)
 {
-	int fname_size = 8;
-	std::string fname = "run00000";
-	std::string rnum;
+  int fname_size = 8;
+  std::string fname = "run00000";
+  std::string rnum;
 
-	std::ostringstream str_stream;
-	str_stream << run_no;
-	rnum = str_stream.str();
-	int no_size = rnum.size();
+  std::ostringstream str_stream;
+  str_stream << run_no;
+  rnum = str_stream.str();
+  int no_size = rnum.size();
 
-	fname.replace(fname_size - no_size, no_size, rnum);
-	fname += ".dat";
-	fname = m_dir_name + fname;
-	return fname;
+  fname.replace(fname_size - no_size, no_size, rnum);
+  fname += ".dat";
+  fname = m_dir_name + fname;
+  return fname;
 }
 
 int RecorderThread::checkCopperData(unsigned int *data, int len)
 {
-	int errorflag = 0;
-	static int last_runno = 0;
+  int errorflag = 0;
+  static int last_runno = 0;
 
-	if (data[0] != 0x45564e54) {
-		std::cerr << "#E DAQ Server header Error !! "
-			<< std::hex << data[0] << std::endl;
-		errorflag |= 0x1;
-	}
+  if (data[0] != 0x45564e54) {
+    std::cerr << "#E DAQ Server header Error !! "
+	      << std::hex << data[0] << std::endl;
+    errorflag |= 0x1;
+  }
 
-	if (data[2] == 1)
-		last_runno = 0;
+  if (data[2] == 1)
+    last_runno = 0;
 
-	if (data[2] - last_runno != 1) {
-		std::cerr << "#E Event Slip !! "
-			<< std::dec << data[2] << "/" << last_runno << std::endl;
-		errorflag |= 0x2;
-	}
-	last_runno = data[2];
+  if (data[2] - last_runno != 1) {
+    std::cerr << "#E Event Slip !! "
+	      << std::dec << data[2] << "/" << last_runno << std::endl;
+    errorflag |= 0x2;
+  }
+  last_runno = data[2];
 
-	if (data[8] != 0xfffffafa) {
-		std::cerr << "#E COPPER header Error !! "
-			<< std::hex << data[8] << std::endl;
-		errorflag |= 0x4;
-	}
-	if (data[len - 1] != 0xfffff5f5) {
-		std::cerr << "#E COPPER trailer Error !! "
-			<< std::hex << data[len - 1] << std::endl;
-		errorflag |= 0x8;
-	}
-	if ((data[len - 2] & 0xffff0000) != 0xff550000) {
-		std::cerr << "#E FINESSE trailer Error !! "
-			<< std::hex << data[len - 2] << std::endl;
-		errorflag |= 0x10;
-	}
-	if (data[1] != (unsigned int) len) {
-		std::cerr << "#E Data length miss-match  !! "
-			<< std::dec << data[1] << "/" << len << std::endl;
-		errorflag |= 0x20;
-	}
+  if (data[8] != 0xfffffafa) {
+    std::cerr << "#E COPPER header Error !! "
+	      << std::hex << data[8] << std::endl;
+    errorflag |= 0x4;
+  }
+  if (data[len - 1] != 0xfffff5f5) {
+    std::cerr << "#E COPPER trailer Error !! "
+	      << std::hex << data[len - 1] << std::endl;
+    errorflag |= 0x8;
+  }
+  if ((data[len - 2] & 0xffff0000) != 0xff550000) {
+    std::cerr << "#E FINESSE trailer Error !! "
+	      << std::hex << data[len - 2] << std::endl;
+    errorflag |= 0x10;
+  }
+  if (data[1] != (unsigned int) len) {
+    std::cerr << "#E Data length miss-match  !! "
+	      << std::dec << data[1] << "/" << len << std::endl;
+    errorflag |= 0x20;
+  }
 
-/*
-		std::cerr << "#D len:" << std::dec << len << "/" << data[1]
-				<< std::endl;
-*/
+  /*
+    std::cerr << "#D len:" << std::dec << len << "/" << data[1]
+    << std::endl;
+  */
 
-/*
-		std::cerr << "COPPER DATA" << std::endl;
-		for (int i = 0 ; i < 4 ; i++) {
-		std::cerr << std::hex << std::setfill('0')
-				<< std::setw(4) << i * 4 << ":" 
-				<< std::setw(8) << data[i * 4] << " "
-				<< std::setw(8) << data[i * 4 + 1] << " "
-				<< std::setw(8) << data[i * 4 + 2] << " "
-				<< std::setw(8) << data[i * 4 + 3] << std::endl;
-		}
-		std::cerr << "---" << std::endl;
-		std::cerr << "tail:"
-				<< std::hex << std::setw(8)
-				<< data[len - 4] << " "
-				<< data[len - 3] << " "
-				<< data[len - 2] << " "
-				<< data[len - 1] << std::endl;
-*/
+  /*
+    std::cerr << "COPPER DATA" << std::endl;
+    for (int i = 0 ; i < 4 ; i++) {
+    std::cerr << std::hex << std::setfill('0')
+    << std::setw(4) << i * 4 << ":"
+    << std::setw(8) << data[i * 4] << " "
+    << std::setw(8) << data[i * 4 + 1] << " "
+    << std::setw(8) << data[i * 4 + 2] << " "
+    << std::setw(8) << data[i * 4 + 3] << std::endl;
+    }
+    std::cerr << "---" << std::endl;
+    std::cerr << "tail:"
+    << std::hex << std::setw(8)
+    << data[len - 4] << " "
+    << data[len - 3] << " "
+    << data[len - 2] << " "
+    << data[len - 1] << std::endl;
+  */
 
-	return errorflag;
+  return errorflag;
 }
 
 int RecorderThread::dump_data(unsigned int *header, unsigned int *data,
-							  int recv_byte)
+			      int recv_byte)
 {
 
-	std::cerr << std::dec << std::setw(4) << m_event_number << ": ";
-	std::cerr << "header[]: " << std::hex << std::setfill('0')
-		<< std::setw(8) << header[0]
-		<< " " << std::setw(8) << header[1] << std::endl;
-	std::cerr << " event[]: " << std::hex << std::setfill('0')
-		<< std::setw(8) << data[0] << " "
-		<< std::setw(8) << data[1] << " "
-		<< std::setw(8) << data[2] << " "
-		<< std::setw(8) << data[3] << std::endl;
-	std::cerr << "				: " << std::hex << std::setfill('0')
-		<< std::setw(8) << data[4] << " "
-		<< std::setw(8) << data[5] << " "
-		<< std::setw(8) << data[6] << " "
-		<< std::setw(8) << data[7] << std::endl;
-	std::cerr << "				: " << std::hex << std::setfill('0')
-		<< std::setw(8) << data[8] << " "
-		<< std::setw(8) << data[9] << " "
-		<< std::setw(8) << data[10] << " "
-		<< std::setw(8) << data[11] << std::endl;
-	std::cerr << "tail		: " << std::hex << std::setw(8)
-		<< data[recv_byte / 4 - 3] << " "
-		<< data[recv_byte / 4 - 2] << " "
-		<< data[recv_byte / 4 - 1] << " "
-		<< data[recv_byte / 4] << std::endl;
+  std::cerr << std::dec << std::setw(4) << m_event_number << ": ";
+  std::cerr << "header[]: " << std::hex << std::setfill('0')
+	    << std::setw(8) << header[0]
+	    << " " << std::setw(8) << header[1] << std::endl;
+  std::cerr << " event[]: " << std::hex << std::setfill('0')
+	    << std::setw(8) << data[0] << " "
+	    << std::setw(8) << data[1] << " "
+	    << std::setw(8) << data[2] << " "
+	    << std::setw(8) << data[3] << std::endl;
+  std::cerr << "				: " << std::hex << std::setfill('0')
+	    << std::setw(8) << data[4] << " "
+	    << std::setw(8) << data[5] << " "
+	    << std::setw(8) << data[6] << " "
+	    << std::setw(8) << data[7] << std::endl;
+  std::cerr << "				: " << std::hex << std::setfill('0')
+	    << std::setw(8) << data[8] << " "
+	    << std::setw(8) << data[9] << " "
+	    << std::setw(8) << data[10] << " "
+	    << std::setw(8) << data[11] << std::endl;
+  std::cerr << "tail		: " << std::hex << std::setw(8)
+	    << data[recv_byte / 4 - 3] << " "
+	    << data[recv_byte / 4 - 2] << " "
+	    << data[recv_byte / 4 - 1] << " "
+	    << data[recv_byte / 4] << std::endl;
 
-	return 0;
+  return 0;
 }

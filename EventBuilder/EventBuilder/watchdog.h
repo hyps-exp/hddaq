@@ -14,18 +14,18 @@
 
 class WatchDog : public kol::Thread
 {
-public:
-	//WatchDog(ConsoleThread*, BuilderThread*, ReaderThread**, int);
-	WatchDog(ControlThread*, BuilderThread*, ReaderThread**, int);
-	virtual ~WatchDog();
-	int run();
-protected:
-	//ConsoleThread *m_console_p;
-	ControlThread *m_controller_p;
-	BuilderThread *m_builder_p;
-	ReaderThread **m_readers_pp;
-	int m_n_node;
-//private:
+ public:
+  //WatchDog(ConsoleThread*, BuilderThread*, ReaderThread**, int);
+  WatchDog(ControlThread*, BuilderThread*, ReaderThread**, int);
+  virtual ~WatchDog();
+  int run();
+ protected:
+  //ConsoleThread *m_console_p;
+  ControlThread *m_controller_p;
+  BuilderThread *m_builder_p;
+  ReaderThread **m_readers_pp;
+  int m_n_node;
+  //private:
 };
 
 #endif

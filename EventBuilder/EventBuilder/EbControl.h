@@ -22,9 +22,9 @@
 class EbControl : public ControlThread
 {
 public:
-	int ackStatus();
-	int CommandStart();
-	int CommandStop();
+  int ackStatus();
+  int CommandStart();
+  int CommandStop();
 protected:
 private:
 };

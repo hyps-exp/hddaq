@@ -53,14 +53,14 @@
 
 
 enum State {
-	IDLE, RUNNING, DISORDER
+  IDLE, RUNNING, DISORDER
 };
 
-enum Command {         
-	START, STOP, EXIT, STAT, ANYONE, MAXEVENT, RUNNO, NOCOMM
+enum Command {
+  START, STOP, EXIT, STAT, ANYONE, MAXEVENT, RUNNO, NOCOMM
 };
 
-class StatableThread : public kol::Thread 
+class StatableThread : public kol::Thread
 {
 public:
   StatableThread();
@@ -68,26 +68,26 @@ public:
 
 public:
 
-//  enum Command {         
-//    START, STOP, EXIT, STAT, MAXEVENT, RUNNO, NOCOMM
-//  };
-  
-//  enum State {
-//    IDLE, RUNNING
-//  };
-  
+  //  enum Command {
+  //    START, STOP, EXIT, STAT, MAXEVENT, RUNNO, NOCOMM
+  //  };
+
+  //  enum State {
+  //    IDLE, RUNNING
+  //  };
+
   enum Ack {
     DONE, YET, OK
   };
-  
+
   void reset_command() { m_command = NOCOMM; }
   void setRunningFalse() { m_is_running = false; }
   //virtual void setSemPost() { return; }
-  
+
   virtual int run();
-  void setCommand(Command command) { m_command = command; }; 
-  int getState() { return m_state; } 
-  int getCommand() const { return m_command; } 
+  void setCommand(Command command) { m_command = command; };
+  int getState() { return m_state; }
+  int getCommand() const { return m_command; }
   int setRunNumber(int run_number);
   int getRunNumber() const { return m_run_number; }
   int setMaxEvent(int max_event);
@@ -99,7 +99,7 @@ public:
 protected:
   virtual int active_loop() { return 0; }
   virtual int checkCommand();
-  int getRunNumber(); 
+  int getRunNumber();
   void trans(State target) { m_state = target; }
 
 protected:
@@ -117,7 +117,7 @@ private:
 };
 
 
-size_t checkDataSize(unsigned int max_data_size, 
+size_t checkDataSize(unsigned int max_data_size,
 		     size_t& size,
 		     const std::string& name);
 int checkHeader(unsigned int magic,
