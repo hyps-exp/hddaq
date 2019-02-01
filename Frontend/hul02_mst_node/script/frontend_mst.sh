@@ -4,8 +4,8 @@ script_dir=$(dirname `readlink -f $0`)
 bin_dir=$script_dir/../bin
 frontend=hul02_frontend_mst
 
-if [ $# != 7 ]; then
-    echo "Usage : $(basename $0) --nickname=NICK_NAME --nodeid=NODE_ID --data-port=DATA_PORT --sctcp-ip=SiTCP_IP --min-twin=MinWindow --max-twin=MaxWindow --master (optional)"
+if [ $# != 10 ]; then
+    echo "Usage : $(basename $0) --nickname=NICK_NAME --nodeid=NODE_ID --data-port=DATA_PORT --sctcp-ip=SiTCP_IP --min-twin=MinWindow --max-twin=MaxWindow --prescale=value --timer=value --bypass=0/1 --master (optional)"
     exit
 fi
 
@@ -15,7 +15,10 @@ dataport=$3
 sitcp_ip=$4
 tmin=$5
 tmax=$6
-master=$7
+pre=$7
+timer=$8
+bypass=$9
+master=${10}
 
 while true
 do
@@ -26,6 +29,9 @@ do
     --sitcp-ip=$sitcp_ip \
     --min-twin=$tmin \
     --max-twin=$tmax \
+    --prescale=$pre \
+    --bypass=$bypass \
+    --timer=$timer \
     $master
 #    --ignore-nodeprop-update
 

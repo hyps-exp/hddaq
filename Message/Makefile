@@ -1,12 +1,10 @@
 # Makefile for Massage
 
-CXX	  = g++
-CXXFLAGS  = -O2 -Wall
+include ../common.mk
 
-INCLUDES  = -I. -I../kol
-LIBS	  = -L./lib -lMessage \
-            -L../kol/lib -lkol \
-            -lpthread
+INCLUDES  += -I../kol
+LIBS	  += -L./lib -lMessage \
+             -L../kol/lib -lkol
 
 FLAGS     = $(CXXFLAGS) $(INCLUDES)
 

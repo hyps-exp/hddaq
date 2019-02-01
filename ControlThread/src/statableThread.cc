@@ -75,7 +75,7 @@ StatableThread::~StatableThread()
 
 int StatableThread::run()
 {
-  GlobalMessageClient& msock = GlobalMessageClient::getInstance();
+  // GlobalMessageClient& msock = GlobalMessageClient::getInstance();
 
   State myState = IDLE;
   m_is_running = true;
@@ -87,13 +87,13 @@ int StatableThread::run()
       switch(myState) {
       case IDLE: //state
 	reset_command();
-	//std::cerr << "active_loop: started...\n";
-	//trans(RUNNING); /// RUNNING ha active_loop no nakade yaru
+	// std::cerr << "active_loop: started...\n";
+	// trans(RUNNING); /// RUNNING ha active_loop no nakade yaru
 	active_loop();
-	//std::cerr << "active_loop: finished...\n";
-	//trans(StatableThread::IDLE);
+	// std::cerr << "active_loop: finished...\n";
+	// trans(StatableThread::IDLE);
 	trans(IDLE);
-	msock.sendString(m_name + " : active_loop() finished.");
+	// msock.sendString(m_name + " : active_loop() finished.");
 	break;
       case RUNNING:
 	break;

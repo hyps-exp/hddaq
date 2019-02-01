@@ -33,18 +33,19 @@ class MessageHandler():
       #sys.exit()
   #_____________________________________________________________________________
   def send_message(self, line):
-    seq_num = 1
-    src_id  = 1
-    dst_id  = 0
-    ms_type = Message.MT_CONTROL
-    header = struct.pack('IIIIII',
-                         Message.magic,
-                         Message.header_size + len(line),
-                         src_id,
-                         dst_id,
-                         seq_num,
-                         ms_type)
-    self.sock.send(header+line)
+    if self.sock_status:
+      seq_num = 1
+      src_id  = 1
+      dst_id  = 0
+      ms_type = Message.MT_CONTROL
+      header = struct.pack('IIIIII',
+                           Message.magic,
+                           Message.header_size + len(line),
+                           src_id,
+                           dst_id,
+                           seq_num,
+                           ms_type)
+      self.sock.send(header+line)
   #_____________________________________________________________________________
   def get_message(self):
     linebuf = []

@@ -147,11 +147,10 @@ int ReaderThread::getRingBufferDepth()
 int ReaderThread::writeNullEvent(int event_type,
 				 int event_number)
 {
-
   EventBuffer *event_f = m_node_rb->writeBufPeek();
   char *event_buf = event_f->getBuf();
   struct event_header *ev_header;
-  ev_header = reinterpret_cast < struct event_header *>(event_buf);
+  ev_header = reinterpret_cast<struct event_header*>(event_buf);
   ev_header->magic = EV_MAGIC;
   ev_header->size = sizeof(struct event_header) / sizeof(int);
   ev_header->event_number = event_number;
@@ -161,7 +160,6 @@ int ReaderThread::writeNullEvent(int event_type,
   ev_header->nblock = 0;
   ev_header->reserve = 0;
   m_node_rb->writeBufRelease();
-
   return 0;
 }
 
@@ -221,7 +219,7 @@ int ReaderThread::updateEventData(kol::TcpClient& client,
 
   EventBuffer* event_f = m_node_rb->writeBufPeek();
   char* event_buf      = event_f->getBuf();
-  memcpy(event_buf, header, HEADER_BYTE_SIZE);
+  std::memcpy(event_buf, header, HEADER_BYTE_SIZE);
   int status = -1;
 
   while (true) {
@@ -269,7 +267,7 @@ int ReaderThread::active_loop()
 {
   is_active = 1;
   while (GlobalInfo::getInstance().state!=IDLE)
-    usleep(1);
+    ::usleep(1);
   m_event_number = 0;
 
   std::cerr << "** reader entered active_loop()" << std::endl;
@@ -303,7 +301,7 @@ int ReaderThread::active_loop()
   m_state = RUNNING;
   while (true) {
     unsigned header[2];
-    memset(header, 0, HEADER_BYTE_SIZE);
+    std::memset(header, 0, HEADER_BYTE_SIZE);
     int status = readHeader(client, header);
 
     if (status>0) break;
