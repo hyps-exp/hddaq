@@ -16,6 +16,7 @@ tdc=on
 for i in $(seq 54 74)
 do
   if [ $i -eq 18 ]; then continue; fi
+#  if [ $i -eq 67 ]; then continue; fi
       
     nodeid=`expr 2000 + $i`
     nickname=veasiroc$i

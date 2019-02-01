@@ -29,6 +29,9 @@ namespace
   char ip[100];
   unsigned int min_time_window;
   unsigned int max_time_window;
+  unsigned int prescale_value;
+  unsigned int timer_value;
+  unsigned int bypass;
   bool flag_master = false;;
   
   int  sock=0;
@@ -276,10 +279,25 @@ open_device( NodeProp& nodeprop )
       iss >> max_time_window;
     }
 
+    if( arg.substr(0,11) == "--prescale=" ){
+      iss.str( arg.substr(11) );
+      iss >> prescale_value;
+    }
+
+    if( arg.substr(0,8) == "--timer=" ){
+      iss.str( arg.substr(8) );
+      iss >> timer_value;
+    }
+
+    if( arg.substr(0,9) == "--bypass=" ){
+      iss.str( arg.substr(9) );
+      iss >> bypass;
+    }
+
     // J0 bus master flag
     if( arg.substr(0,8) == "--master" ){
       flag_master = true;
-    }
+   }
   }
 
   //Connection check -----------------------------------------------
@@ -294,7 +312,10 @@ open_device( NodeProp& nodeprop )
 
   FPGAModule fModule(ip, udp_port, &rbcpHeader, 0);
   fModule.WriteModule(BCT::mid, BCT::laddr_Reset, 0);
-  ::sleep(2);
+  ::sleep(1);
+  fModule.WriteModule(MIFD::mid, MIF::laddr_frst, 1);
+  sleep(1);
+  fModule.WriteModule(MIFD::mid, MIF::laddr_frst, 0);
   
   return;
 }
@@ -324,6 +345,11 @@ init_device( NodeProp& nodeprop )
 	std::ostringstream oss;
 	oss << func_name << " Connection done : " << ip;
 	send_normal_message( oss.str() );
+      }
+
+      // Load matrix
+      {
+	system("cd /home/axis/HUL_E40_MsT && bash load_mst.sh");
       }
 
       // Start DAQ
@@ -364,8 +390,9 @@ init_device( NodeProp& nodeprop )
       fModule.WriteModule(IOM::mid, IOM::laddr_nimout3, IOM::reg_o_level2);
       fModule.WriteModule(IOM::mid, IOM::laddr_nimout4, IOM::reg_o_fast_clear);
 
-      fModule.WriteModule(MsT::mid, MsT::laddr_clear_preset, 0);
-      fModule.WriteModule(MsT::mid, MsT::laddr_timer_preset, 300);
+      fModule.WriteModule(MsT::mid, MsT::laddr_clear_preset, prescale_value);
+      fModule.WriteModule(MsT::mid, MsT::laddr_timer_preset, timer_value);
+      fModule.WriteModule(MsT::mid, MsT::laddr_bypass,       bypass);
 
       ddr_initialize(fModule);
       CalibLUT(fModule, MIFD::mid);

@@ -83,7 +83,7 @@
 #include "EventDistributor/EdControl.h"
 
 bool g_VERBOSE = false;
-static const int k_quelen = 20;
+static const int k_quelen = 200;
 
 void sigpipehandler(int signum)
 {

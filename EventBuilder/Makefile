@@ -1,21 +1,17 @@
 # Makefile for EventBuilder
 
-CXX	 = g++
-CXXFLAGS = -O2 -Wall
+include ../common.mk
 
-INCLUDES = -I. \
-           -I../RingBuffer \
-           -I../EventData \
-           -I../ControlThread \
-           -I../Message \
-           -I../kol
-
-LIBS	 = -L../RingBuffer/lib -lRingBuffer \
-           -L../EventData/lib -lEventData \
-           -L../ControlThread/lib -lControlThread \
-           -L../Message/lib -lMessage \
-           -L../kol/lib -lkol \
-           -lpthread
+INCLUDES += -I../RingBuffer \
+            -I../EventData \
+            -I../ControlThread \
+            -I../Message \
+            -I../kol
+LIBS     += -L../RingBuffer/lib -lRingBuffer \
+            -L../EventData/lib -lEventData \
+            -L../ControlThread/lib -lControlThread \
+            -L../Message/lib -lMessage \
+            -L../kol/lib -lkol
 
 FLAGS    = $(CXXFLAGS) $(INCLUDES)
 

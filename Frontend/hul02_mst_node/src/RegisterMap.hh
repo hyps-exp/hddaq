@@ -141,7 +141,8 @@ namespace MsT{
     laddr_timer_preset  = 0x010, // W/R, [8:0] Decision timer preset
     laddr_win_max       = 0x020, // W, [23:0] search window (max)
     laddr_win_min       = 0x030, // W, [23:0] search window (max)
-    laddr_exec          = 0x040  // W, Execute shift register
+    laddr_exec          = 0x040, // W, Execute shift register
+    laddr_bypass        = 0x050  // W/R, Level1 bypass setting
   };
 };
 
