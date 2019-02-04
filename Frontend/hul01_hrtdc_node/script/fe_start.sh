@@ -9,14 +9,14 @@ cd $bin_dir
 
 sleep 1
 #start hulRM
-$HOME/HUL_RM/bin/set_nimio 192.168.10.63
+$HOME/HUL_RM/bin/set_nimio 192.168.10.60
 
 #start hulhrtdc
 for i in $(seq 1 2)
 do
-    nodeid=`expr $((0x602)) + $i`
+    nodeid=`expr $((0x605)) + $i`
     nickname=hul01hr-`expr + $i`
-    dataport=`expr 9001 + $i` 
+    dataport=`expr 9009 + $i` 
     sitcp_ip=192.168.10.`expr 65 + $i`
     min_window=10
     max_window=50
