@@ -236,6 +236,9 @@ namespace
   void
   CalibLUT(FPGAModule& fModule, unsigned int mif_id)
   {
+    WriteMIFModule(fModule, mif_id,
+		   HRTDC_MZN::TDC::mid, HRTDC_MZN::TDC::laddr_controll, 0, 1);
+
     WriteMIFModule(fModule, mif_id, 
 		   HRTDC_MZN::DCT::mid, HRTDC_MZN::DCT::laddr_extra_path, 1, 1);
 
@@ -320,6 +323,22 @@ open_device( NodeProp& nodeprop )
   ::sleep(1);
   if(en_up)  fModule.WriteModule(HRTDC_BASE::MIFU::mid, HRTDC_BASE::MIF::laddr_frst, 0);
   if(en_down)fModule.WriteModule(HRTDC_BASE::MIFD::mid, HRTDC_BASE::MIF::laddr_frst, 0);
+
+  ddr_initialize(fModule);
+  if(en_up)   CalibLUT(fModule, MIFU::mid);
+  if(en_down) CalibLUT(fModule, MIFD::mid);
+
+  unsigned int tdc_ctrl = HRTDC_MZN::TDC::reg_autosw;
+  if(en_up){
+    WriteMIFModule(fModule, MIFU::mid,
+		   HRTDC_MZN::TDC::mid, HRTDC_MZN::TDC::laddr_controll, tdc_ctrl, 1);    
+
+  }
+
+  if(en_down ){
+    WriteMIFModule(fModule, MIFD::mid,
+		   HRTDC_MZN::TDC::mid, HRTDC_MZN::TDC::laddr_controll, tdc_ctrl, 1);
+  } 
   
   return;
 }
@@ -384,26 +403,17 @@ init_device( NodeProp& nodeprop )
       //fModule.WriteModule(IOM::mid, IOM::laddr_extL2,  IOM::reg_i_nimin2);
       //fModule.WriteModule(IOM::mid, IOM::laddr_extClr, IOM::reg_i_nimin3);
 
-      ddr_initialize(fModule);
-      if(en_up)   CalibLUT(fModule, MIFU::mid);
-      if(en_down) CalibLUT(fModule, MIFD::mid);
-
       // start DAQ
-      unsigned int tdc_ctrl = 0;
       if(en_up){
 	WriteMIFModule(fModule, MIFU::mid,
-		       HRTDC_MZN::TDC::mid, HRTDC_MZN::TDC::laddr_controll, tdc_ctrl, 1);
-	WriteMIFModule(fModule, MIFU::mid,
 		       HRTDC_MZN::DCT::mid, HRTDC_MZN::DCT::laddr_gate, 1, 1);    
-
       }
 
       if(en_down ){
 	WriteMIFModule(fModule, MIFD::mid,
-		       HRTDC_MZN::TDC::mid, HRTDC_MZN::TDC::laddr_controll, tdc_ctrl, 1);
-	WriteMIFModule(fModule, MIFD::mid,
 		       HRTDC_MZN::DCT::mid, HRTDC_MZN::DCT::laddr_gate, 1, 1);
       } 
+      
       fModule.WriteModule(DCT::mid, DCT::laddr_gate, 1);
       return;
     }

@@ -18,8 +18,8 @@ do
     nickname=hul01hr-`expr + $i`
     dataport=`expr 9009 + $i` 
     sitcp_ip=192.168.10.`expr 65 + $i`
-    min_window=10
-    max_window=50
+    min_window=35
+    max_window=60
 
     $bin_dir/frontend_hrtdc.sh \
 	$nickname \

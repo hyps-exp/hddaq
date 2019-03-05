@@ -27,6 +27,7 @@ namespace
   int  sock=0;
   rbcp_header rbcpHeader;
   bool flag_master = false;
+  int reg_en_block=0xf;
 
   //______________________________________________________________________________
   // local function
@@ -171,6 +172,12 @@ open_device( NodeProp& nodeprop )
     if( arg.substr(0, 8) == "--master"){
       flag_master = true;
     }
+
+    // register enable block
+    if( arg.substr(0,11) == "--en-block=" ){
+      iss.str( arg.substr(11) );
+      iss >> std::hex >> reg_en_block;
+    }
   }
 
   //Connection check -----------------------------------------------
@@ -237,7 +244,7 @@ init_device( NodeProp& nodeprop )
       }
       fModule.WriteModule(DCT::mid, DCT::laddr_evb_reset, 0x1);
       fModule.WriteModule(SCR::mid, SCR::laddr_counter_reset, 0x0);
-      fModule.WriteModule(SCR::mid, SCR::laddr_enable_block, 0xb);
+      fModule.WriteModule(SCR::mid, SCR::laddr_enable_block, reg_en_block);
       fModule.WriteModule(SCR::mid, SCR::laddr_enable_hdrst, 0xf);
       fModule.WriteModule(IOM::mid, IOM::laddr_extSpillGate, IOM::reg_i_nimin1);
       fModule.WriteModule(IOM::mid, IOM::laddr_extCCRst    , IOM::reg_i_nimin2);
