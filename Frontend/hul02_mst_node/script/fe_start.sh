@@ -20,7 +20,7 @@ do
     prescale=100
 #    timer=300
     timer=450
-    bypass=1
+    bypass=0
     master=--slave
     if [ $i -eq 1 ]; then
 	master=--master

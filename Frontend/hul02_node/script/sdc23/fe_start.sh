@@ -15,8 +15,8 @@ do
     nickname=hul02sdc-`expr + $i`
     dataport=`expr 9000 + $i` 
     sitcp_ip=192.168.11.`expr 100 + $i`
-    min_window=0
-    max_window=188
+    min_window=25
+    max_window=150
     only_leading=0
     master=--slave
     if [ $i -eq 1 ]; then

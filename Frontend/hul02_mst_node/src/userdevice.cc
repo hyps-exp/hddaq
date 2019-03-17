@@ -218,6 +218,10 @@ namespace
   void
   CalibLUT(FPGAModule& fModule, unsigned int mif_id)
   {
+    WriteMIFModule(fModule, mif_id,
+    		   HRTDC_MZN::TDC::mid, HRTDC_MZN::TDC::laddr_controll, 0, 1);
+
+
     WriteMIFModule(fModule, mif_id, 
 		   HRTDC_MZN::DCT::mid, HRTDC_MZN::DCT::laddr_extra_path, 1, 1);
 
@@ -314,8 +318,14 @@ open_device( NodeProp& nodeprop )
   fModule.WriteModule(BCT::mid, BCT::laddr_Reset, 0);
   ::sleep(1);
   fModule.WriteModule(MIFD::mid, MIF::laddr_frst, 1);
-  sleep(1);
+  ::sleep(1);
   fModule.WriteModule(MIFD::mid, MIF::laddr_frst, 0);
+
+  ddr_initialize(fModule);
+  CalibLUT(fModule, MIFD::mid);
+
+  WriteMIFModule(fModule, MIFD::mid,
+		 HRTDC_MZN::TDC::mid, HRTDC_MZN::TDC::laddr_controll, HRTDC_MZN::TDC::reg_autosw, 1);
   
   return;
 }
@@ -393,11 +403,6 @@ init_device( NodeProp& nodeprop )
       fModule.WriteModule(MsT::mid, MsT::laddr_clear_preset, prescale_value);
       fModule.WriteModule(MsT::mid, MsT::laddr_timer_preset, timer_value);
       fModule.WriteModule(MsT::mid, MsT::laddr_bypass,       bypass);
-
-      ddr_initialize(fModule);
-      CalibLUT(fModule, MIFD::mid);
-      WriteMIFModule(fModule, MIFD::mid,
-		     HRTDC_MZN::TDC::mid, HRTDC_MZN::TDC::laddr_controll, 0, 1);
 
       // start DAQ
       WriteMIFModule(fModule, MIFD::mid,

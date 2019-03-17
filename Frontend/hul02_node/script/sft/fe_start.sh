@@ -16,7 +16,7 @@ do
     dataport=`expr 9010 + $i` 
     sitcp_ip=192.168.11.`expr 200 + $i`
     min_window=0
-    max_window=188
+    max_window=125
     only_leading=0
     master=--slave
 #    if [ $i -eq 1 ]; then
