@@ -48,7 +48,9 @@ class Controller(Frame):
     self.maxevent_timestamp =  time.time()
     self.trig_timestamp =  time.time()
     self.starttime_timestamp =  time.time()
+    self.status_timestamp = time.time()
     self.undertransition_timestamp =  time.time()
+    self.prev_evnum = 0
     MTMController.set_host(args.mtm_host)
     MTMController.set_port(args.mtm_port)
   #___________________________________________________________________________
@@ -67,7 +69,7 @@ class Controller(Frame):
     menubar.add_cascade(label='Message',menu=menu3)
     menubar.add_cascade(label='DAQ mode',menu=menu4)
     menubar.add_cascade(label='Options',menu=menu5)
-    menubar.add_cascade(state=DISABLED,label=' ' * 66)
+    menubar.add_cascade(state=DISABLED,label=' ' * 68)
     menubar.add_cascade(label='Data Sync',menu=menu6)
     if len(secondary_path_list) == 0:
       menubar.entryconfig('Data Sync', state=DISABLED)
@@ -90,9 +92,10 @@ class Controller(Frame):
     menu10.add_command(label='Force Start', command=self.start_command)
     menu10.add_command(label='Force Stop', command=self.stop_command)
     menu10.add_separator()
-    menu10.add_command(label='Force Trig. ON', command=self.trigon_command)
+    menu10.add_command(label='Force Trig. ON',  command=self.trigon_command)
     menu10.add_command(label='Force Trig. OFF', command=self.trigoff_command)
     menu10.add_command(label='Force MTM reset', command=MTMController.mtm_reset)
+    menu10.add_command(label='Force L2',        command=MTMController.force_L2)
     '''comment'''
     menu2.add_command(label='Write Comment', command=self.write_run_comment)
     menu2.add_command(label='Load Last Comment', command=self.load_last_comment)
@@ -489,19 +492,36 @@ class Controller(Frame):
     self.sttext.config(state=NORMAL)
     pos = self.sttext.yview()
     self.sttext.delete(1.0, END)
-    nlines = 0
+    n_nodes = 0
+    n_readers = -1
+    status.total_size = 0
     for item in status.statuslist:
       statusline = status.make_statusline(item)
-      sttag = 'normal'
-      if item.status in ('NOUPDATE', 'DEAD') : sttag = 'fatal'
+      sttag = 'fatal' if item.status in ('NOUPDATE', 'DEAD') else 'normal'
       self.sttext.insert(END, statusline, sttag)
       if (item.src_id != StatusList.REC_ID and
           item.src_id != StatusList.DST_ID and
-          item.src_id != StatusList.BLD_ID):
-        nlines += 1
+          item.src_id != StatusList.BLD_ID and
+          sttag == 'normal'):
+        n_nodes += 1
+      if item.src_id == StatusList.BLD_ID:
+        n_readers = item.n_readers
     self.sttext.config(state=DISABLED)
     self.sttext.yview_moveto(pos[0])
-    self.nodenum.config(text=str(nlines)+' Nodes ')
+    # trigger_rate = ((int(status.dist_evnum) - self.prev_evnum)
+    #                 / (time.time() - self.status_timestamp))
+    self.nodenum.config(text='{:3} nodes/{:5} words' #/{:7.1f} Hz
+                        .format(n_nodes, status.total_size))#, trigger_rate))
+    # self.prev_evnum = int(status.dist_evnum)
+    # self.status_timestamp = time.time()
+    # if n_readers == n_nodes and self.daq_state == StatusList.S_IDLE:
+    #   self.bstart.config(state=NORMAL)
+    if n_readers != n_nodes:
+      # self.bstart.config(state=DISABLED)
+      # print('\033[33;1mnode number mismatch : {:3} nodes/{:5} readers\033[m'
+      #       .format(n_nodes, n_readers))
+      print('node number mismatch : {:3} nodes/{:5} readers'
+            .format(n_nodes, n_readers))
   #___________________________________________________________________________
   def update_evnum_window(self):
     if self.daq_state == StatusList.S_RUNNING :
@@ -605,13 +625,13 @@ class Controller(Frame):
     status.update_list(linebuf)
     self.under_transition_checker()
     self.update_trig_status()
-    self.update_status_window()
     self.update_evnum_window()
     self.update_maxevent_window()
     self.update_runno_window()
     self.update_comment_window()
     self.update_starttime_window()
     self.update_global_state()
+    self.update_status_window()
     if status.check_null_nickname():
       msgh.send_message('anyone\0')
     '''

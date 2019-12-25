@@ -116,6 +116,11 @@ class DataSynchronizer():
                              activebackground='#d9d9d9',
                              foreground='blue',
                              activeforeground='blue')
+    self.menubar.add_command(label=' '*108, state=DISABLED)
+    menu_force = Menu(self.menubar, tearoff=0)
+    self.menubar.add_cascade(label='Force control', menu=menu_force)
+    menu_force.add_command(label='Force erase dsync.lock',
+                           command=self.__force_erase_lock)
     self.path = path
     self.primary_path_list = primary_path_list
     self.secondary_path_list = secondary_path_list
@@ -151,6 +156,16 @@ class DataSynchronizer():
         remain_size += os.path.getsize(src)
     return n_sync, n_wait, remain_size
   #_____________________________________________________________________________
+  def __force_erase_lock(self):
+    self.__put('Force erase dsync.lock')
+    for p in self.secondary_path_list:
+      l = p + '/dsync.lock'
+      if os.path.isfile(l):
+        self.__put('erased {}'.format(l))
+        os.remove(l)
+      else:
+        self.__put('no lock file in {}'.format(p))
+  #_____________________________________________________________________________
   def __put(self, message):
     message = (time.strftime('%Y %m/%d %H:%M:%S')
                + ' ' + message.rstrip() + '\n')
@@ -165,7 +180,7 @@ class DataSynchronizer():
         for j in reversed(xrange(len(self.proc))):
           if self.proc[j].poll() is not None:
             if self.proc[j].is_synced():
-              self.__put('synced {0:38} -> {1:20} {2:>10}\n'
+              self.__put('synced {0:38} -> {1:20} {2:>12}\n'
                          .format(self.proc[j].src,
                                  os.path.dirname(self.proc[j].dest),
                                  self.proc[j].size))
@@ -181,7 +196,7 @@ class DataSynchronizer():
           self.proc[j].kill()
         if self.proc[j].poll() is not None:
           if self.proc[j].is_synced():
-            self.__put('synced {0:38} -> {1:20} {2:>10}\n'
+            self.__put('synced {0:38} -> {1:20} {2:>12}\n'
                        .format(self.proc[j].src,
                                os.path.dirname(self.proc[j].dest),
                                self.proc[j].size))
@@ -208,6 +223,8 @@ class DataSynchronizer():
                           foreground='red',
                           activeforeground='red')
       self.menubar.delete('IDLE')
+      self.menubar.insert_command('Force control', label=' '*101, state=DISABLED)
+      self.menubar.delete(' '*108)
       self.run_thread = threading.Thread(target=self.__run)
       self.run_thread.setDaemon(True)
       self.run_thread.start()
@@ -223,6 +240,8 @@ class DataSynchronizer():
                                   foreground='blue',
                                   activeforeground='blue')
       self.menubar.delete('RUNNING')
+      self.menubar.insert_command('Force control', label=' '*108, state=DISABLED)
+      self.menubar.delete(' '*101)
       self.run_thread.join()
   #_____________________________________________________________________________
   def get_message(self):
@@ -246,6 +265,8 @@ class DataSynchronizer():
     message += ('{0:>28} {1:>8} {2:>8} {3:>7} {4:>6} {5:>10}\n'
                 .format('Free(GB)', 'Used(GB)',
                         'Usage', 'Sync', 'Wait', 'RSize'))
+    max_usage_p = 0
+    max_usage_s = 0
     for p in self.primary_path_list:
       n_sync = 0
       n_wait = 0
@@ -262,6 +283,7 @@ class DataSynchronizer():
           n_wait += 1
           remain_size += os.path.getsize(f)
       free, used, total, usage = FileSystemUtility.get_disk_usage(p)
+      max_usage_p = max(max_usage_p, usage)
       message += 'Primary   '
       message += ('{0:28} {1:8} {2:8}    {3:5.1%}'
                   .format(p, free, used, usage))
@@ -273,6 +295,7 @@ class DataSynchronizer():
       message += '\n'
     for p in self.secondary_path_list:
       free, used, total, usage = FileSystemUtility.get_disk_usage(p)
+      max_usage_s = max(max_usage_s, usage)
       message += 'Secondary '
       message += ('{0:28} {1:8} {2:8}    {3:5.1%}'
                   .format(p, free, used, usage))
@@ -291,11 +314,32 @@ class DataSynchronizer():
       src_size = FileSystemUtility.natural_size(src)
       dest_size = FileSystemUtility.natural_size(dest)
       speed = FileSystemUtility.file_size(dest) / 1e6 / elapsed_time
-      message += ('Running ... {0:38} -> {1:12} {2:>10}/{3:>10} ({4:.1f} MB/s)'
+      message += ('Running ... {0:38} -> {1:12} {2:>9}/{3:>9} ({4:.1f} MB/s)'
                   .format(src, os.path.dirname(dest),
                           dest_size, src_size, speed))
       message += '\n'
-    self.msg_win.status_text.config(state=NORMAL)
+    if max_usage_p > 0.50 or max_usage_s > 0.75:
+      fg_color = 'yellow'
+      bg_color = 'black'
+      font = ('Courier', -12, 'bold')
+      flush = True
+    elif max_usage_p > 0.75 or max_usage_s > 0.90:
+      fg_color = 'red'
+      bg_color = 'black'
+      font = ('Courier', -12, 'bold')
+      flush = True
+    else:
+      fg_color = 'black'
+      bg_color = 'white'
+      font = ('Courier', -12)
+      flush = False
+    fg = self.msg_win.status_text.cget('fg')
+    bg = self.msg_win.status_text.cget('bg')
+    if flush and fg == fg_color and bg == bg_color:
+      fg_color = bg
+      bg_color = fg
+    self.msg_win.status_text.config(state=NORMAL, fg=fg_color, bg=bg_color,
+                                    font=font)
     self.msg_win.status_text.delete(1.0, END)
     message = message.rstrip()
     for line in message:
