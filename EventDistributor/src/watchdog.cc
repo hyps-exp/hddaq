@@ -21,8 +21,8 @@ WatchDog::~WatchDog()
 
 int WatchDog::run()
 {
-  State nowstate;
-  State laststate = IDLE;
+  // State nowstate;
+  // State laststate = IDLE;
 
   //GlobalInfo & gi = GlobalInfo::getInstance();
   //DistReader *reader = reinterpret_cast<DistReader *>(gi.reader);
@@ -30,7 +30,7 @@ int WatchDog::run()
   while (true)
     {
       sleep(2);
-      nowstate = m_controller_p->getGeneralState();
+      // nowstate = m_controller_p->getGeneralState();
 #if 0
       if ((nowstate == RUNNING) || (nowstate != laststate)) {
 	m_controller_p->ackStatus();
@@ -38,7 +38,7 @@ int WatchDog::run()
 #else
       m_controller_p->ackStatus();
 #endif
-      laststate = nowstate;
+      // laststate = nowstate;
 
       //std::cerr << "#D WD RB left: " << reader->leftEventData()
       //	<< std::endl;

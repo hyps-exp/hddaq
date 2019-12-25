@@ -494,11 +494,10 @@ double BuilderThread::checkTrigRate(int ntimes)
 {
   static struct timeval now, last;
 
-  int status;
+  // int status = gettimeofday(&now, NULL);
 
   //GlobalMessageClient & msock = GlobalMessageClient::getInstance();
 
-  status = gettimeofday(&now, NULL);
   double elapse =
     (now.tv_sec - last.tv_sec)
     + (now.tv_usec - last.tv_usec) / 1000000.0;
