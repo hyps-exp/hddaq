@@ -5,4 +5,4 @@ EndDefinition
 #BitNum is # of bit in one array
 #ArrayNum is # of ch ; ArrayNum is 10, Max is A9
 #BitOrder 0 = LSB to MSB; 1 = MSB to LSB;
-10      1         0        830	  1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1
+10      1         0        773	  1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1
