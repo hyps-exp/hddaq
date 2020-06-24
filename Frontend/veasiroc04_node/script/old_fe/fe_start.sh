@@ -13,7 +13,7 @@ reg_dir=${HOME}/vme-easiroc-registers
 adc=on
 tdc=on
 
-for i in $(seq 23 26) $(seq 39 43) $(seq 59 63) $(seq 81 85)
+for i in $(seq 75 95)
 do
   if [ $i -eq 18 ]; then continue; fi
   # if [ $i -eq 82 ]; then continue; fi
