@@ -295,8 +295,8 @@ init_device( NodeProp& nodeprop )
       fModule.WriteModule(IOM::mid, IOM::laddr_nimout1, IOM::reg_o_ModuleBusy);
       fModule.WriteModule(IOM::mid, IOM::laddr_nimout2, IOM::reg_o_CrateBusy);
       fModule.WriteModule(IOM::mid, IOM::laddr_nimout3, IOM::reg_o_clk10kHz);
-      fModule.WriteModule(IOM::mid, IOM::laddr_nimout4, IOM::reg_o_RMRsv1 );
-
+      fModule.WriteModule(IOM::mid, IOM::laddr_nimout4, IOM::reg_o_RML1 );
+      ::sleep(1);
       // start DAQ
       fModule.WriteModule(DCT::mid, DCT::laddr_gate, 1);
       return;
