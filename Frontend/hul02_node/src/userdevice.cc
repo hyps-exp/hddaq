@@ -235,6 +235,11 @@ open_device( NodeProp& nodeprop )
     fModule.WriteModule(TRM::mid, TRM::laddr_sel_trig,
 			TRM::reg_L1Ext | TRM::reg_L2RM | TRM::reg_ClrRM |
 			TRM::reg_EnL2  | TRM::reg_EnRM );
+
+    fModule.WriteModule(IOM::mid, IOM::laddr_nimout1, IOM::reg_o_ModuleBusy);
+    fModule.WriteModule(IOM::mid, IOM::laddr_nimout2, IOM::reg_o_CrateBusy);
+    fModule.WriteModule(IOM::mid, IOM::laddr_nimout3, IOM::reg_o_RML1 );
+    fModule.WriteModule(IOM::mid, IOM::laddr_nimout4, IOM::reg_o_RMRsv1 );
   }
   
   return;
@@ -294,7 +299,7 @@ init_device( NodeProp& nodeprop )
 
       fModule.WriteModule(IOM::mid, IOM::laddr_nimout1, IOM::reg_o_ModuleBusy);
       fModule.WriteModule(IOM::mid, IOM::laddr_nimout2, IOM::reg_o_CrateBusy);
-      fModule.WriteModule(IOM::mid, IOM::laddr_nimout3, IOM::reg_o_clk10kHz);
+      fModule.WriteModule(IOM::mid, IOM::laddr_nimout3, IOM::reg_o_RML1 );
       fModule.WriteModule(IOM::mid, IOM::laddr_nimout4, IOM::reg_o_RMRsv1 );
 
       // start DAQ

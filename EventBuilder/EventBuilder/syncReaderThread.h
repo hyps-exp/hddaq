@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-#ifndef SYNC_READER_THRREAD_H
+#ifndef SYNC_READER_THREAD_H
 #define SYNC_READER_THREAD_H
 
 #include <string>

@@ -20,8 +20,8 @@ do
     nickname=hulbc-`expr + $i`
     dataport=`expr 9000 + $i` 
     sitcp_ip=192.168.1.`expr 30 + $i`
-    min_window=0
-    max_window=188
+    min_window=6
+    max_window=75
     only_leading=0
     master=--slave
     if [ $i -eq 10 ]; then

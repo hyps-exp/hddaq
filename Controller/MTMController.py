@@ -42,6 +42,11 @@ def mtm_reset():
   SocketTools.tcp_send(g_host, g_port, command)
 
 #_______________________________________________________________________________
+def force_L2():
+  command = chr(0x1)+chr(0x0)+chr(0x2)+chr(0x82)
+  SocketTools.tcp_send(g_host, g_port, command)
+
+#_______________________________________________________________________________
 if __name__ == '__main__':
   ret = get_trig_state()
   print(ret)

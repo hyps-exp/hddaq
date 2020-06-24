@@ -30,7 +30,7 @@ int WatchDog::run()
   GlobalMessageClient & msock = GlobalMessageClient::getInstance();
 
   State nowstate;
-  State laststate = IDLE;
+  // State laststate = IDLE;
   std::vector<int> unactive(m_n_node, 0);
 
   while (true)
@@ -44,7 +44,7 @@ int WatchDog::run()
 #else
       m_controller_p->ackStatus();
 #endif
-      laststate = nowstate;
+      // laststate = nowstate;
 
 #if 0
       static const GlobalInfo& gi = GlobalInfo::getInstance();

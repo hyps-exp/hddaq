@@ -23,6 +23,7 @@ class Status:
     self.status = ''
     self.info = ''
     self.lastupdate = 0
+    self.n_readers = 0 # for EB
 
 #_______________________________________________________________________________
 class StatusList:
@@ -32,6 +33,7 @@ class StatusList:
     self.global_state = S_IDLE
     self.dist_evnum = 0
     self.is_recorder = 0
+    self.total_size = 0
   #_____________________________________________________________________________
   def __cmp_src_id(self, x, y):
     if x.src_id > y.src_id: return 1
@@ -79,15 +81,18 @@ class StatusList:
     nickname = tmp + ' ' * (16 - len(tmp))
     ssrcid = ' ' * (9 - len(str(istatus.src_id))) + str(istatus.src_id)
     sstatus = '    ' + istatus.status + ' ' * (10 - len(istatus.status))
+    info = istatus.info.split()
+    if len(info) == 4 and 'size' in info[3]:
+      self.total_size += int(info[3].replace('size:', ''))
     '''added for scroll bar control'''
-    if istatus.src_id == BLD_ID and len(istatus.info.split()) >= 3:
-      rlist = istatus.info.split()
-      nreaders = len(rlist) - 4
+    if istatus.src_id == BLD_ID and len(info) >= 3:
+      n_readers = len(info) - 4
+      istatus.n_readers = n_readers
       ret = ('{0} {1} {2} {3} {4} {5:5} readers\n'
              .format(nickname, ssrcid, sstatus,
-                     rlist[0], rlist[1], nreaders))
-      del rlist[0:2]
-      for i, s in enumerate(rlist):
+                     info[0], info[1], n_readers))
+      del info[0:2]
+      for i, s in enumerate(info):
         ret += '   {0:18}'.format(s)
         if i % 5 == 0:
           ret += '\n'

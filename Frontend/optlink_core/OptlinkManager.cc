@@ -105,8 +105,15 @@ void
 OptlinkManager::ReadBLT( int handle, uint32_t addr, int length)
 {
   int n_of_word = 0;
-  Check( CAENComm_BLTRead( handle, addr, m_blt_buf, length, &n_of_word),
-	 "CAENComm_BLTRead()" );
+  CAENComm_ErrorCode status;
+  for(int i = 0; i<5; ++i){
+    status = CAENComm_BLTRead( handle, addr, m_blt_buf, length, &n_of_word);
+    if(status == CAENComm_Success) break;
+  }// for(i)
+
+  if(status != CAENComm_Success){
+    Check( status, "CAENComm_BLTRead()" );
+  }
 }
 
 //______________________________________________________________________________
@@ -120,8 +127,7 @@ OptlinkManager::Check( CAENComm_ErrorCode status, const std::string& name )
     CAENComm_DecodeError(status, CommErrMess);
     std::ostringstream oss;
     oss << m_nick_name << " " << name << " ";
-    for( std::size_t i=0; i<n-s; ++i )
-      oss << "-";
+    for( std::size_t i=0; i<n-s; ++i ) oss << "-";
     oss << " failed " << CommErrMess << std::endl;
     send_fatal_message( oss.str() );
     std::exit(EXIT_FAILURE);
@@ -132,8 +138,7 @@ OptlinkManager::Check( CAENComm_ErrorCode status, const std::string& name )
     const std::size_t s = name.size();
     std::ostringstream oss;
     oss << m_nick_name << " " << name << " ";
-    for( std::size_t i=0; i<n-s; ++i )
-      oss << "-";
+    for( std::size_t i=0; i<n-s; ++i ) oss << "-";
     oss << " ok ";
     send_normal_message( oss.str() );
   }
