@@ -51,6 +51,7 @@ class Controller(Frame):
     self.status_timestamp = time.time()
     self.undertransition_timestamp =  time.time()
     self.prev_evnum = 0
+    self.reader_check = False
     MTMController.set_host(args.mtm_host)
     MTMController.set_port(args.mtm_port)
   #___________________________________________________________________________
@@ -514,14 +515,19 @@ class Controller(Frame):
                         .format(n_nodes, status.total_size))#, trigger_rate))
     # self.prev_evnum = int(status.dist_evnum)
     # self.status_timestamp = time.time()
-    # if n_readers == n_nodes and self.daq_state == StatusList.S_IDLE:
-    #   self.bstart.config(state=NORMAL)
     if n_readers != n_nodes:
-      # self.bstart.config(state=DISABLED)
-      # print('\033[33;1mnode number mismatch : {:3} nodes/{:5} readers\033[m'
-      #       .format(n_nodes, n_readers))
+      self.reader_check = False
       print('node number mismatch : {:3} nodes/{:5} readers'
             .format(n_nodes, n_readers))
+      # self.bstart.config(state=DISABLED)
+    else:
+      if not self.reader_check:
+        print('node number ok : {:3} nodes/{:5} readers'
+              .format(n_nodes, n_readers))
+      self.reader_check = True
+      # if self.daq_state == StatusList.S_IDLE:
+      #   self.bstart.config(state=NORMAL)
+
   #___________________________________________________________________________
   def update_evnum_window(self):
     if self.daq_state == StatusList.S_RUNNING :
@@ -532,8 +538,10 @@ class Controller(Frame):
   #___________________________________________________________________________
   def update_global_state(self):
     gstate = status.global_state
-    if gstate == self.daq_state: return
-    else: self.daq_state = gstate
+    if gstate == self.daq_state:
+      return
+    else:
+      self.daq_state = gstate
     print('update_global_status : {0}'.format(self.daq_state))
     if self.daq_state == StatusList.S_IDLE:
       self.label.config(text='DAQ: Idle', fg='blue', bg='black')

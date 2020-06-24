@@ -152,21 +152,27 @@ int SenderThread::active_loop()
 	  if (checkCommand()) break;
 	  try {
 	    if (sock.write(event->getBuf(), trans_byte) == 0) {
-	      // std::cerr << "== SenderThread Error: write error occurred"
-	      // 		<< std::endl;
+	      std::stringstream msg;
+	      msg << "== SenderThread Error: write error occurred"
+		  << std::endl;
+	      msock.sendString(MT_ERROR, msg.str());
 	      writeerr = true;
 	      break;
 	    }
 	    sock.flush();
 	  } catch(kol::SocketException &e) {
 	    if (e.reason() == EWOULDBLOCK) {
-	      // std::cerr << "== SenderThread::actrive_loop() socket time out!!"
-	      // 		<< std::endl;
+	      std::stringstream msg;
+	      msg << "== SenderThread::actrive_loop() socket time out!!"
+		  << std::endl;
+	      msock.sendString(MT_ERROR, msg.str());
 	      sock.iostate_good();
 	      retry = true;
 	    } else {
-	      // std::cerr << "== SenderThread::active_loop() write Err. : "
-	      // 		<< e.what() << std::endl;
+	      std::stringstream msg;
+	      msg << "== SenderThread::active_loop() write Err. : "
+		  << e.what() << std::endl;
+	      msock.sendString(MT_ERROR, msg.str());
 	      writeerr = true;
 	      break;
 	    }
@@ -186,9 +192,11 @@ int SenderThread::active_loop()
       sock.close();
 
     } catch(std::exception & e) {
-      std::cerr << "== SenderThread Error: " << e.what()
-		<< " Loop NO: " << m_builder->getEventNumber()
-		<< std::endl;
+      std::stringstream msg;
+      msg << "== SenderThread Error: " << e.what()
+	  << " Loop# " << m_builder->getEventNumber()
+	  << std::endl;
+      msock.sendString(MT_ERROR, msg.str());
     }
 
   }
