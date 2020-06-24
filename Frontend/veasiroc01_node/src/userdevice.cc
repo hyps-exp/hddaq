@@ -280,10 +280,10 @@ open_device( NodeProp& nodeprop )
   sendSlowControl(ip);
   sendReadRegister(ip);
   sendProbeRegister(ip);
-  //  resetReadRegister(ip);
-  //  resetProbeRegister(ip);
-  sendPedestalSupp(ip);
-  sendSelectableLogic(ip);
+  resetReadRegister(ip);
+  resetProbeRegister(ip);
+  //  sendPedestalSupp(ip);
+  //  sendSelectableLogic(ip);
   //  sendTimeWindow();
 
   return;
@@ -330,10 +330,10 @@ init_device( NodeProp& nodeprop )
     {
       resetDirectControl(ip);
       sendSlowControl(ip);
-      //      resetReadRegister(ip);
-      //      resetProbeRegister(ip);
-      sendReadRegister(ip);
-      sendProbeRegister(ip);
+      resetReadRegister(ip);
+      resetProbeRegister(ip);
+      //      sendReadRegister(ip);
+      //      sendProbeRegister(ip);
       sendPedestalSupp(ip);
       sendSelectableLogic(ip);
 
