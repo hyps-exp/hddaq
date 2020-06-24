@@ -14,7 +14,7 @@ namespace
 {
   opt::OptlinkManager& gOpt = opt::OptlinkManager::GetInstance();
   const int max_polling   = 2000000;     //maximum count until time-out
-  const int max_try       = 100;         //maximum count to check data ready
+  const int max_try       = 100000;         //maximum count to check data ready
   const int max_data_size = 4*1024*1024; //maximum datasize by byte unit
   DaqMode g_daq_mode = DM_NORMAL;
 
@@ -64,7 +64,7 @@ open_device( NodeProp& nodeprop )
     // Zero suppression Threshold
     uint32_t zs_threshold[][opt::CaenV1724::NofCh] = 
       {
-	{15820, 15470, 15430, 16170, 16240, 15240, 16210, 15930},
+	{15820, 15470, 15430, 16170, 16240, 15240, 16050, 15930},
 	{15920, 15980, 15970, 15440, 15380, 16200, 15540, 16020}
       };
     uint32_t zs_threshold_weight = 0; // 0:fine, 1:coarse.       30bit shift to left
@@ -115,7 +115,9 @@ open_device( NodeProp& nodeprop )
 
       m->WriteRegister( opt::CaenV1724::MemoryAfullLv,   0x3ef  );
       usleep(10*1000);
-      m->WriteRegister( opt::CaenV1724::CustomSize,      0x4b   );
+      //m->WriteRegister( opt::CaenV1724::CustomSize,      0x4b   );
+      //m->WriteRegister( opt::CaenV1724::CustomSize,      0x5a   ); // 180 sample
+      m->WriteRegister( opt::CaenV1724::CustomSize,      0x8c   ); // 280 sample
       m->WriteRegister( opt::CaenV1724::IOCtrl,          0x40   );
       uint32_t reg_gpo_en_mask = m->ReadRegister( opt::CaenV1724::GPOEnMask );
       reg_gpo_en_mask = reg_gpo_en_mask | (0x1 << 30);
@@ -147,15 +149,19 @@ init_device( NodeProp& nodeprop )
   switch(g_daq_mode){
   case DM_NORMAL:
     {
-      {
+      {// V1724
 	gOpt.Open();
+	
+	sleep(1);
 
 	const int n = gOpt.GetNumOfModule<opt::CaenV1724>();
-	for( int i=0; i<n; ++i ){
-	  opt::CaenV1724* m = gOpt.GetModule<opt::CaenV1724>(i);
-	  m->WriteRegister( opt::CaenV1724::SoftClear, 0x1 );
-	}
-      }
+	for(int i_try = 0; i_try<3; ++i_try){
+	  for( int i=0; i<n; ++i ){
+	    opt::CaenV1724* m = gOpt.GetModule<opt::CaenV1724>(i);
+	    m->WriteRegister( opt::CaenV1724::SoftClear, 0x1 );
+	  }// for(i)
+	}// for(i_try)
+      }// V1724
 
       return;
     }
