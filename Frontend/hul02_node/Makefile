@@ -12,7 +12,7 @@ BIN_DIR		= bin
 BLD_DIR 	= build
 
 CXX		= g++
-CXXFLAGS	= -O2 -Wall
+CXXFLAGS	= -O2 -Wall -std=c++1y
 
 INCLUDES	= \
 	-I. -I$(CORE_DIR) -I$(HUL_CORE_DIR) -I$(SRC_DIR) \
