@@ -7,15 +7,18 @@ cd $bin_dir
 #$bin_dir/message.sh & #> /dev/null 2> /dev/null &
 ./message.sh > /dev/null 2> /dev/null &
 
-ctrl_bin=$HOME/work/HUL_MHTDC/bin/set_nimio
+ctrl_bin=$HOME/hul_software/HRM/bin/set_nimio
 master_ip=192.168.1.40
 $ctrl_bin $master_ip
-
+$ctrl_bin 192.168.1.41
 
 sleep 1
 
-for i in $(seq 1 10)
+for i in $(seq 1 12)
 do
+   # if [ $i -eq 3 ]; then
+#	continue
+ #   fi
     nodeid=`expr 130 + $i`
     nickname=hulbc-`expr + $i`
     dataport=`expr 9000 + $i` 
@@ -25,6 +28,9 @@ do
     only_leading=0
     master=--slave
     if [ $i -eq 10 ]; then
+	master=--master
+    fi
+    if [ $i -eq 11 ]; then
 	master=--master
     fi
 
