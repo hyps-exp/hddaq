@@ -9,17 +9,18 @@ cd $bin_dir
 
 sleep 1
 #start hulRM
-$HOME/HUL_RM/bin/set_nimio 192.168.10.60
+
+#$HOME/HUL_Scaler/bin/set_nimio 192.168.10.62
 
 #start hulhrtdc
-for i in $(seq 1 2)
+for i in $(seq 1 3)
 do
     nodeid=`expr $((0x605)) + $i`
     nickname=hul01hr-`expr + $i`
-    dataport=`expr 9009 + $i` 
+    dataport=`expr 9009 + $i`
     sitcp_ip=192.168.10.`expr 65 + $i`
-    min_window=35
-    max_window=60
+    min_window=10
+    max_window=2000
 
     $bin_dir/frontend_hrtdc.sh \
 	$nickname \

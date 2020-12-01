@@ -11,7 +11,6 @@
 #include<netinet/tcp.h>
 #include<string.h>
 
-static const unsigned int udp_port = 4660;
-static const unsigned int tcp_port = 24;
+//static const unsigned int udp_port = 4660;
 
 #endif

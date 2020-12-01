@@ -8,14 +8,16 @@
 
 #include "FPGAModule.hh"
 #include "RegisterMap.hh"
+#include "RegisterMapCommon.hh"
 #include "UDPRBCP.hh"
 #include "errno.h"
 #include "network.hh"
-#include "rbcp.h"
+#include "rbcp.hh"
 
 namespace
 {
-  using namespace HUL_SCR;
+  using namespace HUL;
+  using namespace Scaler;
   //maximum datasize by byte unit
   static const int n_header = 3;
   static const int max_n_word = n_header + 32*4;
@@ -25,7 +27,6 @@ namespace
 
   char ip[100];
   int  sock=0;
-  rbcp_header rbcpHeader;
   bool flag_master = false;
   int reg_en_block=0xf;
 
@@ -36,7 +37,7 @@ namespace
   ConnectSocket( char *ip )
   {
     struct sockaddr_in SiTCP_ADDR;
-    unsigned int port = tcp_port;
+    unsigned int port = 24;
 
     int sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     SiTCP_ADDR.sin_family      = AF_INET;
@@ -130,7 +131,7 @@ namespace
     }
 #endif
 
-    if(ret < 0) return -1;  
+    if(ret < 0) return -1;
     return sizeHeader + sizeData;
 
   }
@@ -150,10 +151,6 @@ open_device( NodeProp& nodeprop )
 {
   nick_name = nodeprop.getNickName();
   const std::string& func_name(nick_name+" [::"+__func__+"()]");
-
-  // RBCP
-  rbcpHeader.type = UDPRBCP::rbcp_ver_;
-  rbcpHeader.id   = 0;
 
   // update DAQ mode
   g_daq_mode = nodeprop.getDaqMode();
@@ -187,6 +184,11 @@ open_device( NodeProp& nodeprop )
     send_error_message( oss.str() );
     std::cerr << oss.str() << std::endl;
   }
+
+  RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);
+  FPGAModule fModule(udp_rbcp);
+  fModule.WriteModule(BCT::kAddrReset,  1, 1);
+  ::sleep(1);
 
   close(sock);
 
@@ -222,41 +224,42 @@ init_device( NodeProp& nodeprop )
       }
 
       // Start DAQ
-      FPGAModule fModule(ip, udp_port, &rbcpHeader, 0);
+      RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);
+      FPGAModule fModule(udp_rbcp);
       {
 	std::ostringstream oss;
 	oss << func_name << " Firmware : " << std::hex << std::showbase
-	    << fModule.ReadModule( BCT::mid, BCT::laddr_Version, 4 );
+	    << fModule.ReadModule(BCT::kAddrVersion, 4);
 	send_normal_message( oss.str() );
       }
 
-      fModule.WriteModule(BCT::mid, BCT::laddr_Reset,  1);
-      ::sleep(1);
-
       if(flag_master){
-	fModule.WriteModule(TRM::mid, TRM::laddr_sel_trig,
-			    TRM::reg_L1RM | TRM::reg_L2RM | TRM::reg_ClrRM |
-			    TRM::reg_EnL2 | TRM::reg_EnRM );
+	fModule.WriteModule(TRM::kAddrSelectTrigger,
+			    TRM::kRegL1RM | TRM::kRegL2RM | TRM::kRegClrRM |
+			    TRM::kRegEnL2 | TRM::kRegEnRM, 2 );
       }else{
-	fModule.WriteModule(TRM::mid, TRM::laddr_sel_trig,
-			    TRM::reg_L1J0 | TRM::reg_L2J0 | TRM::reg_ClrJ0 |
-			    TRM::reg_EnL2 | TRM::reg_EnJ0);
+	fModule.WriteModule(TRM::kAddrSelectTrigger,
+			    TRM::kRegL1J0 | TRM::kRegL2J0 | TRM::kRegClrJ0 |
+			    TRM::kRegEnL2 | TRM::kRegEnJ0, 2);
       }
-      fModule.WriteModule(DCT::mid, DCT::laddr_evb_reset, 0x1);
-      fModule.WriteModule(SCR::mid, SCR::laddr_counter_reset, 0x0);
-      fModule.WriteModule(SCR::mid, SCR::laddr_enable_block, reg_en_block);
-      fModule.WriteModule(SCR::mid, SCR::laddr_enable_hdrst, 0xf);
-      fModule.WriteModule(IOM::mid, IOM::laddr_extSpillGate, IOM::reg_i_nimin1);
-      fModule.WriteModule(IOM::mid, IOM::laddr_extCCRst    , IOM::reg_i_nimin2);
-      fModule.WriteModule(IOM::mid, IOM::laddr_extBusy     , IOM::reg_i_nimin3);
-      fModule.WriteModule(IOM::mid, IOM::laddr_extRsv2     , IOM::reg_i_nimin4);
-      fModule.WriteModule(IOM::mid, IOM::laddr_nimout1, IOM::reg_o_ModuleBusy);
-      fModule.WriteModule(IOM::mid, IOM::laddr_nimout2, IOM::reg_o_clk100kHz);
-      fModule.WriteModule(IOM::mid, IOM::laddr_nimout3, IOM::reg_o_RML1 );
-      fModule.WriteModule(IOM::mid, IOM::laddr_nimout4, IOM::reg_o_RML2 );
+
+      fModule.WriteModule(DCT::kAddrResetEvb, 0x1, 1);
+
+      fModule.WriteModule(SCR::kAddrCounterReset, 0x0, 1);
+      fModule.WriteModule(SCR::kAddrEnableBlock, reg_en_block, 1);
+      fModule.WriteModule(SCR::kAddrEnableHdrst, 0xf, 1);
+
+      fModule.WriteModule(IOM::kAddrExtSpillGate, IOM::kReg_i_Nimin1, 1);
+      fModule.WriteModule(IOM::kAddrExtCCRst    , IOM::kReg_i_Nimin2, 1);
+      fModule.WriteModule(IOM::kAddrExtBusy     , IOM::kReg_i_Nimin3, 1);
+      fModule.WriteModule(IOM::kAddrExtRsv2     , IOM::kReg_i_Nimin4, 1);
+      fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_RML1, 1);
+      fModule.WriteModule(IOM::kAddrNimout2     , IOM::kReg_o_RML1, 1);
+      fModule.WriteModule(IOM::kAddrNimout3     , IOM::kReg_o_ModuleBusy, 1);
+      fModule.WriteModule(IOM::kAddrNimout4     , IOM::kReg_o_RML2, 1);
 
       // start DAQ
-      fModule.WriteModule(DCT::mid, DCT::laddr_gate, 1);
+      fModule.WriteModule(DCT::kAddrDaqGate, 1, 1);
       return;
     }
   case DM_DUMMY:
@@ -276,8 +279,9 @@ finalize_device( NodeProp& nodeprop )
   // const std::string& nick_name(nodeprop.getNickName());
   // const std::string& func_name(nick_name+" [::"+__func__+"()]");
 
-  FPGAModule fModule(ip, udp_port, &rbcpHeader, 0);
-  fModule.WriteModule(DCT::mid, DCT::laddr_gate, 0);
+  RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);
+  FPGAModule fModule(udp_rbcp);
+  fModule.WriteModule(DCT::kAddrDaqGate, 0, 1);
   ::sleep(1);
   unsigned int data[max_n_word];
   while(-1 != EventCycle(sock, data));

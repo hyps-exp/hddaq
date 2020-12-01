@@ -1,64 +1,67 @@
-// -*- C++ -*-
+#include"FPGAModule.hh"
+#include"UDPRBCP.hh"
+#include<iostream>
 
-#include "FPGAModule.hh"
+namespace HUL{
 
-#include <iostream>
-
-#include "UDPRBCP.hh"
-
-//______________________________________________________________________________
-FPGAModule::FPGAModule( const char*  ipAddr,
-			unsigned int port,
-			rbcp_header* sendHeader,
-			int          disp_mode )
-  : ipAddr_(ipAddr),
-    port_(port),
-    sendHeader_(sendHeader),
-    disp_mode_(disp_mode)
+// Constructor/Destructor --------------------------------------------------
+FPGAModule::FPGAModule(RBCP::UDPRBCP& udp_rbcp)
+  :
+  udp_rbcp_(udp_rbcp)
 {
+
 }
 
-//______________________________________________________________________________
-FPGAModule::~FPGAModule( void )
+FPGAModule::~FPGAModule()
 {
+
 }
 
-//______________________________________________________________________________
-int
-FPGAModule::WriteModule( unsigned int module_id,
-			 unsigned int local_address,
-			 unsigned int write_data )
+// WriteModule -------------------------------------------------------------
+int32_t
+FPGAModule::WriteModule(const uint32_t local_address,
+			const uint32_t write_data,
+			const int32_t  n_cycle
+			)
 {
-  unsigned int udp_addr
-    = ((module_id & module_id_mask) << module_id_shift)
-    + ((local_address & address_mask) << address_shift)
-    + ((write_data & exdata_mask) >> exdata_shift);
+  if(n_cycle > kMaxCycle){
+    std::cerr << "#E :FPGAModule::WriteModule, too many cycle " 
+	      << n_cycle << std::endl;
+    return -1;
+  }
 
-  char udp_wd = static_cast<char>(write_data & data_mask);
+  for(int32_t i = 0; i<n_cycle; ++i){
+    uint8_t udp_wd = static_cast<uint8_t>((write_data >> kDataSize*i) & kDataMask);
 
-  UDPRBCP udpMan(ipAddr_, port_, sendHeader_,
-		 static_cast<UDPRBCP::rbcp_debug_mode>(disp_mode_));
-  udpMan.SetWD(udp_addr, 1, &udp_wd);
-  return udpMan.DoRBCP();
+    int32_t ret = 0;
+    int32_t multi_byte_offset = i << kShiftMultiByteOffset;
+    if( 0 > WriteModule_nByte(local_address+multi_byte_offset, &udp_wd, 1)){
+      std::cout << "#E :FPGAModule::WriteModule, Write error " << ret 
+		<< ", (" << i << "-th)" << std::endl;
+    }
+  }
+
+  return 0;
 }
 
-//______________________________________________________________________________
-unsigned int
-FPGAModule::ReadModule( unsigned int module_id,
-			unsigned int local_address,
-			int          nCycle )
+// ReadModule ----------------------------------------------------------------
+uint32_t
+FPGAModule::ReadModule(const uint32_t local_address,
+		       const int32_t n_cycle
+		       )
 {
-  if(nCycle > 4){
-    std::cerr << "#E :FPGAModule::ReadModule, too many cycle "
-	      << nCycle << std::endl;
+  if(n_cycle > kMaxCycle){
+    std::cerr << "#E :FPGAModule::ReadModule, too many cycle " 
+	      << n_cycle << std::endl;
     return 0xeeeeeeee;
   }
 
-  unsigned int data = 0;
-  for(int i = 0; i<nCycle; ++i){
-    if( this->ReadModule_nByte(module_id, local_address+i, 1) > -1){
-      unsigned int tmp = (unsigned int)rd_data_[0];
-      data += (tmp & 0xff) << 8*i;
+  uint32_t data = 0;
+  for(int32_t i = 0; i<n_cycle; ++i){
+    int32_t multi_byte_offset = i << kShiftMultiByteOffset;
+    if( ReadModule_nByte(local_address+multi_byte_offset, 1) > -1){
+      uint32_t tmp = static_cast<uint32_t>(rd_data_[0]);
+      data += (tmp & 0xff) << kDataSize*i;
     }else{
       return 0xeeeeeeee;
     }
@@ -68,21 +71,38 @@ FPGAModule::ReadModule( unsigned int module_id,
   return rd_word_;
 }
 
-//______________________________________________________________________________
-int FPGAModule::ReadModule_nByte( unsigned int module_id,
-				  unsigned int local_address,
-				  unsigned int nByte )
+// WriteModule -------------------------------------------------------------
+int32_t
+FPGAModule::WriteModule_nByte(const uint32_t local_address,
+			      const uint8_t* write_data,
+			      const uint32_t n_byte
+			      )
 {
-  rd_data_.clear();
-  unsigned int udp_addr
-    = ((module_id & module_id_mask) << module_id_shift)
-    + ((local_address & address_mask) << address_shift);
+  uint32_t udp_addr = local_address;
+  udp_rbcp_.SetWD(udp_addr, n_byte, write_data);
 
-  UDPRBCP udpMan(ipAddr_, port_, sendHeader_,
-		 static_cast<UDPRBCP::rbcp_debug_mode>(disp_mode_));
-  udpMan.SetRD(udp_addr, nByte);
-  int ret;
-  if((ret = udpMan.DoRBCP()) > -1){ udpMan.CopyRD(rd_data_); }
+  int32_t ret = 0;
+  if( 0 > (ret = udp_rbcp_.DoRBCP())){
+      std::cout << "#E :FPGAModule::WriteModule_nByte, Write error " << ret 
+		<< std::endl;
+  }
 
   return ret;
 }
+
+// ReadModule_nByte --------------------------------------------------------
+int32_t
+FPGAModule::ReadModule_nByte(const uint32_t local_address,
+			     const uint32_t n_byte
+			     )
+{
+  rd_data_.clear();
+  uint32_t udp_addr = local_address;
+
+  udp_rbcp_.SetRD(udp_addr, n_byte);
+  int32_t ret = 0;;
+  if((ret = udp_rbcp_.DoRBCP()) > -1){ udp_rbcp_.CopyRD(rd_data_); }
+
+  return ret;
+}
+};

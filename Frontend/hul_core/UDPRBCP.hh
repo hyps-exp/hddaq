@@ -3,54 +3,63 @@
 
 #include<vector>
 #include<algorithm>
+#include<string>
+#include<stdint.h>
 
+#include"rbcp.hh"
 #include"Uncopyable.hh"
 
-struct rbcp_header;
+namespace RBCP{
+  
+const uint32_t gUdpPort = 4660;
 
 class UDPRBCP
   : Uncopyable<UDPRBCP>
 {
-public:
-  static const unsigned int udp_buf_size_ = 4096;
-  static const unsigned int rbcp_ver_     = 0xFF;  
-  enum rbcp_debug_mode
+ public:
+  static const uint32_t kSizeUdpBuf_ {4096};
+  static const uint32_t kRbcpVer_    {0xFF};  
+  enum RbcpDebugMode
     {
-      disp_no, disp_interactive, disp_debug,
-      size_rbcp_debug_mode
+      kNoDisp, kInteractive, kDebug,
+      kSizeRbcpDebugMode
     };
   
-private:
-  static const unsigned int rbcp_cmd_wr_  = 0x80;  
-  static const unsigned int rbcp_cmd_rd_  = 0xC0;  
+ private:
+  const uint32_t kRbcpCmdWr_  {0x80};  
+  const uint32_t kRbcpCmdRd_  {0xC0};  
 
-  const char*  ipAddr_;
-  unsigned int port_;
-  rbcp_header* sendHeader_;
+  const std::string  ip_addr_;
+  const uint32_t     port_;
+  RbcpHeader         send_header_;
 
-  int  length_rd_;
-  char          wd_buffer_[udp_buf_size_];
-  unsigned char rd_buffer_[udp_buf_size_];
+  int32_t            length_rd_;
+  uint8_t            wd_buffer_[kSizeUdpBuf_];
+  uint8_t            rd_buffer_[kSizeUdpBuf_];
 
-  rbcp_debug_mode mode_;
+  RbcpDebugMode      mode_;
 
 public:
-  UDPRBCP(const char* ipAddr, unsigned int port, rbcp_header* sendHeader,
-	  rbcp_debug_mode mode = disp_interactive);
+  UDPRBCP(const std::string ipAddr, const uint32_t port,
+	  const RbcpDebugMode mode = kInteractive);
   virtual ~UDPRBCP();
   
-  void SetDispMode(rbcp_debug_mode mode);
-  void SetWD(unsigned int address, unsigned int length, char* sendData);
-  void SetRD(unsigned int address, unsigned int legnth);
+  void SetDispMode(const RbcpDebugMode mode);
+  void SetRbcpVer(const uint8_t verion);
+  void SetRbcpId(const uint8_t id);
+  void SetWD(const uint32_t address, const uint32_t length,
+	     const uint8_t* send_data);
+  void SetRD(const uint32_t address, const uint32_t legnth);
   int  DoRBCP();
 
-  void CopyRD(std::vector<unsigned char>& buffer);
+  void CopyRD(std::vector<uint8_t>& buffer);
 };
 
-inline void UDPRBCP::CopyRD(std::vector<unsigned char>& buffer){
+inline void UDPRBCP::CopyRD(std::vector<uint8_t>& buffer){
   std::copy(rd_buffer_, rd_buffer_ +length_rd_,
 	    back_inserter(buffer)
 	    );
 }
+};
 
 #endif

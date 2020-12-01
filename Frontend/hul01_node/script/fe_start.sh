@@ -11,11 +11,11 @@ sleep 1
 # enable block register (0th value is dummy)
 en_block=(0x0, 0x3, 0x3, 0x3)
 
-for i in $(seq 1 3)
+for i in $(seq 1 2)
 do
     nodeid=`expr $((0x600)) + $i`
     nickname=hul01scr-`expr + $i`
-    dataport=`expr 8999 + $i` 
+    dataport=`expr 8999 + $i`
     sitcp_ip=192.168.10.`expr 60 + $i`
     master=--master
 
