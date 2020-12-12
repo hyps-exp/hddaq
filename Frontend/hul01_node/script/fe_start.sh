@@ -9,7 +9,7 @@ $bin_dir/message.sh > /dev/null 2> /dev/null &
 sleep 1
 
 # enable block register (0th value is dummy)
-en_block=(0x0, 0x3, 0x3, 0x3)
+en_block=(0x0, 0xb, 0x1, 0x3)
 
 for i in $(seq 1 2)
 do
