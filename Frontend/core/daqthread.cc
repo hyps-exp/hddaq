@@ -68,7 +68,7 @@ int DaqThread::run()
     try{
       dsock = server.accept();
     }catch(...){
-      std::cout << "#D waitting accept" << std::endl;
+      std::cout << "#D waiting accept" << std::endl;
       continue;
     }
     std::cout << "#D server accepted" << std::endl;
@@ -126,8 +126,10 @@ int DaqThread::run()
 	dsock.send(buf, clen, MSG_NOSIGNAL);
 	dsock.flush();
       }catch(...){
-	send_fatal_message("data send failure");
-	std::cout << "#E data send failed -> exit " << std::endl;
+	send_fatal_message(m_nodeprop.getNickName()+" data send failure");
+	std::cout << m_nodeprop.getNickName() << " #E data send failed -> exit "
+		  << "event=" << m_nodeprop.getEventNumber()
+		  << ",clen=" << clen << std::endl;
 	std::exit(-1);
       }
 
