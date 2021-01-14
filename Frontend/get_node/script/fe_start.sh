@@ -18,6 +18,6 @@ do
 	$nickname \
 	$nodeid \
 	$dataport \
-	$coboid &
-	#>/dev/null 2>/dev/null &
+	$coboid \
+	>/dev/null 2>/dev/null &
 done

@@ -45,6 +45,16 @@ open_device( NodeProp& nodeprop )
       iss >> g_cobo_id;
     }
   }
+  std::ostringstream oss;
+  oss.flags( std::ios::left );
+  if( g_cobo_id >= 0 ){
+    oss << nodeprop.getNickName() << " set cobo id " << g_cobo_id;
+    send_normal_message( oss.str() );
+  } else {
+    oss << nodeprop.getNickName() << " found invalid cobo id (" << g_cobo_id << ")";
+    send_fatal_message( oss.str() );
+    std::exit( EXIT_FAILURE );
+  }
   return;
 }
 
@@ -57,16 +67,18 @@ init_device( NodeProp& nodeprop )
   case DM_NORMAL:
     {
       int run_number = nodeprop.getRunNumber();
-      std::stringstream ss;
-      ss << "/raid/getdata/test/cobo" << g_cobo_id
+      std::ostringstream oss;
+      oss << "/raid/getdata/test/cobo" << g_cobo_id
 	 << "/run_" << std::setfill('0') << std::setw(4) << run_number
 	 << ".dat";
       // g_data_path = FileSystem::GetRun( ss.str(), run_number );
-      g_data_path = ss.str();
+      g_data_path = oss.str();
       g_event_reader.Clear();
       // g_event_reader.SetPrintCycle( 1 );
       g_seek_pos = 0;
-      std::cout << "set data path : " << g_data_path << std::endl;
+      oss.str("");
+      oss << nodeprop.getNickName() << " set data path : " << g_data_path;
+      send_normal_message( oss.str() );
       return;
     }
   case DM_DUMMY:
@@ -82,6 +94,7 @@ init_device( NodeProp& nodeprop )
 void
 finalize_device( NodeProp& nodeprop )
 {
+  // erase raw data
   return;
 }
 
@@ -113,7 +126,8 @@ wait_device( NodeProp& nodeprop )
       // std::time_t curr_time = FileSystem::GetLastTime( g_data_path );
       // if( last_time < curr_time ){
 	// last_time = curr_time;
-	return 0;
+      ::sleep(1);
+      return 0;
       // } else {
       // 	last_time = curr_time;
       // 	::usleep(100000);
@@ -152,19 +166,24 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
       bool next = ( g_event_reader.Next() &&
 		    g_event_reader.HasEventBuf( event_number ) );
       if( next ){
+	const auto& head = g_event_reader.CoBoHeader();
+	data[ndata++] = head->m_magic;
+	data[ndata++] = head->m_cobo_id;
+	data[ndata++] = head->m_data_size;
+	data[ndata++] = head->m_nblock;
 	const auto& buf = g_event_reader.EventBuf( event_number );
 	for( const auto& asad : buf ){
 	  for( const auto& b : asad ){
 	    if( ndata == max_data_size/4 ){
 	      std::cerr << "too much data!!!" << std::endl;
-	      std::exit(-1);
+	      std::exit( EXIT_FAILURE );
 	    }
 	    data[ndata++] = b;
 	  }
 	}
 	// if( ndata == 0 ){
 	//   std::cerr << "wrong event number? ndata=0" << std::endl;
-	//   std::exit(-1);
+	//   std::exit( EXIT_FAILURE );
 	// }
 	g_seek_pos = g_event_reader.tellg();
       }

@@ -31,13 +31,16 @@ EventReader::EventReader( void )
     m_header_size(),
     m_item_size(),
     m_padded(),
-  m_increment_event( false ),
+    m_increment_event( false ),
     m_event_id_offset( -1 ),
+    m_cobo_header( new CoBoMasterHeader ),
     m_data_buf32(),
     m_data_buf16(),
-  m_data_buf(),
-  m_event_buf()
+    m_data_buf(),
+    m_event_buf(),
+    m_header_buf()
 {
+  m_cobo_header->m_magic = kCoBoMasterMagic;
 }
 
 //_____________________________________________________________________________
@@ -145,6 +148,17 @@ EventReader::IncrementEvent( void )
 {
   if( eof() )
     return;
+
+  // m_cobo_header->m_magic = kCoBoMasterMagic;
+  m_cobo_header->m_cobo_id = m_cobo_id;
+  m_cobo_header->m_data_size = sizeof(CoBoMasterHeader)/sizeof(uint32_t);
+  m_cobo_header->m_nblock = 0;
+  for( int i=0; i<NumOfAsAd; ++i ){
+    const uint32_t s = m_event_buf[m_event_counter][i].size();
+    m_cobo_header->m_data_size += s;
+    m_cobo_header->m_nblock += ( s > 0 );
+  }
+
   m_increment_event = true;
   ++m_event_counter;
   if( m_event_counter > 100 ){
@@ -256,9 +270,15 @@ EventReader::ReadOneBlock( void )
     if( m_event_buf[m_event_counter].empty() ){
       m_event_buf[m_event_counter].resize( NumOfAsAd );
     }
-    m_event_buf[m_event_counter][m_asad_id].resize( m_n_data );
+    uint32_t total_data_size = ( m_n_data + sizeof(GetHeader)/sizeof(uint32_t)
+				 + 2 ); // magic+size
+    m_event_buf[m_event_counter][m_asad_id].resize( total_data_size );
+    auto itr = m_event_buf[m_event_counter][m_asad_id].begin();
+    *(itr++) = kAsAdMagic;
+    *(itr++) = total_data_size;
+    std::memcpy( &( *itr ), m_header, sizeof(GetHeader) );
     m_istream->read( reinterpret_cast<char*>
-		     ( m_event_buf[m_event_counter][m_asad_id].data() ),
+		     ( &( *( itr + sizeof(GetHeader)/sizeof(uint32_t) ) ) ),
                      sizeof(uint32_t)*m_n_data );
 
     //m_data_buf32.resize( m_n_data );
@@ -327,6 +347,7 @@ EventReader::SetStream( const std::string& stream )
 bool
 EventReader::Next( void )
 {
+  uint32_t counter = m_counter;
   if( eof() )
     return false;
   // Clear();
@@ -339,6 +360,7 @@ EventReader::Next( void )
     // if( m_counter > 0 )
     //   PrintEventNumber();
     // std::cout << FUNC_NAME << " exit loop" << std::endl;
+    m_counter = counter;
     return false;
   }
   Decode();

@@ -49,6 +49,17 @@ struct GetHeader
 };
 
 //_____________________________________________________________________________
+struct CoBoMasterHeader
+{
+  uint32_t m_magic;
+  uint32_t m_cobo_id;
+  uint32_t m_data_size;
+  uint32_t m_nblock;
+};
+
+const uint32_t kCoBoMasterMagic = 0x436f426f; // "Cobo"
+const uint32_t kAsAdMagic       = 0x41734164; // "AsAd"
+//_____________________________________________________________________________
 class EventReader
 {
 public:
@@ -110,10 +121,12 @@ private:
   // data
   bool                  m_increment_event;
   int32_t               m_event_id_offset;
+  CoBoMasterHeader*     m_cobo_header;
   std::vector<uint32_t> m_data_buf32; // Partial
   std::vector<uint16_t> m_data_buf16; // Full
   std::vector<uint32_t> m_data_buf;
   std::map<uint32_t, DataBuf_t> m_event_buf; // [event_id]
+  std::map<uint32_t, GetHeader*> m_header_buf; // [event_id]
 
 public:
   typedef std::char_traits<char>::pos_type pos_t;
@@ -121,6 +134,7 @@ public:
 public:
   void CheckHeaderFormat( void );
   void Clear( void );
+  const CoBoMasterHeader* CoBoHeader( void ) const { return m_cobo_header; }
   const DataBuf_t& EventBuf( uint32_t evid ) const { return m_event_buf.at(evid); }
   const std::vector<uint32_t>& DataBuf( void ) const { return m_data_buf; }
   const std::vector<uint32_t>& DataBuf32( void ) const { return m_data_buf32; }
@@ -129,6 +143,7 @@ public:
   bool eof( void ) const;
   const std::string& GetStreamPath( void ) const { return m_stream_path; }
   bool HasEventBuf( uint32_t evid ) const { return m_event_buf.count(evid) == 1; }
+  const GetHeader* HeaderBuf( uint32_t evid ) const { return m_header_buf.at(evid); }
   void IncrementEvent( void );
   bool Initialize( void );
   void Join( void );
