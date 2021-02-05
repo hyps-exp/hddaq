@@ -126,7 +126,7 @@ wait_device( NodeProp& nodeprop )
       // std::time_t curr_time = FileSystem::GetLastTime( g_data_path );
       // if( last_time < curr_time ){
 	// last_time = curr_time;
-      ::sleep(1);
+      // ::sleep(1);
       return 0;
       // } else {
       // 	last_time = curr_time;

@@ -259,12 +259,6 @@ EventReader::ReadOneBlock( void )
   CheckHeaderFormat();
   if( !m_is_good )
     return;
-  ++m_counter;
-  m_asad_flag[m_event_id].set( m_asad_id );
-  if( m_asad_flag[m_event_id].count() == NumOfAsAd ||
-      ( m_cobo_id == 7 && m_asad_flag[m_event_id].count() == NumOfAsAd-1 ) ){
-    IncrementEvent();
-  }
   switch( m_frame_type ){
   case GetHeader::kPartialRead: {
     if( m_event_buf[m_event_counter].empty() ){
@@ -297,6 +291,12 @@ EventReader::ReadOneBlock( void )
               << std::endl;
     m_is_good = false;
     return;
+  }
+  ++m_counter;
+  m_asad_flag[m_event_id].set( m_asad_id );
+  if( m_asad_flag[m_event_id].count() == NumOfAsAd ||
+      ( m_cobo_id == 7 && m_asad_flag[m_event_id].count() == NumOfAsAd-1 ) ){
+    IncrementEvent();
   }
   m_istream->seekg( m_padded, std::ios::cur );
   m_tellg = m_istream->tellg();
