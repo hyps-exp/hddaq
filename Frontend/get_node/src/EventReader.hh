@@ -135,14 +135,16 @@ public:
   void CheckHeaderFormat( void );
   void Clear( void );
   const CoBoMasterHeader* CoBoHeader( void ) const { return m_cobo_header; }
-  const DataBuf_t& EventBuf( uint32_t evid ) const { return m_event_buf.at(evid); }
+  const DataBuf_t& EventBuf( uint32_t event_number ) const
+  { return m_event_buf.at( event_number ); }
   const std::vector<uint32_t>& DataBuf( void ) const { return m_data_buf; }
   const std::vector<uint32_t>& DataBuf32( void ) const { return m_data_buf32; }
   void Decode( void );
   void DecodeHeader( void );
   bool eof( void ) const;
   const std::string& GetStreamPath( void ) const { return m_stream_path; }
-  bool HasEventBuf( uint32_t evid ) const { return m_event_buf.count(evid) == 1; }
+  bool HasEventBuf( uint32_t event_number ) const
+  { return m_event_buf.count( event_number ) == 1; }
   const GetHeader* HeaderBuf( uint32_t evid ) const { return m_header_buf.at(evid); }
   void IncrementEvent( void );
   bool Initialize( void );

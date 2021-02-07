@@ -7,6 +7,7 @@
 #include <sstream>
 
 #include "FuncName.hh"
+#include "MessageHelper.h"
 
 //_____________________________________________________________________________
 EventReader::EventReader( void )
@@ -34,9 +35,6 @@ EventReader::EventReader( void )
     m_increment_event( false ),
     m_event_id_offset( -1 ),
     m_cobo_header( new CoBoMasterHeader ),
-    m_data_buf32(),
-    m_data_buf16(),
-    m_data_buf(),
     m_event_buf(),
     m_header_buf()
 {
@@ -60,16 +58,22 @@ void
 EventReader::CheckHeaderFormat( void )
 {
   if( m_revisions != Revisions ){
-    std::cerr << FUNC_NAME << " unknown revisions=" << m_revisions
-              << " (must be " << Revisions << ")" << std::endl;
+    std::ostringstream oss;
+    oss << "unknown revisions=" << m_revisions
+	<< " (must be " << Revisions << ")";
+    send_warning_message( oss.str() );
     m_is_good = false;
   }
   if( NumOfCobo < m_cobo_id ){
-    std::cerr << FUNC_NAME << " unknown CoboId=" << m_cobo_id << std::endl;
+    std::ostringstream oss;
+    oss << " unknown CoboId=" << m_cobo_id;
+    send_warning_message( oss.str() );
     m_is_good = false;
   }
   if( NumOfAsAd < m_asad_id ){
-    std::cerr << FUNC_NAME << " unknown AsAdId=" << m_asad_id << std::endl;
+    std::ostringstream oss;
+    oss << " unknown AsAdId=" << m_asad_id;
+    send_warning_message( oss.str() );
     m_is_good = false;
   }
   if( m_is_good && m_event_id_offset < 0 ){
@@ -88,9 +92,6 @@ EventReader::Clear( void )
   m_increment_event = false;
   m_event_id_offset = -1;
   m_asad_flag.clear();
-  m_data_buf16.clear();
-  m_data_buf32.clear();
-  m_data_buf.clear();
   m_event_buf.clear();
 }
 
@@ -153,16 +154,17 @@ EventReader::IncrementEvent( void )
   m_cobo_header->m_cobo_id = m_cobo_id;
   m_cobo_header->m_data_size = sizeof(CoBoMasterHeader)/sizeof(uint32_t);
   m_cobo_header->m_nblock = 0;
+  uint32_t evnum = m_event_id-m_event_id_offset-1;
   for( int i=0; i<NumOfAsAd; ++i ){
-    const uint32_t s = m_event_buf[m_event_counter][i].size();
+    const uint32_t s = m_event_buf[evnum][i].size();
     m_cobo_header->m_data_size += s;
     m_cobo_header->m_nblock += ( s > 0 );
   }
 
   m_increment_event = true;
-  ++m_event_counter;
-  if( m_event_counter > 100 ){
-    m_event_buf.erase( m_event_counter-100 );
+  m_event_counter++;
+  if( evnum > 1 ){
+    m_event_buf.erase( evnum-1 );
   }
   if( m_print_cycle > 0 && m_event_counter > 0 &&
       ( m_event_counter % m_print_cycle ) == 0 ){
@@ -210,43 +212,30 @@ EventReader::PrintHeader( void ) const
     return;
   std::string frame_type = ( m_header->FrameType[1] == 1 ) ? "Partial"
     : ( m_header->FrameType[1] == 2 ) ? "Full" : "Unknown";
-  std::cout << FUNC_NAME << std::endl
-            << "   MetaType = " << (int)m_header->MetaType << std::endl
-            << "   FrameSize = 0x"
-            << std::hex << (int)m_header->FrameSize[0]
-            << (int)m_header->FrameSize[1]
-            << (int)m_header->FrameSize[2] << std::dec
-            << " Blocks (256 bytes/block)" << std::endl
-            << "   DataSource = " << (int)m_header->DataSource << std::endl
-            << "   FrameType = " << (int)m_header->FrameType[1] << " "
-            << frame_type << std::endl
-            << "   Revision = " << m_revisions << std::endl
-            << "   HeaderSize = " << (int)m_header->HeaderSize[1]
-            << " Blocks" << std::endl
-            << "   ItemSize = " << (int)m_header->ItemSize[1] << std::endl
-            << "   n data = " << m_n_data << std::endl
-            << "   Event Id = " << m_event_id
-            << ", Cobo Id = " << m_cobo_id
-            << ", AsAd Id = " << m_asad_id << std::endl
-            << "   ReadOffset = " << (int)m_header->ReadOffset[1] << std::endl
-            << "   Status = " << (int)m_header->Status << std::endl
-            << "   Padded = " << m_padded << std::endl;
+  std::ostringstream oss;
+  oss << FUNC_NAME << std::endl
+      << "   MetaType = " << (int)m_header->MetaType << std::endl
+      << "   FrameSize = 0x"
+      << std::hex << (int)m_header->FrameSize[0]
+      << (int)m_header->FrameSize[1]
+      << (int)m_header->FrameSize[2] << std::dec
+      << " Blocks (256 bytes/block)" << std::endl
+      << "   DataSource = " << (int)m_header->DataSource << std::endl
+      << "   FrameType = " << (int)m_header->FrameType[1] << " "
+      << frame_type << std::endl
+      << "   Revision = " << m_revisions << std::endl
+      << "   HeaderSize = " << (int)m_header->HeaderSize[1]
+      << " Blocks" << std::endl
+      << "   ItemSize = " << (int)m_header->ItemSize[1] << std::endl
+      << "   n data = " << m_n_data << std::endl
+      << "   Event Id = " << m_event_id
+      << ", Cobo Id = " << m_cobo_id
+      << ", AsAd Id = " << m_asad_id << std::endl
+      << "   ReadOffset = " << (int)m_header->ReadOffset[1] << std::endl
+      << "   Status = " << (int)m_header->Status << std::endl
+      << "   Padded = " << m_padded << std::endl;
+  send_normal_message( oss.str() );
 }
-
-//_____________________________________________________________________________
-// bool
-// EventReader::read( void )
-// {
-//   if( !m_istream || eof() )
-//     return false;
-//   if( m_istream->read( reinterpret_cast<char*>( &m_data_buf ),
-// 		       sizeof(uint32_t) ) ){
-//     ++m_counter;
-//     m_tellg = m_istream->tellg();
-//     return true;
-//   }
-//   return false;
-// }
 
 //_____________________________________________________________________________
 void
@@ -259,32 +248,28 @@ EventReader::ReadOneBlock( void )
   CheckHeaderFormat();
   if( !m_is_good )
     return;
+  uint32_t evnum = m_event_id-m_event_id_offset-1;
   switch( m_frame_type ){
   case GetHeader::kPartialRead: {
-    if( m_event_buf[m_event_counter].empty() ){
-      m_event_buf[m_event_counter].resize( NumOfAsAd );
+    if( m_event_buf[evnum].empty() ){
+      m_event_buf[evnum].resize( NumOfAsAd );
     }
     uint32_t total_data_size = ( m_n_data + sizeof(GetHeader)/sizeof(uint32_t)
 				 + 2 ); // magic+size
-    m_event_buf[m_event_counter][m_asad_id].resize( total_data_size );
-    auto itr = m_event_buf[m_event_counter][m_asad_id].begin();
+    m_event_buf[evnum][m_asad_id].resize( total_data_size );
+    auto itr = m_event_buf[evnum][m_asad_id].begin();
     *(itr++) = kAsAdMagic;
     *(itr++) = total_data_size;
     std::memcpy( &( *itr ), m_header, sizeof(GetHeader) );
     m_istream->read( reinterpret_cast<char*>
 		     ( &( *( itr + sizeof(GetHeader)/sizeof(uint32_t) ) ) ),
                      sizeof(uint32_t)*m_n_data );
-
-    //m_data_buf32.resize( m_n_data );
-    // m_istream->read( reinterpret_cast<char*>( m_data_buf32.data() ),
-    //                  sizeof(uint32_t)*m_n_data );
+    m_asad_flag[m_event_id].set( m_asad_id );
     break;
   }
   case GetHeader::kFullRead: {
-    m_data_buf16.resize( m_n_data );
-    m_istream->read( reinterpret_cast<char*>( m_data_buf16.data() ),
-                     sizeof(uint16_t)*m_n_data );
-    break;
+    send_fatal_message( "not support full read mode!" );
+    std::exit( EXIT_FAILURE );
   }
   default:
     std::cerr << FUNC_NAME << " unknown frame type=" << m_frame_type
@@ -293,7 +278,6 @@ EventReader::ReadOneBlock( void )
     return;
   }
   ++m_counter;
-  m_asad_flag[m_event_id].set( m_asad_id );
   if( m_asad_flag[m_event_id].count() == NumOfAsAd ||
       ( m_cobo_id == 7 && m_asad_flag[m_event_id].count() == NumOfAsAd-1 ) ){
     IncrementEvent();
@@ -306,11 +290,6 @@ EventReader::ReadOneBlock( void )
 void
 EventReader::Run( void )
 {
-  // if( m_counter%m_print_cycle == 0 )
-  // std::cout << FUNC_NAME << " " << m_stream_path
-  // 	      << " running ... " << m_tellg << " "
-  // 	      << std::hex << m_data_buf
-  // 	      << std::endl;
 }
 
 //_____________________________________________________________________________
@@ -359,7 +338,6 @@ EventReader::Next( void )
   if( eof() ){
     // if( m_counter > 0 )
     //   PrintEventNumber();
-    // std::cout << FUNC_NAME << " exit loop" << std::endl;
     m_counter = counter;
     return false;
   }

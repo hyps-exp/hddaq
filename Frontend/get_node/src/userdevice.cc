@@ -51,7 +51,8 @@ open_device( NodeProp& nodeprop )
     oss << nodeprop.getNickName() << " set cobo id " << g_cobo_id;
     send_normal_message( oss.str() );
   } else {
-    oss << nodeprop.getNickName() << " found invalid cobo id (" << g_cobo_id << ")";
+    oss << nodeprop.getNickName() << " found invalid cobo id ("
+	<< g_cobo_id << ")";
     send_fatal_message( oss.str() );
     std::exit( EXIT_FAILURE );
   }
