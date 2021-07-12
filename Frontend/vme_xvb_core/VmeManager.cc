@@ -18,6 +18,7 @@
 
 #include "CaenV775.hh"
 #include "CaenV792.hh"
+#include "CaenV830.hh"
 #include "NoticeTDC64M.hh"
 #include "RM.hh"
 #include "RMME.hh"
@@ -103,6 +104,7 @@ VmeManager::Open( void )
   // each type of VmeModule
   CreateMapWindow<CaenV775>();
   CreateMapWindow<CaenV792>();
+  CreateMapWindow<CaenV830>();
   CreateMapWindow<CaenV1724>();
   CreateMapWindow<NoticeTDC64M>();
   CreateMapWindow<RM>();

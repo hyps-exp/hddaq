@@ -19,7 +19,7 @@ namespace
 {
   vme::VmeManager& gVme = vme::VmeManager::GetInstance();
   const int max_polling   = 2000000;     //maximum count until time-out
-  const int max_try       = 100;         //maximum count to check data ready
+  const int max_try       = 10000;       //maximum count to check data ready
   const int max_data_size = 4*1024*1024; //maximum datasize by byte unit
   DaqMode g_daq_mode = DM_NORMAL;
 
@@ -48,6 +48,8 @@ open_device( NodeProp& nodeprop )
 
   gVme.AddModule( new vme::CaenV792( 0x00110000 ) );
   gVme.AddModule( new vme::CaenV792( 0x00120000 ) );
+  // gVme.AddModule( new vme::CaenV792( 0x00130000 ) );
+  // gVme.AddModule( new vme::CaenV792( 0x00140000 ) );
   gVme.AddModule( new vme::RMME( 0xff020000 ) );
 
   gVme.SetDmaAddress( 0xaa000000 );
@@ -62,7 +64,7 @@ open_device( NodeProp& nodeprop )
     GEF_UINT16 overflow_suppression = 1; // 0:enable 1:disable
     GEF_UINT16 zero_suppression     = 1; // 0:enable 1:disable
     GEF_UINT16 all_trigger          = 0; // 0:accepted 1:all
-    GEF_UINT16 iped[] = { 255, 255, 255, 255, 255 }; // 0x0-0xff
+    GEF_UINT16 iped[] = { 255, 255 }; // 0x0-0xff
     const int n = gVme.GetNumOfModule<vme::CaenV792>();
     for( int i=0; i<n; ++i ){
       vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(i);
@@ -230,13 +232,16 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 
 #if DMA_CHAIN
       int dready = 0;
-      for(int j=0;j<max_try;j++){
-	vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(0);
-	dready = m->ReadRegister( vme::CaenV792::Str1 ) & 0x1;
-	if(dready==1) break;
+      static const int n = gVme.GetNumOfModule<vme::CaenV792>();
+      for( int i=0; i<n; ++i ){
+	for(int j=0;j<max_try;j++){
+	  vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(i);
+	  dready += m->ReadRegister( vme::CaenV792::Str1 ) & 0x1;
+	  if( dready==1 ) break;
+	}
       }
 
-      if( dready==1 ){
+      if( dready==n ){
 	static const int nread = 4*34*gVme.GetNumOfModule<vme::CaenV792>();
 	gVme.ReadDmaBuf( nread );
 	//gVme.ReadDmaBuf( gVme.DmaBufLen() );
@@ -280,6 +285,8 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
       ////////// V792
       {
 	static const int n = gVme.GetNumOfModule<vme::CaenV792>();
+	unsigned int local_counter = 0;
+
 	for( int i=0; i<n; ++i ){
 	  vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(i);
 	  int module_header_start = ndata;
@@ -294,7 +301,14 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 # if DMA_V792
 	    gVme.ReadDmaBuf( m->AddrParam(), 4*data_len );
 	    for(int j=0;j<data_len;j++){
-	      data[ndata++] = gVme.GetDmaBuf(j);
+	      unsigned int v792_data = gVme.GetDmaBuf(j);
+	      if(i == 0 && j == data_len-1){
+		local_counter = (v792_data & 0xffffff);
+	      }
+	      if(i != 0 && j == data_len-1){
+		v792_data = (v792_data & 0xff000000) | local_counter;
+	      }
+	      data[ndata++] = v792_data;
 	    }
 # else
 	    for(int j=0;j<data_len;j++){

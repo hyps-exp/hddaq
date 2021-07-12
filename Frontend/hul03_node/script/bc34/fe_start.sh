@@ -19,12 +19,16 @@ do
    # if [ $i -eq 3 ]; then
 #	continue
  #   fi
-    nodeid=`expr 130 + $i`
-    nickname=hulbc-`expr + $i`
+    nodeid=`expr 1700 + $i`
+    if [ $i -le 6 ]; then
+	nickname=hul03bc-`expr + $i`
+    else
+	nickname=hul03sdc-`expr + $i - 6`
+    fi
     dataport=`expr 9000 + $i` 
     sitcp_ip=192.168.1.`expr 30 + $i`
     min_window=6
-    max_window=75
+    max_window=150
     only_leading=0
     master=--slave
     if [ $i -eq 10 ]; then
