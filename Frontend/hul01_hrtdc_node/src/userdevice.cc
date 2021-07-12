@@ -31,6 +31,9 @@ namespace
   char ip[100];
   unsigned int min_time_window;
   unsigned int max_time_window;
+  int          en_slot = 0x3;
+  bool         en_slot_up   = false;
+  bool         en_slot_down = false;
 
   int  sock=0;
   //rbcp_header rbcpHeader;
@@ -164,17 +167,17 @@ namespace
   void
   DdrInitialize(FPGAModule& fModule)
   {
-    unsigned int reg_enable_up   = kEnSlotUp   ? DCT::kRegEnableU : 0;
-    unsigned int reg_enable_down = kEnSlotDown ? DCT::kRegEnableD : 0;
+    unsigned int reg_enable_up   = en_slot_up   ? DCT::kRegEnableU : 0;
+    unsigned int reg_enable_down = en_slot_down ? DCT::kRegEnableD : 0;
 
     std::cout << "#D : Do DDR initialize" << std::endl;
     // MZN
-    if(kEnSlotUp){
+    if(en_slot_up){
       WriteMIFModule(fModule, MIF::kUp,
 		     HRTDC_MZN::DCT::kAddrTestMode, 1, 1 );
     }
 
-    if(kEnSlotDown){
+    if(en_slot_down){
       WriteMIFModule(fModule, MIF::kDown,
 		     HRTDC_MZN::DCT::kAddrTestMode, 1, 1 );
     }
@@ -191,7 +194,7 @@ namespace
 
     unsigned int ret = fModule.ReadModule(DCT::kAddrRcvStatus, 1);
 
-    if(kEnSlotUp){
+    if(en_slot_up){
       if( ret & DCT::kRegBitAlignedU){
 	std::cout << "#D : DDR initialize succeeded (MZN-U)" << std::endl;
       }else{
@@ -200,7 +203,7 @@ namespace
       }
     }// bit aligned ?
 
-    if(kEnSlotDown){
+    if(en_slot_down){
       if( ret & DCT::kRegBitAlignedD){
 	std::cout << "#D : DDR initialize succeeded (MZN-D)" << std::endl;
       }else{
@@ -211,13 +214,13 @@ namespace
 
     // Set DAQ mode
 
-    if(kEnSlotUp){
+    if(en_slot_up){
       WriteMIFModule(fModule, MIF::kUp,
 		     HRTDC_MZN::DCT::kAddrTestMode, 0, 1 );
 
     }
 
-    if(kEnSlotDown){
+    if(en_slot_down){
       WriteMIFModule(fModule, MIF::kDown,
 		     HRTDC_MZN::DCT::kAddrTestMode, 0, 1 );
     }
@@ -294,6 +297,13 @@ open_device( NodeProp& nodeprop )
       iss.str( arg.substr(11) );
       iss >> max_time_window;
     }
+
+    if( arg.substr(0,10) == "--en-slot=" ){
+      iss.str( arg.substr(10) );
+      iss >> std::hex >> en_slot;
+      if( en_slot      & 0x1 ) en_slot_up   = true;
+      if( (en_slot>>1) & 0x1 ) en_slot_down = true;
+    }
   }
 
   //Connection check -----------------------------------------------
@@ -310,24 +320,25 @@ open_device( NodeProp& nodeprop )
   FPGAModule fModule(udp_rbcp);
   fModule.WriteModule(BCT::kAddrReset, 0, 1);
   ::sleep(1);
-  if(kEnSlotUp)  fModule.WriteModule(MIF::kAddrForceReset, 1 ,1);
-  if(kEnSlotDown)fModule.WriteModule(MIF::kAddrForceReset, 1 ,1);
+
+  if(en_slot_up)   fModule.WriteModule(MIF::kAddrForceReset, 1 ,1);
+  if(en_slot_down) fModule.WriteModule(MIF::kAddrForceReset, 1 ,1);
   ::sleep(1);
-  if(kEnSlotUp)  fModule.WriteModule(MIF::kAddrForceReset, 0 ,1);
-  if(kEnSlotDown)fModule.WriteModule(MIF::kAddrForceReset, 0 ,1);
+  if(en_slot_up)   fModule.WriteModule(MIF::kAddrForceReset, 0 ,1);
+  if(en_slot_down) fModule.WriteModule(MIF::kAddrForceReset, 0 ,1);
 
   DdrInitialize(fModule);
-  if(kEnSlotUp)   CalibLUT(fModule, MIF::kUp);
-  if(kEnSlotDown) CalibLUT(fModule, MIF::kDown);
+  if(en_slot_up)   CalibLUT(fModule, MIF::kUp);
+  if(en_slot_down) CalibLUT(fModule, MIF::kDown);
 
   unsigned int tdc_ctrl = HRTDC_MZN::TDC::kRegAutosw;
-  if(kEnSlotUp){
+  if(en_slot_up){
     WriteMIFModule(fModule, MIF::kUp,
 		    HRTDC_MZN::TDC::kAddrControll, tdc_ctrl, 1);
 
   }
 
-  if(kEnSlotDown ){
+  if(en_slot_down ){
     WriteMIFModule(fModule, MIF::kDown,
 		    HRTDC_MZN::TDC::kAddrControll, tdc_ctrl, 1);
   }
@@ -371,17 +382,20 @@ init_device( NodeProp& nodeprop )
 	    << fModule.ReadModule(BCT::kAddrVersion, 4);
 	send_normal_message( oss.str() );
 
-	std::ostringstream oss_mznu;
-	oss_mznu << func_name << " Firmware (MZNU): " << std::hex << std::showbase
-		 << ReadMIFModule(fModule, MIF::kUp,
-			     HRTDC_MZN::BCT::kAddrVersion, 4 );
-	send_normal_message( oss_mznu.str() );
-
-	std::ostringstream oss_mznd;
-	oss_mznd << func_name << " Firmware (MZND): " << std::hex << std::showbase
-		 << ReadMIFModule(fModule, MIF::kDown,
-			     HRTDC_MZN::BCT::kAddrVersion, 4 );
-	send_normal_message( oss_mznd.str() );
+	if(en_slot_up){
+	  std::ostringstream oss_mznu;
+	  oss_mznu << func_name << " Firmware (MZNU): " << std::hex << std::showbase
+		   << ReadMIFModule(fModule, MIF::kUp,
+				    HRTDC_MZN::BCT::kAddrVersion, 4 );
+	  send_normal_message( oss_mznu.str() );
+	}
+	if(en_slot_down){
+	  std::ostringstream oss_mznd;
+	  oss_mznd << func_name << " Firmware (MZND): " << std::hex << std::showbase
+		   << ReadMIFModule(fModule, MIF::kDown,
+				    HRTDC_MZN::BCT::kAddrVersion, 4 );
+	  send_normal_message( oss_mznd.str() );
+	}
       }
 
       fModule.WriteModule(TRM::kAddrSelectTrigger,
@@ -391,31 +405,31 @@ init_device( NodeProp& nodeprop )
 
       fModule.WriteModule(DCT::kAddrResetEvb, 0x1, 1);
 
-      uint32_t en_blocks = HRTDC_MZN::DCT::kEnLeading;// | HRTDC_MZN::DCT::kEnTrailing;
-      if(kEnSlotUp){
+      uint32_t en_blocks = HRTDC_MZN::DCT::kEnLeading | HRTDC_MZN::DCT::kEnTrailing;
+      if(en_slot_up){
 	WriteMIFModule(fModule, MIF::kUp,
 		       HRTDC_MZN::DCT::kAddrEnBlocks, en_blocks, 1);
       }
 
-      if(kEnSlotDown ){
+      if(en_slot_down ){
 	WriteMIFModule(fModule, MIF::kDown,
 		       HRTDC_MZN::DCT::kAddrEnBlocks, en_blocks, 1);
       }
 
-      if(kEnSlotUp)   SetTdcWindow(max_time_window, min_time_window, fModule, MIF::kUp);
-      if(kEnSlotDown) SetTdcWindow(max_time_window, min_time_window, fModule, MIF::kDown);
+      if(en_slot_up)   SetTdcWindow(max_time_window, min_time_window, fModule, MIF::kUp);
+      if(en_slot_down) SetTdcWindow(max_time_window, min_time_window, fModule, MIF::kDown);
 
       fModule.WriteModule(IOM::kAddrExtL1,  IOM::kReg_i_Nimin1, 1);
       //fModule.WriteModule(IOM::kAddrExtL2,  IOM::kReg_i_Nimin2, 1);
       //fModule.WriteModule(IOM::kAddrExtClr, IOM::kReg_i_Nimin3, 1);
 
       // start DAQ
-      if(kEnSlotUp){
+      if(en_slot_up){
 	WriteMIFModule(fModule, MIF::kUp,
 		       HRTDC_MZN::DCT::kAddrGate, 1, 1);
       }
 
-      if(kEnSlotDown ){
+      if(en_slot_down ){
 	WriteMIFModule(fModule, MIF::kDown,
 		       HRTDC_MZN::DCT::kAddrGate, 1, 1);
       }
@@ -443,12 +457,12 @@ finalize_device( NodeProp& nodeprop )
   RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);
   FPGAModule fModule(udp_rbcp);
   fModule.WriteModule(DCT::kAddrDaqGate, 0, 1);
-  if(kEnSlotUp){
+  if(en_slot_up){
     WriteMIFModule(fModule, MIF::kUp,
 		   HRTDC_MZN::DCT::kAddrGate, 0, 1);
   }
 
-  if(kEnSlotDown){
+  if(en_slot_down){
     WriteMIFModule(fModule, MIF::kDown,
 		   HRTDC_MZN::DCT::kAddrGate, 0, 1);
   }

@@ -7,14 +7,9 @@ namespace HUL{
 // ------------------------------------------------------------------------
 // HR-TDC BASE
 // ------------------------------------------------------------------------
-  
+
 namespace HRTDC_BASE{
-// ------------------------------------------------------------------------
-// Slot status
-// ------------------------------------------------------------------------
-const bool kEnSlotUp   = true;
-const bool kEnSlotDown = true;
-  
+
 //-------------------------------------------------------------------------
 // TRM Module
 //-------------------------------------------------------------------------
@@ -116,7 +111,7 @@ namespace IOM{
 };
 
 //-------------------------------------------------------------------------
-// MIF 
+// MIF
 //-------------------------------------------------------------------------
 namespace MIF{
   enum BaseAddress
@@ -124,18 +119,18 @@ namespace MIF{
      kUp    = 0x30000000,
      kDown  = 0x40000000
     };
-  
+
   enum LocalAddress
     {
      kAddrConnect    = 0x00000000,
      kAddrReg        = 0x00100000,
      kAddrForceReset = 0x01000000 // W [0:0] force reset of MZN
-    };  
+    };
 };
 
 };
 
-  
+
 // ------------------------------------------------------------------------
 // Mezzanine HR-TDC
 // ------------------------------------------------------------------------
@@ -193,13 +188,13 @@ namespace SDS{
   enum LocalAddress
     {
      kAddrSdsStatus      = 0xC00,  // R   [7:0]
-     
+
      kAddrXadcDrpMode    = 0xC10,  // W/R [0:0]
      kAddrXadcDrpAddr    = 0xC20,  // W/R [6:0]
      kAddrXadcDrpDin     = 0xC30,  // W/R [15:0]
      kAddrXadcDrpDout    = 0xC40,  // R   [15:0]
      kAddrXadcExecute    = 0xC50,  // W
-     
+
      kAddrSemCorCount    = 0xCA0,  // R   [15:0]
      kAddrSemRstCorCount = 0xCB0,  // W
      kAddrSemErrAddr     = 0xCC0,  // W   [39:0]
