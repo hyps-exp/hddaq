@@ -144,14 +144,11 @@ int RecorderThread::active_loop()
     std::string messageStr = "Rec: record start " + fname;
     msock.sendString(messageStr);
 
-
-
     kol::TcpClient client(m_hostname.c_str(), m_port);
     unsigned int header[2];
     // 		static unsigned int data[max_event_len];
     data.clear();
     //unsigned int *data = new unsigned int[max_event_len];
-
 
     struct timeval timeoutv;
     //socklen_t optlen;
@@ -173,9 +170,11 @@ int RecorderThread::active_loop()
     } else {
       ofsp = new std::ofstream(fname.c_str(), std::ios::out | std::ios::binary);
     }
-    if (! *ofsp) {
-      std::cerr << "ERROR: unable to create or write file"
-		<< std::endl;
+    if( !ofsp || !(*ofsp) || ofsp->fail() ){
+      std::ostringstream msgss;
+      msgss << "Rec: unable to create or write file";
+      std::cerr << msgss.str() << std::endl;
+      msock.sendString(MT_ERROR, msgss.str());
       return -1;
     }
     Logger logger(m_event_number,

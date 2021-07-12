@@ -185,12 +185,12 @@ if __name__ == '__main__':
             '--idnumber=90000 datanode.txt')
   app.entry('DISTRIBUTOR', 'EventDistributor/bin/EventDistributor',
             '--node-id=80000')
-  app.entry('RECORDER (.dat)', 'Recorder/bin/Recorder',
+  app.entry('RECORDER', 'Recorder/bin/Recorder',
             '--node-id=70000 --dir='+storage_path)
-  app.entry('RECORDER (.gz)', 'Recorder/bin/Recorder',
-            '--node-id=70000 --compress --dir='+storage_path)
+  # app.entry('RECORDER (.gz)', 'Recorder/bin/Recorder',
+  #           '--node-id=70000 --compress --dir='+storage_path)
   app.controller_entry('CONTROLLER',
-                       'Controller/controller.py \
+                       'Controller/controller-e42.py \
                         --data-path {0} --data-path-list {1} --mtm-host {2}'
                        .format(storage_path, path_list, '192.168.10.3'))
   app.makebuttons()

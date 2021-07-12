@@ -39,7 +39,6 @@ class Controller(Frame):
     self.daq_start_flag = 0
     self.daq_stop_flag = 0
     self.daq_auto_restart_flag = 0
-    self.daq_auto_disk_switch_flag = 0
     self.master_controller_flag = 0
     self.is_switching = False
     '''time stamps'''
@@ -130,6 +129,8 @@ class Controller(Frame):
     self.auto_restart.set(0)
     self.auto_disk_switch = IntVar()
     self.auto_disk_switch.set(0)
+    self.auto_narval_control = IntVar()
+    self.auto_narval_control.set(1)
     menu5.add_checkbutton(label='Auto Trig. ON',
                           onvalue=1, offvalue=0, variable=self.auto_trig_on)
     menu5.add_checkbutton(label='Auto Restart',
@@ -140,6 +141,8 @@ class Controller(Frame):
                             variable=self.auto_disk_switch)
     else:
       menu5.add_checkbutton(label='Auto Disk Switch', state=DISABLED)
+    menu5.add_checkbutton(label='Auto Narval Control', onvalue=1, offvalue=0,
+                          variable=self.auto_narval_control)
     '''dsync'''
     menu6.add_command(label='Control Window',
                       command=dsync.msg_win.deiconify)
@@ -258,14 +261,19 @@ class Controller(Frame):
     self.trig_file =  misc_dir+'/trig.txt'
     if os.path.isfile(self.trig_file) == False:
       self.set_trig_state('OFF')
-    self.starttime_file =  misc_dir+'/starttime.txt'
+    self.starttime_file = misc_dir+'/starttime.txt'
     if os.path.isfile(self.starttime_file) == False:
       self.set_starttime('')
+    self.narval_file = os.path.join(misc_dir, 'narval.txt')
+    if self.auto_narval_control.get() == 1:
+      self.set_narval_status('INIT')
   #____________________________________________________________________________
   def start_command(self, mode='manual'):
     self.bstart.config(state=DISABLED)
     if self.auto_disk_switch.get() == 1:
       self.switch_disk()
+    if self.auto_narval_control.get() == 1:
+      self.set_narval_status('START')
     self.increment_runno()
     msgh.send_message('run ' + str(self.get_runno()) + '\0')
     '''for backword compatibility'''
@@ -290,6 +298,8 @@ class Controller(Frame):
     self.btrigon.config(state=DISABLED)
     self.daq_stop_flag = 1
     self.master.update()
+    if self.auto_narval_control.get() == 1:
+      self.set_narval_status('STOP')
     time.sleep(1)
     msgh.send_message('stop\0')
     if mode=='auto': self.write_run_comment('STOP* ')
@@ -378,6 +388,14 @@ class Controller(Frame):
     with open(self.starttime_file, 'w') as f:
       f.write(starttime)
   #____________________________________________________________________________
+  def get_narval_status(self, status):
+    with open(self.narval_file, 'r') as f:
+      return f.readline()
+  #____________________________________________________________________________
+  def set_narval_status(self, status):
+    with open(self.narval_file, 'w') as f:
+      f.write(status)
+  #____________________________________________________________________________
   def beep_sound(self):
     os.system(sound_command)
   #____________________________________________________________________________
@@ -416,9 +434,17 @@ class Controller(Frame):
     stat = os.stat(self.starttime_file).st_mtime
     if self.starttime_timestamp != stat:
       self.starttime_timestamp = stat
-      starttime = self.get_starttime()
-      self.lasttime.configure(text='Last Run Start Time: ' + starttime)
-      print('update_startime_window : {0}'.format(starttime))
+      print('update_startime_window : {0}'.format(stat))
+    starttime = self.get_starttime()
+    curpath = 'run{0:05d}.dat'.format(self.get_runno())
+    try:
+      cursize = os.path.getsize(os.path.join(
+        args.data_path, curpath))
+      cursize = cursize / 1e9
+    except OSError:
+      cursize = -1
+    self.lasttime.configure(text='Last Run Start Time: ' + starttime +
+                            '\n({0}: {1:.1f} GB)'.format(curpath, cursize))
     st = os.statvfs(os.path.realpath(args.data_path))
     free = st.f_frsize * st.f_bavail / 1000000000
     used = st.f_frsize * (st.f_blocks - st.f_bfree) / 1000000000
