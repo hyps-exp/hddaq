@@ -9,14 +9,14 @@
 #include "nodeprop.h"
 
 int main(int argc, char* argv[])
-{	
+{
   int nodeid = 0;
   int dataport = 9000;
   std::string nickname = "nickname";
   bool noupdate_flag = false;
 
   std::istringstream iss;
-  
+
   for (int i = 1 ; i < argc ; i++) {
     std::string arg = argv[i];
     iss.str("");
@@ -31,10 +31,10 @@ int main(int argc, char* argv[])
     if (arg.substr(0, 12) == "--data-port=") {
       iss.str(arg.substr(12));
       iss >> dataport;
-    } 
+    }
     if (arg.substr(0, 24) == "--ignore-nodeprop-update") {
       noupdate_flag = true;
-    } 
+    }
   }
 
   if (nodeid == 0){
@@ -50,28 +50,27 @@ int main(int argc, char* argv[])
   std::cout << "node id  : " << nodeid << std::endl;
   std::cout << "nickname : " << nickname << std::endl;
 
-  GlobalMessageClient& msock 
-    = GlobalMessageClient::getInstance("localhost", g_MESSAGE_PORT_UPSTREAM, nodeid);
-
-  if (&msock == 0) {
-    std::cout << "#E " << argv[0]
-	      << " can not connect MESSAGE PATH !!"
-	      << std::endl;
-    return 0;
-  }
+  // GlobalMessageClient& msock =
+  GlobalMessageClient::getInstance("localhost",
+				   g_MESSAGE_PORT_UPSTREAM, nodeid);
+  // if (&msock == 0) {
+  //   std::cout << "#E " << argv[0]
+  // 	      << " can not connect MESSAGE PATH !!"
+  // 	      << std::endl;
+  //   return 0;
+  // }
 
   NodeProp       nodeprop(nodeid, nickname, dataport, noupdate_flag);
   nodeprop.setArgc(argc);
   nodeprop.setArgv(argv);
-
   DaqThread      daqthread(nodeprop);
   ControlThread  controller(nodeprop);
   WatchdogThread watchdog(nodeprop);
- 
+
   controller.start();
   daqthread.start();
   watchdog.start();
-  
+
   daqthread.join();
   return 0;
 }

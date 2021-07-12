@@ -2,7 +2,7 @@
 
 nickname=vme08
 nodeid=$((0x208))
-frontend=vme07_frontend
+frontend=vme08_frontend
 
 bin_dir=$(cd $(dirname $0); pwd)/../bin
 #echo ${bin_dir}
@@ -16,5 +16,6 @@ while true
 do
     echo -e "\n\n"${frontend}
     ${bin_dir}/${frontend} --nickname=${nickname} --nodeid=${nodeid}
+    # --ignore-nodeprop-update
     sleep 1
 done

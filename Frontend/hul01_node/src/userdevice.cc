@@ -1,6 +1,8 @@
 
 #include "userdevice.h"
 
+#include <bitset>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -14,13 +16,15 @@
 #include "network.hh"
 #include "rbcp.hh"
 
+#define MAKE_TEXT 1
+
 namespace
 {
   using namespace HUL;
   using namespace Scaler;
   //maximum datasize by byte unit
-  static const int n_header = 3;
-  static const int max_n_word = n_header + 32*4;
+  static const int header_len = 3;
+  static const int max_n_word = header_len + 32*4 + 10;
   static const int max_data_size = 4*max_n_word;
   DaqMode g_daq_mode = DM_NORMAL;
   std::string nick_name;
@@ -100,7 +104,7 @@ namespace
     static const std::string& func_name(nick_name+" [::"+__func__+"()]");
 
     // data read ---------------------------------------------------------
-    static const unsigned int sizeHeader = n_header*sizeof(unsigned int);
+    static const unsigned int sizeHeader = header_len*sizeof(unsigned int);
     int ret = receive(sock, (char*)event_buffer, sizeHeader);
     if(ret < 0) return -1;
 
@@ -124,10 +128,10 @@ namespace
 
     if(n_word_data == 0) return sizeHeader;
 
-    ret = receive(sock, (char*)(event_buffer + n_header), sizeData);
+    ret = receive(sock, (char*)(event_buffer + header_len), sizeData);
 #if DEBUG
     for(unsigned int i = 0; i<n_word_data; ++i){
-      printf("D%d : %x\n", i, event_buffer[n_header+i]);
+      printf("D%d : %x\n", i, event_buffer[header_len+i]);
     }
 #endif
 
@@ -289,6 +293,19 @@ finalize_device( NodeProp& nodeprop )
   shutdown(sock, SHUT_RDWR);
   close(sock);
 
+#if MAKE_TEXT
+  std::stringstream ss;
+  ss << nodeprop.getRunNumber()+1 << "\t" << 0 << std::endl;
+  for(int i=0, n=32*std::bitset<4>(reg_en_block).count(); i<n; ++i){
+    ss << i << "\t" << 0 << std::endl;
+  }
+  static const std::string& nick_name(nodeprop.getNickName());
+  static const std::string& scaler_tmp("/home/axis/scaler_e42_2021may/" +
+  				       nick_name + ".txt");
+  std::ofstream ofs(scaler_tmp);
+  ofs << ss.str();
+#endif
+
   return;
 }
 
@@ -337,17 +354,40 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 {
   // const std::string& nick_name(nodeprop.getNickName());
   // const std::string& func_name(nick_name+" [::"+__func__+"()]");
+  static const std::string& nick_name(nodeprop.getNickName());
+  // static const std::string& scaler_tmp("/misc/data3/E42SubData/scaler_2021may/" +
+  // 				       nick_name + ".txt");
+  static const std::string& scaler_tmp("/home/axis/scaler_e42_2021may/" +
+  				       nick_name + ".txt");
+  // static const std::string& scaler_tmp("/misc/raid/tmp/" +
+  // 				       nick_name + ".txt");
   switch(g_daq_mode){
   case DM_NORMAL:
     {
       int ret_event_cycle = EventCycle(sock, data);
       len = ret_event_cycle == -1 ? -1 : ret_event_cycle/sizeof(unsigned int);
-      // if( len > 0 ){
-      // 	for(int i = 0; i<n_word; ++i){
-      // 	  printf("%x ", data[i]);
-      // 	  if(i%8==0) printf("\n");
-      // 	}
-      // }
+      if(len >= max_n_word){
+	send_fatal_message("exceed max_n_word");
+	std::exit(-1);
+      }
+#if MAKE_TEXT
+      using std::chrono::duration_cast;
+      using std::chrono::microseconds;
+      using std::chrono::system_clock;
+      auto curr_time = duration_cast<microseconds>
+      	(system_clock::now().time_since_epoch()).count();
+      static auto prev_time = curr_time;
+      if(len > header_len + 1 && curr_time - prev_time > 5000){
+	std::stringstream ss;
+	ss << nodeprop.getRunNumber() << "\t" << nodeprop.getEventNumber() << std::endl;
+	for(int i=header_len+1; i<len; ++i){
+	  ss << i-header_len-1 << "\t" << (data[i] & 0xfffffff) << std::endl;
+	}
+	std::ofstream ofs(scaler_tmp);
+	ofs << ss.str();
+	prev_time = curr_time;
+      }
+#endif
       return len;
     }
   case DM_DUMMY:

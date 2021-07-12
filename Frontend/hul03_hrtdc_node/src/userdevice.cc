@@ -405,7 +405,7 @@ init_device( NodeProp& nodeprop )
 
       fModule.WriteModule(DCT::kAddrResetEvb, 0x1, 1);
 
-      uint32_t en_blocks = HRTDC_MZN::DCT::kEnLeading | HRTDC_MZN::DCT::kEnTrailing;
+      uint32_t en_blocks = HRTDC_MZN::DCT::kEnLeading;// | HRTDC_MZN::DCT::kEnTrailing;
       if(en_slot_up){
 	WriteMIFModule(fModule, MIF::kUp,
 		       HRTDC_MZN::DCT::kAddrEnBlocks, en_blocks, 1);

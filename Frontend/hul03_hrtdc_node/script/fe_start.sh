@@ -10,20 +10,19 @@ cd $bin_dir
 sleep 1
 #start hulRM
 
-#$HOME/HUL_Scaler/bin/set_nimio 192.168.10.62
-
 # enable mezzanine slot (0th value is dummy)
-en_slot=(0x0, 0x1, 0x3, 0x1)
+# bit0: up, bit1: down
+en_slot=(0x0, 0x3, 0x1)
 
 #start hulhrtdc
-for i in $(seq 1 3)
+for i in $(seq 1 2)
 do
-    nodeid=`expr $((0x605)) + $i`
-    nickname=hul01hr-`expr + $i`
-    dataport=`expr 9009 + $i`
-    sitcp_ip=192.168.10.`expr 65 + $i`
-    min_window=10
-    max_window=100
+    nodeid=`expr 1720 + $i`
+    nickname=hul03hr-`expr + $i`
+    dataport=`expr 9020 + $i`
+    sitcp_ip=192.168.1.`expr 68 + $i`
+    min_window=0
+    max_window=200
 
     $bin_dir/frontend_hrtdc.sh \
 	$nickname \

@@ -14,7 +14,7 @@ PollThread::PollThread(NodeProp& nodeprop, kol::TcpSocket& sock)
     m_sock(sock)
 {
 }
-  
+
 PollThread::~PollThread()
 {
   std::cout << "PollThread destructed" << std::endl;
@@ -23,13 +23,13 @@ PollThread::~PollThread()
 int PollThread::run()
 {
   char buf[1];
-  while (m_nodeprop.getState() == RUNNING) {    
+  while (m_nodeprop.getState() == RUNNING) {
     try
       {
 	m_sock.read(buf, 1);
-	
+
 	if(m_nodeprop.getState() != RUNNING ) break;
-	
+
 	if (m_sock.gcount() == 0){
 	  send_error_message("data-path closed by peer -> end");
 	  std::cout << "#E data-path closed by peer -> end" << std::endl;
@@ -39,7 +39,7 @@ int PollThread::run()
       }
     catch(...)
       {
-	std::cout << "#D polling data socket" << std::endl;
+	// std::cout << "#D polling data socket" << std::endl;
       }
   }
 
