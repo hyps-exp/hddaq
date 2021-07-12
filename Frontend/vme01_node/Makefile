@@ -13,7 +13,7 @@ BLD_DIR 	= build
 
 CXX		= g++
 CXXFLAGS	= -O3 -Wall
-#CXXFLAGS	+= -DDebugPrint
+# CXXFLAGS	+= -DDebugPrint
 
 INCLUDES	= \
 	-I. -I$(CORE_DIR) -I$(VME_CORE_DIR) \
