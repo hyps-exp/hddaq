@@ -69,7 +69,10 @@ init_device( NodeProp& nodeprop )
     {
       int run_number = nodeprop.getRunNumber();
       std::ostringstream oss;
-      oss << "/raid/getdata/test/cobo" << g_cobo_id
+      // oss << "/raid/getdata/bench_e42_2021may/cobo" << g_cobo_id
+      oss << "/raid/getdata/e42_2021may/cobo" << g_cobo_id
+      // oss << "/raid/getdata/e03_2021feb/cobo" << g_cobo_id
+      //oss << "/raid/getdata/bench_e03_2021feb/cobo" << g_cobo_id
 	 << "/run_" << std::setfill('0') << std::setw(4) << run_number
 	 << ".dat";
       // g_data_path = FileSystem::GetRun( ss.str(), run_number );
@@ -187,6 +190,8 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	//   std::exit( EXIT_FAILURE );
 	// }
 	g_seek_pos = g_event_reader.tellg();
+      } else {
+	::usleep(10);
       }
       len = ndata;
       return next ? 0 : -1;
