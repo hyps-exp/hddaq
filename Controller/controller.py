@@ -734,10 +734,11 @@ if __name__ == '__main__':
   '''
   sound_file = (os.path.abspath(os.path.dirname(__file__))
                 + '/sound/under_transition.wav')
-  if 'eb0' in os.uname()[1]:
-    sound_command = 'aplay ' + sound_file
-  else:
-    sound_command = 'ssh eb0 aplay ' + sound_file
+  # if 'eb0' in os.uname()[1]:
+  #   sound_command = 'aplay ' + sound_file
+  # else:
+  #   sound_command = 'ssh eb0 aplay ' + sound_file
+  sound_command = 'aplay ' + sound_file
   '''
   mainloop
   '''
