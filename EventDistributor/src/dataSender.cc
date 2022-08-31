@@ -257,7 +257,7 @@ void DataSender::setTimeout(unsigned int tv_sec,
   m_timeoutv          = new timeval;
   m_timeoutv->tv_sec  = tv_sec;
   m_timeoutv->tv_usec = tv_usec;
-  std::cout << "#D " << m_name << "timeout value = "
+  std::cout << m_name << " timeout value = "
 	    << tv_sec << " sec " << tv_usec << " usec" << std::endl;
   return;
 }

@@ -1,20 +1,22 @@
+# -*- coding: utf-8 -*-
+
+import os
 import datetime
 import glob
-import os
 import signal
-import threading
 import time
-import queue
+import threading
+import Queue
 import subprocess
-from tkinter import *
 
+from Tkinter import *
 import TextWindow
 import Message
 import FileSystemUtility
 
-#______________________________________________________________________________
+#_______________________________________________________________________________
 class DSyncController(Toplevel):
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __init__(self, title):
     Toplevel.__init__(self)
     self.title(title)
@@ -22,7 +24,7 @@ class DSyncController(Toplevel):
     self.__make_layout()
     self.protocol('WM_DELETE_WINDOW', self.withdraw)
     self.withdraw()
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __make_layout(self):
     font = ('Courier', -12)
     self.status_frame = Frame(self)
@@ -42,11 +44,11 @@ class DSyncController(Toplevel):
     self.log_scrollb = Scrollbar(self.log_frame, command=self.log_text.yview)
     self.log_text.config(yscrollcommand=self.log_scrollb.set)
     self.log_scrollb.pack(side=LEFT, fill=Y)
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def deiconify(self):
     self.log_text.see(END)
     Toplevel.deiconify(self)
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def AddText(self, line):
     pos = self.log_scrollb.get()
     self.log_text.config(state=NORMAL)
@@ -58,9 +60,9 @@ class DSyncController(Toplevel):
     if pos[1] > 0.99:
       self.log_text.see(END)
 
-#______________________________________________________________________________
+#_______________________________________________________________________________
 class RsyncProcess():
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __init__(self, src, dest):
     self.src = src
     self.dest = dest
@@ -79,24 +81,24 @@ class RsyncProcess():
     self.__process = subprocess.Popen(self.command, shell=True,
                                       stdout=self.__devnull,
                                       stderr=self.__devnull)
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __del__(self):
     if 'rsync' in self.command and os.path.isfile(self.__lock):
       os.remove(self.__lock)
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def kill(self):
     self.__process.send_signal(signal.SIGKILL)
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def poll(self):
     return self.__process.poll()
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def is_synced(self):
     return (self.poll() == 0 and
             FileSystemUtility.compare_file_size(self.src, self.dest))
 
-#______________________________________________________________________________
+#_______________________________________________________________________________
 class DataSynchronizer():
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __init__(self, path, primary_path_list, secondary_path_list):
     self.msg_win = DSyncController('Data Synchronizer')
     self.menubar = Menu()
@@ -122,14 +124,14 @@ class DataSynchronizer():
     self.path = path
     self.primary_path_list = primary_path_list
     self.secondary_path_list = secondary_path_list
-    self.message_q = queue.Queue()
+    self.message_q = Queue.Queue()
     self.proc = []
     self.max_process = len(self.secondary_path_list)
     self.state = 'IDLE'
     if len(self.secondary_path_list) == 0:
       self.menubar.entryconfig('Start', state=DISABLED)
       self.menubar.entryconfig('Stop', state=DISABLED)
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __check(self, check_hash=False):
     n_sync = 0
     n_wait = 0
@@ -145,30 +147,30 @@ class DataSynchronizer():
             shash = FileSystemUtility.get_hash(src)
             dhash = FileSystemUtility.get_hash(dest)
             if shash == dhash and self.state == 'RUNNING':
-              self.__put(f'erased {src}')
+              self.__put('erased {0}'.format(src))
           else:
-            self.__put(f'erased {src}')
+            self.__put('erased {0}'.format(src))
             os.remove(src)
       else:
         n_wait += 1
         remain_size += os.path.getsize(src)
     return n_sync, n_wait, remain_size
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __force_erase_lock(self):
     self.__put('Force erase dsync.lock')
     for p in self.secondary_path_list:
       l = p + '/dsync.lock'
       if os.path.isfile(l):
-        self.__put(f'erased {l}')
+        self.__put('erased {}'.format(l))
         os.remove(l)
       else:
-        self.__put(f'no lock file in {p}')
-  #____________________________________________________________________________
+        self.__put('no lock file in {}'.format(p))
+  #_____________________________________________________________________________
   def __put(self, message):
     message = (time.strftime('%Y %m/%d %H:%M:%S')
                + ' ' + message.rstrip() + '\n')
     self.message_q.put(message)
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __rsync(self):
     for i, src in enumerate(self.get_data_list()):
       if (self.state != 'RUNNING' or
@@ -178,9 +180,10 @@ class DataSynchronizer():
         for j in reversed(xrange(len(self.proc))):
           if self.proc[j].poll() is not None:
             if self.proc[j].is_synced():
-              self.__put(f'synced {self.proc[j].src:38} -> '
-                         +f'{os.path.dirname(self.proc[j].dest):20} '
-                         +f'{self.proc[j].size:>12}\n')
+              self.__put('synced {0:38} -> {1:20} {2:>12}\n'
+                         .format(self.proc[j].src,
+                                 os.path.dirname(self.proc[j].dest),
+                                 self.proc[j].size))
             del self.proc[j]
       r = int(src.replace('.dat', '').replace('.gz', '')[-5:])
       dest = (self.secondary_path_list[r % len(self.secondary_path_list)]
@@ -193,11 +196,12 @@ class DataSynchronizer():
           self.proc[j].kill()
         if self.proc[j].poll() is not None:
           if self.proc[j].is_synced():
-            self.__put(f'synced {self.proc[j].src:38} -> '
-                       +f'{os.path.dirname(self.proc[j].dest):20} '
-                       +f'{self.proc[j].size:>12}\n')
+            self.__put('synced {0:38} -> {1:20} {2:>12}\n'
+                       .format(self.proc[j].src,
+                               os.path.dirname(self.proc[j].dest),
+                               self.proc[j].size))
           del self.proc[j]
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __run(self):
     self.__put('run_thread start')
     while self.state == 'RUNNING':
@@ -207,7 +211,7 @@ class DataSynchronizer():
       else:
         time.sleep(0.5)
     self.__put('run_thread stop')
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __start(self):
     if self.state == 'IDLE':
       self.menubar.entryconfig('Start', state=DISABLED)
@@ -219,13 +223,12 @@ class DataSynchronizer():
                           foreground='red',
                           activeforeground='red')
       self.menubar.delete('IDLE')
-      self.menubar.insert_command('Force control', label=' '*101,
-                                  state=DISABLED)
+      self.menubar.insert_command('Force control', label=' '*101, state=DISABLED)
       self.menubar.delete(' '*108)
       self.run_thread = threading.Thread(target=self.__run)
       self.run_thread.setDaemon(True)
       self.run_thread.start()
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __stop(self):
     if self.state == 'RUNNING':
       self.menubar.entryconfig('Start', state=NORMAL, command=self.__start)
@@ -237,17 +240,16 @@ class DataSynchronizer():
                                   foreground='blue',
                                   activeforeground='blue')
       self.menubar.delete('RUNNING')
-      self.menubar.insert_command('Force control', label=' '*108,
-                                  state=DISABLED)
+      self.menubar.insert_command('Force control', label=' '*108, state=DISABLED)
       self.menubar.delete(' '*101)
       self.run_thread.join()
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def get_message(self):
     linebuf = []
     while not self.message_q.empty():
       linebuf.append(self.message_q.get())
     return linebuf
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def get_data_list(self):
     data_list = []
     for p in self.primary_path_list:
@@ -256,12 +258,13 @@ class DataSynchronizer():
       data_list += glob.glob(p + '/*.dat*')
     data_list.sort()
     return data_list
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def update(self):
     self.erase = self.erase_flag.get()
     message = time.strftime('%Y %m/%d %H:%M:%S')
-    message += (f'{"Free(GB)":>28} {"Used(GB)":>8} {"Usage":>8} {"Sync":>7} '
-                +f'{"Wait":>6} {"RSize":>10}\n')
+    message += ('{0:>28} {1:>8} {2:>8} {3:>7} {4:>6} {5:>10}\n'
+                .format('Free(GB)', 'Used(GB)',
+                        'Usage', 'Sync', 'Wait', 'RSize'))
     max_usage_p = 0
     max_usage_s = 0
     for p in self.primary_path_list:
@@ -282,9 +285,11 @@ class DataSynchronizer():
       free, used, total, usage = FileSystemUtility.get_disk_usage(p)
       max_usage_p = max(max_usage_p, usage)
       message += 'Primary   '
-      message += (f'{p:28} {free:8} {used:8}    {usage:5.1%}')
-      message += (f'{n_sync:8} {n_wait:6} '
-                  +f'{FileSystemUtility.natural_size(remain_size):>10}')
+      message += ('{0:28} {1:8} {2:8}    {3:5.1%}'
+                  .format(p, free, used, usage))
+      message += ('{0:8} {1:6} {2:>10}'
+                  .format(n_sync, n_wait,
+                          FileSystemUtility.natural_size(remain_size)))
       if os.path.realpath(self.path) == p:
         message += '  @@@ CURRENT @@@'
       message += '\n'
@@ -292,12 +297,14 @@ class DataSynchronizer():
       free, used, total, usage = FileSystemUtility.get_disk_usage(p)
       max_usage_s = max(max_usage_s, usage)
       message += 'Secondary '
-      message += f'{p:28} {free:8} {used:8}    {usage:5.1%}'
-      message += f'{len(glob.glob(p + "/*.dat*")):8} {"":6} {"":>10}'
+      message += ('{0:28} {1:8} {2:8}    {3:5.1%}'
+                  .format(p, free, used, usage))
+      message += ('{0:8} {1:6} {2:>10}'
+                  .format(len(glob.glob(p + '/*.dat*')), '', ''))
       if os.path.isfile(p + '/dsync.lock'):
         message += '  %%% SYNCING %%%'
       message += '\n'
-    message += f'{len(self.proc):>3} Processes running\n'
+    message += '{0:>3} Processes running\n'.format(len(self.proc))
     for p in self.proc:
       elapsed_time = time.time() - p.start
       if not 'rsync' in p.command:
@@ -307,8 +314,9 @@ class DataSynchronizer():
       src_size = FileSystemUtility.natural_size(src)
       dest_size = FileSystemUtility.natural_size(dest)
       speed = FileSystemUtility.file_size(dest) / 1e6 / elapsed_time
-      message += (f'Running ... {src:38} -> {os.path.dirname(dest):12} '
-                  +f'{dest_size:>9}/{src_size:>9} ({speed:.1f} MB/s)')
+      message += ('Running ... {0:38} -> {1:12} {2:>9}/{3:>9} ({4:.1f} MB/s)'
+                  .format(src, os.path.dirname(dest),
+                          dest_size, src_size, speed))
       message += '\n'
     if max_usage_p > 0.50 or max_usage_s > 0.75:
       fg_color = 'yellow'
@@ -340,18 +348,18 @@ class DataSynchronizer():
       self.msg_win.status_text.insert(END, line)
     self.msg_win.status_text.config(state=DISABLED)
     self.msg_win.status_text.see(1.0)
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def AddMessage(self, linebuf):
     for line in linebuf:
       self.msg_win.AddText(line)
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def SaveMessage(self, logfile, linebuf):
     with open(logfile, 'a') as f:
       for line in linebuf:
         if not line:
           continue
         f.write(line)
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def AddSaveMessage(self, logfile, linebuf):
     self.AddMessage(linebuf)
     self.SaveMessage(logfile, linebuf)

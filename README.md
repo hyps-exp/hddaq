@@ -3,6 +3,7 @@ README.md
 
 ## Update
 
+- 2022.08.26 --- S.H. Hayakawa
 - 2017.07.11 --- S.H. Hayakawa
 - 2017.03.11 --- S.H. Hayakawa
 - 2015.03.25 --- K. Hosomi
@@ -29,6 +30,13 @@ README.md
 
     $ ln -s <data directory> data
     $ ln -s <tmpdata directory> tmpdata
+
+python3 scripts need following libraries
+
+    $ python3 -m pip install --user -U pip
+    $ python3 -m pip install --user -U humanize
+    $ python3 -m pip install --user -U pyyaml
+    $ python3 -m pip install --user -U rich (optional)
 
 ## RUN
 

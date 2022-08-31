@@ -1,38 +1,37 @@
-import logging
-import queue
-import socket
-import struct
-import sys
-import threading
-import time
+# -*- coding: utf-8 -*-
 
+import socket
+import sys
+import struct
+import Queue
+import time
+import threading
 import Message
 
-logger = logging.getLogger(__name__)
-
-#______________________________________________________________________________
+#_______________________________________________________________________________
 class MessageHandler():
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __init__(self, ip_address, port):
     self.ip_address = ip_address
     self.port = port
     self.sock_status = False
-    self.reader_q = queue.Queue()
+    self.reader_q = Queue.Queue()
     reader_thread = threading.Thread(target=self.__read_message)
     reader_thread.setDaemon(True)
     reader_thread.start()
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def connect(self):
     try:
       self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       self.sock.connect((self.ip_address, self.port))
       self.sock_status = True
-      logger.info(f'connect {self.ip_address}:{self.port}')
+      print('connect')
     except:
       self.sock.close()
-      logger.error(f'failed to connect {self.ip_address}:{self.port}')
+      print('MessageHandler: connection faild to {0} : {1}'
+            .format(self.ip_address, self.port))
       #sys.exit()
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def send_message(self, line):
     if self.sock_status:
       seq_num = 1
@@ -46,14 +45,14 @@ class MessageHandler():
                            dst_id,
                            seq_num,
                            ms_type)
-      self.sock.send(header+line.encode())
-  #____________________________________________________________________________
+      self.sock.send(header+line)
+  #_____________________________________________________________________________
   def get_message(self):
     linebuf = []
     while not self.reader_q.empty():
-      linebuf.append(self.reader_q.get())
+      linebuf.append( self.reader_q.get() )
     return linebuf
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __read_message(self):
     while True:
       if self.sock_status == True:
@@ -64,7 +63,7 @@ class MessageHandler():
                 = struct.unpack('IIIIII', header)
             body_len = length - Message.header_size
             if magic == Message.magic and body_len > 0 :
-              body = self.sock.recv(body_len).decode()
+              body = self.sock.recv(body_len)
               now  = time.time()
               self.reader_q.put((now, ms_type, src_id, body))
           elif len(header) == 0 :
@@ -77,11 +76,11 @@ class MessageHandler():
         time.sleep(1)
         self.connect()
 
-#______________________________________________________________________________
+#_______________________________________________________________________________
 if __name__ == '__main__':
   ip_address = '127.0.0.1'
   port = 8882
   app = MessageHandler(ip_address, port)
   time.sleep(1)
   aaa = app.get_message()
-  logger.info(aaa)
+  print(aaa)

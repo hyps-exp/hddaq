@@ -1,14 +1,15 @@
-# -*- coding: utf-8 -*-
-
-from Tkinter import *
-from ScrolledText import *
-
 import argparse
+import logging
+import logging.config
 import os
 import sys
 import shutil
 import time
 import threading
+import yaml
+from rich.logging import RichHandler
+from tkinter import *
+from tkinter.scrolledtext import *
 
 import MTMController
 import MessageHandler
@@ -16,6 +17,8 @@ import MessageWindow
 import CommentWindow
 import StatusList
 import DataSynchronizer
+
+logger = logging.getLogger(__name__)
 
 #______________________________________________________________________________
 class Controller(Frame):
@@ -222,8 +225,8 @@ class Controller(Frame):
     flabels = Frame(self)
     flabels.pack(side=TOP, fill=X)
     lstatus = Label(flabels, anchor='w',
-                    text='{0:20} {1:9} {2:10} {3}'
-                    .format('Nick Name', 'Node ID', 'Status', 'Information'))
+                    text=f'{"Nick Name":20} {"Node ID":9} {"Status":10} '
+                    +f'{"Information"}')
     lstatus.pack(side=LEFT)
     lstatus.config(font=('Courier', -12, 'bold'))
     self.nodenum = Label(flabels, text='0 nodes/0 words')
@@ -329,7 +332,8 @@ class Controller(Frame):
     comment = self.comment.get()
     if command=='      ' and comment=='': return
     runno = self.get_runno()
-    CommentWindow.AddSaveComment(self.comment_file, runno, command+': '+comment)
+    CommentWindow.AddSaveComment(self.comment_file, runno,
+                                 command+': '+comment)
     self.comment_timestamp = os.stat(self.comment_file).st_mtime
   #____________________________________________________________________________
   def load_last_comment(self):
@@ -389,7 +393,7 @@ class Controller(Frame):
       if self.cur_path == item:
         n = len(primary_path_list)
         self.new_path = primary_path_list[(index + 1) % n]
-    print('switch_disk : {0} -> {1}'.format(self.cur_path, self.new_path))
+    logger.info(f'switch_disk : {self.cur_path} -> {self.new_path}')
     if self.new_path != self.cur_path:
       if not os.path.exists(self.new_path + '/misc'):
         os.makedirs(self.new_path + '/misc')
@@ -406,7 +410,7 @@ class Controller(Frame):
           try:
             shutil.copy2(self.cur_path + f, self.new_path + f)
           except:
-            print(sys.exc_info())
+            logger.error(sys.exc_info())
     os.remove(args.data_path)
     os.symlink(self.new_path, args.data_path)
     self.is_switching = False
@@ -418,14 +422,14 @@ class Controller(Frame):
       self.starttime_timestamp = stat
       starttime = self.get_starttime()
       self.lasttime.configure(text='Last Run Start Time: ' + starttime)
-      print('update_startime_window : {0}'.format(starttime))
+      logger.info(f'update_startime_window : {starttime}')
     st = os.statvfs(os.path.realpath(args.data_path))
     free = st.f_frsize * st.f_bavail / 1000000000
     used = st.f_frsize * (st.f_blocks - st.f_bfree) / 1000000000
     total = st.f_frsize * st.f_blocks / 1000000000
     usage = float(used) * 100 / total
-    info = ('Data Storage Path: {0}\n(Used: {1}/{2} GB  {3:.1f}%)'
-            .format(os.path.realpath(args.data_path), used, total, usage))
+    info = (f'Data Storage Path: {os.path.realpath(args.data_path)}\n'
+            +f'(Used: {used:.0f}/{total:.0f} GB  {usage:.1f}%)')
     if usage < 75.0:
       fg_color = 'black'
       bg_color = '#d9d9d9'
@@ -458,7 +462,7 @@ class Controller(Frame):
     if self.runno_timestamp != stat:
       self.runno_timestamp = stat
       runno = self.get_runno()
-      print('update_runno_window : {0}'.format(runno))
+      logger.info(f'update_runno_window : {runno}')
       self.runno_e.config(state=NORMAL)
       self.runno_e.delete(0,END)
       self.runno_e.insert(0, str(runno))
@@ -469,7 +473,7 @@ class Controller(Frame):
     if self.maxevent_timestamp != stat:
       self.maxevent_timestamp = stat
       maxevent = self.get_maxevent()
-      print('update_maxevent_window : {0}'.format(maxevent))
+      logger.info(f'update_maxevent_window : {maxevent}')
       self.maxevent_e.delete(0,END)
       self.maxevent_e.insert(0, str(maxevent))
   #____________________________________________________________________________
@@ -478,7 +482,7 @@ class Controller(Frame):
     if self.trig_timestamp != stat:
       self.trig_timestamp = stat
       state = self.get_trig_state()
-      print('update_trig_status : ' + state)
+      logger.info('update_trig_status : ' + state)
       if state == 'ON':
         self.btrigon.config(fg='black', bg='green', state=DISABLED)
         self.btrigoff.config(state=NORMAL)
@@ -511,19 +515,16 @@ class Controller(Frame):
     self.sttext.yview_moveto(pos[0])
     # trigger_rate = ((int(status.dist_evnum) - self.prev_evnum)
     #                 / (time.time() - self.status_timestamp))
-    self.nodenum.config(text='{:3} nodes/{:5} words' #/{:7.1f} Hz
-                        .format(n_nodes, status.total_size))#, trigger_rate))
+    self.nodenum.config(text=f'{n_nodes:3} nodes/{status.total_size:5} words')
     # self.prev_evnum = int(status.dist_evnum)
     # self.status_timestamp = time.time()
     if n_readers != n_nodes:
       self.reader_check = False
-      print('node number mismatch : {:3} nodes/{:5} readers'
-            .format(n_nodes, n_readers))
+      logger.warning(f'node number mismatch : {n_nodes:3} nodes/{n_readers:5} readers')
       # self.bstart.config(state=DISABLED)
     else:
       if not self.reader_check:
-        print('node number ok : {:3} nodes/{:5} readers'
-              .format(n_nodes, n_readers))
+        logger.info(f'node number ok : {n_nodes:3} nodes/{n_readers:5} readers')
       self.reader_check = True
       # if self.daq_state == StatusList.S_IDLE:
       #   self.bstart.config(state=NORMAL)
@@ -542,7 +543,7 @@ class Controller(Frame):
       return
     else:
       self.daq_state = gstate
-    print('update_global_status : {0}'.format(self.daq_state))
+    logger.info(f'update_global_status : {self.daq_state}')
     if self.daq_state == StatusList.S_IDLE:
       self.label.config(text='DAQ: Idle', fg='blue', bg='black')
       self.bstart.config(state=NORMAL)
@@ -571,9 +572,11 @@ class Controller(Frame):
         self.menu1.entryconfig('Quit', state=DISABLED)
       if status.is_recorder == 1:
         if self.master_controller_flag == 1:
-          self.label.config(text='DAQ: RUNNING [MASTER]', fg='green', bg='black')
+          self.label.config(text='DAQ: RUNNING [MASTER]',
+                            fg='green', bg='black')
         else:
-          self.label.config(text='DAQ: RUNNING [SLAVE]', fg='green', bg='black')
+          self.label.config(text='DAQ: RUNNING [SLAVE]',
+                            fg='green', bg='black')
       else:
         if self.master_controller_flag == 1:
           self.label.config(text='DAQ: DUMMY RUNNING [MASTER]',
@@ -697,6 +700,14 @@ if __name__ == '__main__':
                       help='Which port number to connect MTM controller')
   args, unparsed = parser.parse_known_args()
   argc = len(sys.argv)
+  logging.basicConfig(
+    # level=logging.DEBUG,
+    level=logging.INFO,
+    format="%(message)s",
+    # handlers=[RichHandler(show_time=False,
+    #                       show_path=False,                          
+    #                       rich_tracebacks=True)],
+  )
   '''
   set storage path
   '''
@@ -715,7 +726,7 @@ if __name__ == '__main__':
         if line[0][0].upper() == 'S':
           secondary_path_list.append(line[1])
   if not os.path.isdir(args.data_path):
-    print('no such directory : ' + args.data_path + '\n')
+    logger.error('no such directory : ' + args.data_path + '\n')
     parser.print_usage()
     quit()
   '''
@@ -738,7 +749,7 @@ if __name__ == '__main__':
   #   sound_command = 'aplay ' + sound_file
   # else:
   #   sound_command = 'ssh eb0 aplay ' + sound_file
-  sound_command = 'aplay ' + sound_file
+  sound_command = 'aplay -Dsysdefault ' + sound_file
   '''
   mainloop
   '''
@@ -746,4 +757,4 @@ if __name__ == '__main__':
     app.updater()
     app.mainloop()
   except:
-    print(sys.exc_info())
+    logger.info(sys.exc_info())

@@ -1,11 +1,12 @@
-from tkinter import *
+# -*- coding: utf-8 -*-
 
+from Tkinter import *
 import os
 import stat
 
-#______________________________________________________________________________
+#_______________________________________________________________________________
 class TextWindow(Toplevel):
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __init__(self, title):
     Toplevel.__init__(self)
     self.title(title)
@@ -13,7 +14,7 @@ class TextWindow(Toplevel):
     self.__make_layout()
     self.protocol('WM_DELETE_WINDOW', self.withdraw)
     self.withdraw()
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __make_layout(self):
     '''create a Frame for the Text and Scrollbar'''
     self.txt_frm = Frame(self)
@@ -26,11 +27,11 @@ class TextWindow(Toplevel):
     self.scrollb = Scrollbar(self.txt_frm, command=self.txt.yview)
     self.txt.config(yscrollcommand=self.scrollb.set)
     self.scrollb.pack(side=LEFT, fill=Y)
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def deiconify(self):
     self.txt.see(END)
     Toplevel.deiconify(self)
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def AddText(self, line):
     pos = self.scrollb.get()
     self.txt.config(state=NORMAL)
@@ -41,20 +42,24 @@ class TextWindow(Toplevel):
     self.txt.config(state=DISABLED)
     if pos[1] > 0.99:
       self.txt.see(END)
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def GetLastText(self):
     return self.txt.get(END + '- 2lines', END +  '- 1lines')
 
-#______________________________________________________________________________
+#_______________________________________________________________________________
 if __name__ == '__main__':
   root = Tk()
   msgwin = TextWindow('Message Window')
+
   button = Button(root, text='Message Window', command=msgwin.deiconify)
   button.pack()
+
   msgwin.AddText("AAAA\n")
   msgwin.AddText("BBB\n")
   msgwin.AddText("CC\n")
+
   print(msgwin.txt.get(END + '- 2lines', END +  '- 1lines'))
+
   root.mainloop()
 
 

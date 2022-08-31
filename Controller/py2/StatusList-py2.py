@@ -1,7 +1,8 @@
-import logging
-import functools
+# -*- coding: utf-8 -*-
+
 import time
 import re
+import string
 
 import Message
 
@@ -13,11 +14,9 @@ REC_ID = 70000
 DST_ID = 80000
 BLD_ID = 90000
 
-logger = logging.getLogger(__name__)
-
-#______________________________________________________________________________
+#_______________________________________________________________________________
 class Status:
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __init__(self):
     self.src_id = 0
     self.nickname = ''
@@ -26,21 +25,21 @@ class Status:
     self.lastupdate = 0
     self.n_readers = 0 # for EB
 
-#______________________________________________________________________________
+#_______________________________________________________________________________
 class StatusList:
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __init__(self):
     self.statuslist = []
     self.global_state = S_IDLE
     self.dist_evnum = 0
     self.is_recorder = 0
     self.total_size = 0
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __cmp_src_id(self, x, y):
     if x.src_id > y.src_id: return 1
     elif x.src_id == y.src_id: return 0
     else: return -1
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __change_status(self, istatus, now, mbody):
     istatus.lastupdate = now
     sbody = mbody.split()
@@ -48,22 +47,21 @@ class StatusList:
       del sbody[0]
       if len(sbody) > 0:
         istatus.nickname = sbody[0]
-    elif sbody[0] in ('INITIAL', 'IDLE', 'RUNNING', 'DISORDER', 'END',
-                      'UNKNOWN'):
+    elif sbody[0] in ('INITIAL', 'IDLE', 'RUNNING', 'DISORDER', 'END', 'UNKNOWN'):
       istatus.status = sbody[0]
       del sbody[0]
       if len(sbody) > 0:
-        istatus.info = ' '.join(sbody)
+        istatus.info = string.join(sbody)
       else :
-        istatus.info = ' '
-  #____________________________________________________________________________
+        istatus.info = ''
+  #_____________________________________________________________________________
   def __check_update_interval(self):
     now = time.time()
     for i in self.statuslist:
       diff = now - i.lastupdate
       if diff >  6 :  i.status = 'NOUPDATE'
       if diff > 30 :  i.status = 'DEAD'
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __check_global_status(self):
     is_idle    = 1
     is_running = 1
@@ -73,11 +71,11 @@ class StatusList:
     if   is_idle == 1   : self.global_state = S_IDLE
     elif is_running == 1: self.global_state = S_RUNNING
     else                : self.global_state = S_TRANSITION
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def cleanup_list(self):
     self.statuslist = []
     self.is_recorder = 0
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def make_statusline(self, istatus):
     tmp      = istatus.nickname[0:16]
     nickname = tmp + ' ' * (16 - len(tmp))
@@ -90,18 +88,18 @@ class StatusList:
     if istatus.src_id == BLD_ID and len(info) >= 3:
       n_readers = len(info) - 4
       istatus.n_readers = n_readers
-      ret = (f'{nickname} {ssrcid} {sstatus} {info[0]} {info[1]} '
-             +f'{n_readers:5} readers\n')
+      ret = ('{0} {1} {2} {3} {4} {5:5} readers\n'
+             .format(nickname, ssrcid, sstatus,
+                     info[0], info[1], n_readers))
       del info[0:2]
       for i, s in enumerate(info):
-        ret += f'   {s:18}'
+        ret += '   {0:18}'.format(s)
         if i % 5 == 0:
           ret += '\n'
-      ret += '\n'
       return ret
     ''' '''
-    return ' '.join([nickname, ssrcid, sstatus, istatus.info, '\n'])
-  #____________________________________________________________________________
+    return string.join([nickname, ssrcid, sstatus, istatus.info, '\n'])
+  #_____________________________________________________________________________
   def update_list(self, linebuf):
     for line in linebuf:
       now, ms_type, src_id, body = line
@@ -120,16 +118,16 @@ class StatusList:
         newentry.status = 'UNKNOWN'
         self.__change_status(newentry, now, body)
         self.statuslist.append(newentry)
-        self.statuslist.sort(key=functools.cmp_to_key(self.__cmp_src_id))
-      if src_id == REC_ID:  #Recorder
-        self.is_recorder = 1
+        self.statuslist.sort(self.__cmp_src_id)
+        if src_id == REC_ID:  #Recorder
+          self.is_recorder = 1
       if src_id == DST_ID:  #Event Distributor
         sbody = body.split()
         m = re.findall(r'[0-9]+',sbody[1])
         self.dist_evnum = m[0]
       self.__check_update_interval()
       self.__check_global_status()
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def check_null_nickname(self):
     for i in self.statuslist:
       if i.nickname == '--':

@@ -62,14 +62,14 @@ kol::Mutex GlobalMessageClient::s_mutex;
 GlobalMessageClient::GlobalMessageClient (const char *host, int port)
   : MessageClient(host, port)
 {
-  std::cerr << "GlobalMessageClient Created : host= " << host
+  std::cerr << "GlobalMessageClient Created : host = " << host
 	    << " port = " << port << std::endl;
 }
 
 GlobalMessageClient::GlobalMessageClient (const char *host, int port, int node_id)
   : MessageClient(host, port), m_node_id(node_id)
 {
-  std::cerr << "GlobalMessageClient Created : host=" << host
+  std::cerr << "GlobalMessageClient Created : host = " << host
 	    << " port = " << port << " node_id = " << m_node_id << std::endl;
 
 }

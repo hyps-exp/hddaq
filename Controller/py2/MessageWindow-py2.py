@@ -1,12 +1,14 @@
-import time
-from tkinter import *
+# -*- coding: utf-8 -*-
 
+import time
+
+from Tkinter import *
 import TextWindow
 import Message
 
-#______________________________________________________________________________
+#_______________________________________________________________________________
 class MessageWindow():
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def __init__(self):
     self.all_msg_win = TextWindow.TextWindow('Message Window [ALL]')
     self.normal_msg_win = TextWindow.TextWindow('Message Window [NORMAL]')
@@ -41,12 +43,12 @@ class MessageWindow():
                             variable=self.ms_error_flag)
     menubar.add_checkbutton( label='Fatal', onvalue=True, offvalue=False,
                              variable=self.ms_fatal_flag)
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def AddMessage(self, linebuf):
     for line in linebuf:
       now, ms_type, src_id, body = line
       message  = time.strftime('%Y %m/%d %H:%M:%S', time.localtime(now))
-      message += f' [{src_id:6d},'
+      message += ' [%6d,' % src_id
       if   ms_type == Message.MT_NORMAL  : message += '  NORMAL'+' ] '
       elif ms_type == Message.MT_CONTROL : message += ' CONTROL'+' ] '
       elif ms_type == Message.MT_STATUS  : message += '  STATUS'+' ] '
@@ -81,14 +83,14 @@ class MessageWindow():
         if self.ms_error_flag.get():
           self.all_msg_win.AddText(message)
 
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def SaveMessage(self, logfile, linebuf):
     with open(logfile, 'a') as f:
       for line in linebuf:
         now, ms_type, src_id, body = line
         if ms_type == Message.MT_STATUS : continue
         message  = time.strftime('%Y %m/%d %H:%M:%S', time.localtime(now))
-        message += f' [{src_id:6d},'
+        message += ' [%6d,' % src_id
         if   ms_type == Message.MT_NORMAL : message += '  NORMAL'+' ] '
         elif ms_type == Message.MT_CONTROL: message += ' CONTROL'+' ] '
         elif ms_type == Message.MT_STATUS : message += '  STATUS'+' ] '
@@ -100,7 +102,7 @@ class MessageWindow():
         message += '\n'
         f.write(message)
 
-  #____________________________________________________________________________
+  #_____________________________________________________________________________
   def AddSaveMessage(self, logfile, linebuf):
     self.AddMessage(linebuf)
     self.SaveMessage(logfile, linebuf)

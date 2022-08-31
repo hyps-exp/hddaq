@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
+
+import os
 import hashlib
 import humanize
-import os
 
-#______________________________________________________________________________
+#_______________________________________________________________________________
 def get_disk_usage(path):
   st = os.statvfs(os.path.realpath(path))
   free = st.f_frsize * st.f_bavail / 1000000000
@@ -10,7 +12,7 @@ def get_disk_usage(path):
   total = st.f_frsize * st.f_blocks / 1000000000
   usage = float(used) / total
   return free, used, total, usage
-#______________________________________________________________________________
+#_______________________________________________________________________________
 def get_hash(path, algorithm='sha512'):
   if not os.path.isfile(path):
     return None
@@ -22,13 +24,13 @@ def get_hash(path, algorithm='sha512'):
         break
       hash.update(chunk)
   return hash.hexdigest()
-#______________________________________________________________________________
+#_______________________________________________________________________________
 def compare_file_size(src, dest):
   if os.path.isfile(src) and os.path.isfile(dest):
     if os.path.getsize(src) == os.path.getsize(dest):
       return True
   return False
-#______________________________________________________________________________
+#_______________________________________________________________________________
 def natural_size(arg):
   if type(arg) is str:
     if not os.path.isfile(arg):
@@ -37,7 +39,7 @@ def natural_size(arg):
     return humanize.naturalsize(size).replace('Bytes', ' B')
   if type(arg) is int:
     return humanize.naturalsize(arg).replace('Bytes', ' B')
-#______________________________________________________________________________
+#_______________________________________________________________________________
 def file_size(arg):
   if type(arg) is str:
     if os.path.isfile(arg):

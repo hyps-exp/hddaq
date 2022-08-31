@@ -1,15 +1,14 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
 
 import sys
 import os
 import signal
 import subprocess
 from struct import *
-from tkinter import *
+from Tkinter import *
 
-mtm_host = '192.168.10.3'
-
-#______________________________________________________________________________
+#_______________________________________________________________________________
 class ChildProc(Frame):
   #___________________________________________________________________________
   def __init__(self, name, cmd, arg):
@@ -27,10 +26,8 @@ class ChildProc(Frame):
   #___________________________________________________________________________
   def __make_button(self):
     font1 = ('Helvetica', -20, '')
-    self.name_label = Label(self, text=self.name, font=font1, fg='blue',
-                            width=15)
-    self.status_label = Label(self, text='DEAD', font=font1, fg='black',
-                              width=10)
+    self.name_label = Label(self, text=self.name, font=font1, fg='blue', width=15)
+    self.status_label = Label(self, text='DEAD', font=font1, fg='black', width=10)
     self.start_button = Button(self, text='START', command = self.start)
     self.start_button.config(state=DISABLED)
     self.stop_button = Button(self, text='STOP', command = self.stop)
@@ -67,7 +64,7 @@ class ChildProc(Frame):
       self.start_button.config(state=NORMAL)
       self.stop_button.config(state=DISABLED)
 
-#______________________________________________________________________________
+#_______________________________________________________________________________
 class ControllerProc(Frame):
   #___________________________________________________________________________
   def __init__(self, name, arg):
@@ -78,14 +75,12 @@ class ControllerProc(Frame):
     self.child = None
     self.devnull = open(os.devnull, 'w')
     self.__make_button()
-    self.execmd = 'python3 -B '+daqtop+self.arg
+    self.execmd = 'python -B '+daqtop+self.arg
   #___________________________________________________________________________
   def __make_button(self):
     font1 = ('Helvetica', -20, '')
-    self.name_label = Label(self, text=self.name, font=font1, fg='blue',
-                            width=15)
-    self.status_label = Label(self, text='DEAD', font=font1, fg='black',
-                              width=10)
+    self.name_label = Label(self, text=self.name, font=font1, fg='blue', width=15)
+    self.status_label = Label(self, text='DEAD', font=font1, fg='black', width=10)
     self.start_button = Button(self, text='START', command=self.start)
     self.stop_button = Button(self, text='STOP', command=self.stop)
     self.stop_button.config(state=DISABLED)
@@ -116,7 +111,7 @@ class ControllerProc(Frame):
     self.start_button.config(state=NORMAL)
     self.stop_button.config(state=DISABLED)
 
-#______________________________________________________________________________
+#_______________________________________________________________________________
 class App(Frame):
   #___________________________________________________________________________
   def __init__(self):
@@ -150,7 +145,7 @@ class App(Frame):
         p.check_process_status()
     self.after(500, self.updater)
 
-#______________________________________________________________________________
+#_______________________________________________________________________________
 if __name__ == '__main__':
   argvs = sys.argv
   argc = len(argvs)
@@ -167,20 +162,18 @@ if __name__ == '__main__':
   storage_path=./tmpdata => tmplauncher.py
   '''
   if storage_path == './data':
-    proc = subprocess.Popen(['pgrep','-f','python3 ./tmplauncher.py'],
-                            stdout=subprocess.PIPE)
+    proc = subprocess.Popen(['pgrep','-f','python ./tmplauncher.py'], stdout=subprocess.PIPE)
     proc_out = proc.communicate()[0][0:-1]
     path_list = './datapath.txt'
     if len(proc_out) > 0:
-      print('tmplauncher.py is alreadly running!!')
+      print 'tmplauncher.py is alreadly running!!'
       sys.exit()
   if storage_path == './tmpdata' :
-    proc = subprocess.Popen(['pgrep','-fx','python3 ./launcher.py'],
-                            stdout=subprocess.PIPE)
+    proc = subprocess.Popen(['pgrep','-fx','python ./launcher.py'], stdout=subprocess.PIPE)
     proc_out = proc.communicate()[0][0:-1]
     path_list = './tmpdatapath.txt'
     if len(proc_out) > 0:
-      print('launcher.py is alreadly running!!')
+      print 'launcher.py is alreadly running!!'
       sys.exit()
   '''dir path for HDDAQ programs'''
   daqtop = os.path.dirname(os.path.realpath(__file__))+'/../'
@@ -197,10 +190,9 @@ if __name__ == '__main__':
   app.entry('RECORDER', 'Recorder/bin/Recorder',
             '--node-id=70000 --compress --dir='+storage_path)
   app.controller_entry('CONTROLLER',
-                       'Controller/controller.py '
-                       +f'--data-path {storage_path} '
-                       +f'--data-path-list {path_list} '
-                       +f'--mtm-host {mtm_host}')
+                       'Controller/controller.py \
+                        --data-path {0} --data-path-list {1} --mtm-host {2}'
+                       .format(storage_path, path_list, '192.168.10.3'))
   app.makebuttons()
   app.updater()
   app.mainloop()

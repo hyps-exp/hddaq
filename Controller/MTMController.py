@@ -1,31 +1,33 @@
-# -*- coding: utf-8 -*-
+import os
 
 import SocketTools
 
 g_host = 'localhost'
 g_port = 24
 
-#_______________________________________________________________________________
+#______________________________________________________________________________
 def set_host(host):
   global g_host
   g_host = host
 
-#_______________________________________________________________________________
+#______________________________________________________________________________
 def set_port(port):
   global g_port
   g_port = port
 
-#_______________________________________________________________________________
+#______________________________________________________________________________
 def trig_on():
-  command = chr(0x1)+chr(0x0)+chr(0x0)+chr(0x82)
-  SocketTools.tcp_send(g_host, g_port, command)
+  os.system('ssh vme02 vmetools/XVB601/TrigOn/bin/trigon')
+  # command = chr(0x1)+chr(0x0)+chr(0x0)+chr(0x82)
+  # SocketTools.tcp_send(g_host, g_port, command)
 
-#_______________________________________________________________________________
+#______________________________________________________________________________
 def trig_off():
-  command = chr(0x0)+chr(0x0)+chr(0x0)+chr(0x82)
-  SocketTools.tcp_send(g_host, g_port, command)
+  os.system('ssh vme02 vmetools/XVB601/TrigOn/bin/trigoff')
+  # command = chr(0x0)+chr(0x0)+chr(0x0)+chr(0x82)
+  # SocketTools.tcp_send(g_host, g_port, command)
 
-#_______________________________________________________________________________
+#______________________________________________________________________________
 def get_trig_state():
   command = chr(0x0)+chr(0x0)+chr(0x0)+chr(0x42)
   data = SocketTools.tcp_send_and_read(g_host, g_port, command)
@@ -36,17 +38,19 @@ def get_trig_state():
   else:
     return 'UNKNOWN'
 
-#_______________________________________________________________________________
+#______________________________________________________________________________
 def mtm_reset():
-  command = chr(0x1)+chr(0x0)+chr(0x1)+chr(0x82)
-  SocketTools.tcp_send(g_host, g_port, command)
+  os.system('ssh vme02 vmetools/XVB601/TrigOn/bin/mtmreset')
+  # command = chr(0x1)+chr(0x0)+chr(0x1)+chr(0x82)
+  # SocketTools.tcp_send(g_host, g_port, command)
 
-#_______________________________________________________________________________
+#______________________________________________________________________________
 def force_L2():
-  command = chr(0x1)+chr(0x0)+chr(0x2)+chr(0x82)
-  SocketTools.tcp_send(g_host, g_port, command)
+  os.system('ssh vme02 vmetools/XVB601/TrigOn/bin/forcel2')
+  # command = chr(0x1)+chr(0x0)+chr(0x2)+chr(0x82)
+  # SocketTools.tcp_send(g_host, g_port, command)
 
-#_______________________________________________________________________________
+#______________________________________________________________________________
 if __name__ == '__main__':
   ret = get_trig_state()
   print(ret)
