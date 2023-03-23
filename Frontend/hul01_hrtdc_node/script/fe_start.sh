@@ -17,6 +17,8 @@ en_slot=(0x0, 0x1, 0x3, 0x1)
 
 #start hulhrtdc
 for i in $(seq 1 3)
+#for i in $(seq 2 2)
+#for i in $(seq 2 3)
 do
     nodeid=`expr $((0x605)) + $i`
     nickname=hul01hr-`expr + $i`
@@ -34,4 +36,5 @@ do
 	$max_window \
 	${en_slot[$i]} \
 	>/dev/null 2>/dev/null &
+
 done

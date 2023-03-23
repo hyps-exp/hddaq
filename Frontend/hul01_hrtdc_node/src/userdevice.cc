@@ -9,7 +9,7 @@
 #include "RegisterMap.hh"
 #include "RegisterMapCommon.hh"
 #include "UDPRBCP.hh"
-#include "MifFunc.hh"
+#include "BctBusBridgeFunc.hh"
 #include "errno.h"
 #include "network.hh"
 #include "rbcp.hh"
@@ -116,7 +116,7 @@ namespace
     unsigned int n_word_data  = event_buffer[1] & 0x3ff;
     unsigned int sizeData     = n_word_data*sizeof(unsigned int);
 
-    if(event_buffer[0] != 0xffff800b){
+    if(event_buffer[0] != 0xffff80eb){
       std::ostringstream oss;
       oss << func_name << " Data broken : " << ip;
       send_fatal_message( oss.str() );
@@ -154,12 +154,12 @@ namespace
 
     unsigned int ptr_ofs = kCounterMax - wmax + kPtrDiffWr;
 
-    WriteMIFModule(fModule, addr_base,
-		    HRTDC_MZN::TDC::kAddrPtrOfs, ptr_ofs, 2);
-    WriteMIFModule(fModule, addr_base,
-		    HRTDC_MZN::TDC::kAddrWinMax, wmax, 2);
-    WriteMIFModule(fModule, addr_base,
-		    HRTDC_MZN::TDC::kAddrWinMin, wmin, 2);
+    WriteModuleIn2ndryFPGA(fModule, addr_base,
+			   HRTDC_MZN::TDC::kAddrPtrOfs, ptr_ofs, 2);
+    WriteModuleIn2ndryFPGA(fModule, addr_base,
+			 HRTDC_MZN::TDC::kAddrWinMax, wmax, 2);
+    WriteModuleIn2ndryFPGA(fModule, addr_base,
+			 HRTDC_MZN::TDC::kAddrWinMin, wmin, 2);
 
   }
 
@@ -173,13 +173,13 @@ namespace
     std::cout << "#D : Do DDR initialize" << std::endl;
     // MZN
     if(en_slot_up){
-      WriteMIFModule(fModule, MIF::kUp,
-		     HRTDC_MZN::DCT::kAddrTestMode, 1, 1 );
+      WriteModuleIn2ndryFPGA(fModule, BBP::kUpper,
+			   HRTDC_MZN::DCT::kAddrTestMode, 1, 1 );
     }
 
     if(en_slot_down){
-      WriteMIFModule(fModule, MIF::kDown,
-		     HRTDC_MZN::DCT::kAddrTestMode, 1, 1 );
+      WriteModuleIn2ndryFPGA(fModule, BBP::kLower,
+			   HRTDC_MZN::DCT::kAddrTestMode, 1, 1 );
     }
 
     unsigned int reg =
@@ -215,13 +215,13 @@ namespace
     // Set DAQ mode
 
     if(en_slot_up){
-      WriteMIFModule(fModule, MIF::kUp,
+      WriteModuleIn2ndryFPGA(fModule, BBP::kUpper,
 		     HRTDC_MZN::DCT::kAddrTestMode, 0, 1 );
 
     }
 
     if(en_slot_down){
-      WriteMIFModule(fModule, MIF::kDown,
+      WriteModuleIn2ndryFPGA(fModule, BBP::kLower,
 		     HRTDC_MZN::DCT::kAddrTestMode, 0, 1 );
     }
 
@@ -234,26 +234,26 @@ namespace
   void
   CalibLUT(FPGAModule& fModule, uint32_t addr_base)
   {
-    WriteMIFModule(fModule, addr_base,
+    WriteModuleIn2ndryFPGA(fModule, addr_base,
 		    HRTDC_MZN::TDC::kAddrControll, 0, 1);
 
-    WriteMIFModule(fModule, addr_base,
+    WriteModuleIn2ndryFPGA(fModule, addr_base,
 		   HRTDC_MZN::DCT::kAddrExtraPath, 1, 1);
 
-    while(!(ReadMIFModule(fModule, addr_base, HRTDC_MZN::TDC::kAddrStatus, 1) & HRTDC_MZN::TDC::kRegReadyLut)){
+    while(!(ReadModuleIn2ndryFPGA(fModule, addr_base, HRTDC_MZN::TDC::kAddrStatus, 1) & HRTDC_MZN::TDC::kRegReadyLut)){
       sleep(1);
       std::cout << "#D waiting LUT ready" << std::endl;
     }// while
 
-    if((int32_t)addr_base == MIF::kUp){
-      std::cout << "#D LUT is ready! (MIF-U)" << std::endl;
+    if((int32_t)addr_base == BBP::kUpper){
+      std::cout << "#D LUT is ready! (BBP-U)" << std::endl;
     }else{
-      std::cout << "#D LUT is ready! (MIF-D)" << std::endl;
+      std::cout << "#D LUT is ready! (BBP-D)" << std::endl;
     }
 
-    WriteMIFModule(fModule, addr_base,
+    WriteModuleIn2ndryFPGA(fModule, addr_base,
 		   HRTDC_MZN::DCT::kAddrExtraPath, 0, 1);
-    WriteMIFModule(fModule, addr_base,
+    WriteModuleIn2ndryFPGA(fModule, addr_base,
 		    HRTDC_MZN::TDC::kAddrReqSwitch, 1, 1);
   }
 
@@ -316,30 +316,40 @@ open_device( NodeProp& nodeprop )
 
   close(sock);
 
-  RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);
+  RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kNoDisp); //kInteractive->kNoDisp FOura
   FPGAModule fModule(udp_rbcp);
   fModule.WriteModule(BCT::kAddrReset, 0, 1);
   ::sleep(1);
 
-  if(en_slot_up)   fModule.WriteModule(MIF::kAddrForceReset, 1 ,1);
-  if(en_slot_down) fModule.WriteModule(MIF::kAddrForceReset, 1 ,1);
+  if(en_slot_up){
+    uint32_t reg = fModule.WriteModule(DCT::kAddrCtrlReg, 1);
+    fModule.WriteModule(DCT::kAddrCtrlReg, reg | DCT::kRegFRstU);
+    fModule.WriteModule(DCT::kAddrCtrlReg, reg);
+  }
+
+
+  if(en_slot_up){
+    uint32_t reg = fModule.WriteModule(DCT::kAddrCtrlReg, 1);
+    fModule.WriteModule(DCT::kAddrCtrlReg, reg | DCT::kRegFRstD);
+    fModule.WriteModule(DCT::kAddrCtrlReg, reg);
+  }
+
   ::sleep(1);
-  if(en_slot_up)   fModule.WriteModule(MIF::kAddrForceReset, 0 ,1);
-  if(en_slot_down) fModule.WriteModule(MIF::kAddrForceReset, 0 ,1);
+
 
   DdrInitialize(fModule);
-  if(en_slot_up)   CalibLUT(fModule, MIF::kUp);
-  if(en_slot_down) CalibLUT(fModule, MIF::kDown);
+  if(en_slot_up)   CalibLUT(fModule, BBP::kUpper);
+  if(en_slot_down) CalibLUT(fModule, BBP::kLower);
 
   unsigned int tdc_ctrl = HRTDC_MZN::TDC::kRegAutosw;
   if(en_slot_up){
-    WriteMIFModule(fModule, MIF::kUp,
+    WriteModuleIn2ndryFPGA(fModule, BBP::kUpper,
 		    HRTDC_MZN::TDC::kAddrControll, tdc_ctrl, 1);
 
   }
 
   if(en_slot_down ){
-    WriteMIFModule(fModule, MIF::kDown,
+    WriteModuleIn2ndryFPGA(fModule, BBP::kLower,
 		    HRTDC_MZN::TDC::kAddrControll, tdc_ctrl, 1);
   }
 
@@ -385,14 +395,14 @@ init_device( NodeProp& nodeprop )
 	if(en_slot_up){
 	  std::ostringstream oss_mznu;
 	  oss_mznu << func_name << " Firmware (MZNU): " << std::hex << std::showbase
-		   << ReadMIFModule(fModule, MIF::kUp,
+		   << ReadModuleIn2ndryFPGA(fModule, BBP::kUpper,
 				    HRTDC_MZN::BCT::kAddrVersion, 4 );
 	  send_normal_message( oss_mznu.str() );
 	}
 	if(en_slot_down){
 	  std::ostringstream oss_mznd;
 	  oss_mznd << func_name << " Firmware (MZND): " << std::hex << std::showbase
-		   << ReadMIFModule(fModule, MIF::kDown,
+		   << ReadModuleIn2ndryFPGA(fModule, BBP::kLower,
 				    HRTDC_MZN::BCT::kAddrVersion, 4 );
 	  send_normal_message( oss_mznd.str() );
 	}
@@ -402,35 +412,42 @@ init_device( NodeProp& nodeprop )
 			  TRM::kRegL1Ext | TRM::kRegL2J0 | TRM::kRegClrJ0
 			  | TRM::kRegEnL2 | TRM::kRegEnJ0,
 			  2);
+      // fModule.WriteModule(TRM::kAddrSelectTrigger,
+      // 			  TRM::kRegL1Ext | TRM::kRegL2Ext | TRM::kRegClrExt
+      // 			  | TRM::kRegEnL2 | TRM::kRegEnJ0,
+      // 			  2);
 
       fModule.WriteModule(DCT::kAddrResetEvb, 0x1, 1);
 
       uint32_t en_blocks = HRTDC_MZN::DCT::kEnLeading | HRTDC_MZN::DCT::kEnTrailing;
       if(en_slot_up){
-	WriteMIFModule(fModule, MIF::kUp,
+	WriteModuleIn2ndryFPGA(fModule, BBP::kUpper,
 		       HRTDC_MZN::DCT::kAddrEnBlocks, en_blocks, 1);
       }
 
       if(en_slot_down ){
-	WriteMIFModule(fModule, MIF::kDown,
+	WriteModuleIn2ndryFPGA(fModule, BBP::kLower,
 		       HRTDC_MZN::DCT::kAddrEnBlocks, en_blocks, 1);
       }
 
-      if(en_slot_up)   SetTdcWindow(max_time_window, min_time_window, fModule, MIF::kUp);
-      if(en_slot_down) SetTdcWindow(max_time_window, min_time_window, fModule, MIF::kDown);
+      if(en_slot_up)   SetTdcWindow(max_time_window, min_time_window, fModule, BBP::kUpper);
+      if(en_slot_down) SetTdcWindow(max_time_window, min_time_window, fModule, BBP::kLower);
 
       fModule.WriteModule(IOM::kAddrExtL1,  IOM::kReg_i_Nimin1, 1);
-      //fModule.WriteModule(IOM::kAddrExtL2,  IOM::kReg_i_Nimin2, 1);
-      //fModule.WriteModule(IOM::kAddrExtClr, IOM::kReg_i_Nimin3, 1);
+      fModule.WriteModule(IOM::kAddrExtL2,  IOM::kReg_i_Nimin2, 1);
+      fModule.WriteModule(IOM::kAddrExtClr, IOM::kReg_i_Nimin3, 1);
+      //fModule.WriteModule(IOM::kAddrExtBusy, IOM::kReg_i_Nimin2, 1);
+      fModule.WriteModule(IOM::kAddrNimout1,  IOM::kReg_o_ModuleBusy, 1);
+      fModule.WriteModule(IOM::kAddrNimout2,  IOM::kReg_o_clk10kHz, 1);
 
       // start DAQ
       if(en_slot_up){
-	WriteMIFModule(fModule, MIF::kUp,
+	WriteModuleIn2ndryFPGA(fModule, BBP::kUpper,
 		       HRTDC_MZN::DCT::kAddrGate, 1, 1);
       }
 
       if(en_slot_down ){
-	WriteMIFModule(fModule, MIF::kDown,
+	WriteModuleIn2ndryFPGA(fModule, BBP::kLower,
 		       HRTDC_MZN::DCT::kAddrGate, 1, 1);
       }
 
@@ -458,12 +475,12 @@ finalize_device( NodeProp& nodeprop )
   FPGAModule fModule(udp_rbcp);
   fModule.WriteModule(DCT::kAddrDaqGate, 0, 1);
   if(en_slot_up){
-    WriteMIFModule(fModule, MIF::kUp,
+    WriteModuleIn2ndryFPGA(fModule, BBP::kUpper,
 		   HRTDC_MZN::DCT::kAddrGate, 0, 1);
   }
 
   if(en_slot_down){
-    WriteMIFModule(fModule, MIF::kDown,
+    WriteModuleIn2ndryFPGA(fModule, BBP::kLower,
 		   HRTDC_MZN::DCT::kAddrGate, 0, 1);
   }
 

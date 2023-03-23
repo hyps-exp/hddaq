@@ -12,6 +12,7 @@ sleep 1
 en_block=(0x0, 0xb, 0x1, 0x3)
 
 for i in $(seq 1 2)
+#for i in $(seq 2 2)
 do
     nodeid=`expr $((0x600)) + $i`
     nickname=hul01scr-`expr + $i`
