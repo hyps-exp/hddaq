@@ -15,7 +15,8 @@
 #define DMA_CHAIN 1
 #define DMA_V792  1 // if DMA_CHAIN 0
 
-#define USE_RMME 1
+#define USE_RM 0
+#define USE_RMME 0
 
 #define USE_V775 0
 
@@ -55,8 +56,8 @@ open_device( NodeProp& nodeprop )
   gVme.AddModule( new vme::CaenV792( 0xad030000 ) );
   gVme.AddModule( new vme::CaenV792( 0xad040000 ) );
   gVme.AddModule( new vme::CaenV792( 0xad050000 ) );
-  gVme.AddModule( new vme::CaenV792( 0xad060000 ) );
-  gVme.AddModule( new vme::CaenV792( 0xad070000 ) );
+  // gVme.AddModule( new vme::CaenV792( 0xad060000 ) );
+  // gVme.AddModule( new vme::CaenV792( 0xad070000 ) );
 
 #if USE_V775
   gVme.AddModule( new vme::CaenV775( 0xbd020000 ) );
@@ -66,7 +67,7 @@ open_device( NodeProp& nodeprop )
 
 #if USE_RMME
   gVme.AddModule( new vme::RMME( 0xff010000 ) );
-#else
+#elif USE_RM
   gVme.AddModule( new vme::RM( 0xff010000 ) );
 #endif
 
@@ -80,7 +81,8 @@ open_device( NodeProp& nodeprop )
 #if USE_V775
     GEF_UINT16 chain_set[] = { 0x2, 0x3, 0x3, 0x3, 0x3, 0x3, 0x3 };
 #else
-    GEF_UINT16 chain_set[] = { 0x2, 0x3, 0x3, 0x3, 0x3, 0x3, 0x1};
+    // GEF_UINT16 chain_set[] = { 0x2, 0x3, 0x3, 0x3, 0x3, 0x3, 0x1};
+    GEF_UINT16 chain_set[] = { 0x2, 0x3, 0x3, 0x3, 0x1 };
 #endif
 
     // GEF_UINT16 fast_clear_window = 0x3f0; // 31.5 + 7 us
@@ -150,7 +152,7 @@ open_device( NodeProp& nodeprop )
     m->WriteRegister( vme::RMME::Control, reg );
     //    m->WriteRegister( vme::RMME::Pulse, 0x1 );
     m->WriteRegister( vme::RMME::FifoDepth, 0x1d);
-#else
+#elif USE_RM
     vme::RM* m = gVme.GetModule<vme::RM>(0);
     m->WriteRegister( vme::RM::Reset, 0x1 );
     m->WriteRegister( vme::RM::Pulse, 0x1 );
@@ -200,7 +202,7 @@ init_device( NodeProp& nodeprop )
       m->WriteRegister( vme::RMME::Control, reg );
       //      m->WriteRegister( vme::RMME::Pulse, 0x1 );
       m->WriteRegister( vme::RMME::Level, 0x2 );
-#else
+#elif USE_RM
       vme::RM* m = gVme.GetModule<vme::RM>(0);
       m->WriteRegister( vme::RM::Reset, 0x1 );
       m->WriteRegister( vme::RM::Pulse, 0x1 );
@@ -227,7 +229,7 @@ finalize_device( NodeProp& nodeprop )
   int reg = vme::RMME::regSelNIM4;
   m->WriteRegister( vme::RMME::Control, reg );
   m->WriteRegister( vme::RMME::Level, 0x0 );
-#else
+#elif USE_RM
   vme::RM* m = gVme.GetModule<vme::RM>(0);
   m->WriteRegister( vme::RM::Level, 0x0 );
 #endif
@@ -263,7 +265,7 @@ wait_device( NodeProp& nodeprop )
 	reg = m->ReadRegister( vme::RMME::WriteCount );
 	if( (reg & 0x3ff) != 0 ) return 0; // FIFO is not empty
       }
-#else
+#elif USE_RM
       int reg = 0;
       vme::RM* m = gVme.GetModule<vme::RM>(0);
       for( int i=0; i<max_polling; ++i ){
@@ -274,6 +276,22 @@ wait_device( NodeProp& nodeprop )
 	}
       }
 #endif
+
+#if DMA_CHAIN
+      static const int n = gVme.GetNumOfModule<vme::CaenV792>();
+      int dready = 0;
+      for( int i=0; i<n; ++i ){
+      	for(int j=0;j<max_try;j++){
+	  vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(i);
+	  dready += m->ReadRegister( vme::CaenV792::Str1 ) & 0x1;
+	  if(dready==i+1) break;
+	}
+      }
+      if( dready==n ){
+	return 0;
+      }
+#endif
+
       // TimeOut
       std::cout << "wait_device() Time Out" << std::endl;
       //send_warning_message( gVme.GetNickName()+" : wait_device() Time Out" );
@@ -327,7 +345,7 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 
 	//std::cout << "fifo_data : " << fifo_data << std::endl;
 	}
-#else
+#elif USE_RM
 	static const int n = gVme.GetNumOfModule<vme::RM>();
 	for( int i=0; i<n; ++i ){
 	  vme::RM* m = gVme.GetModule<vme::RM>(i);
@@ -346,22 +364,9 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
       }
 
 #if DMA_CHAIN
-      static const int n = gVme.GetNumOfModule<vme::CaenV792>();
-      int dready = 0;
-      for( int i=0; i<n; ++i ){
-      	for(int j=0;j<max_try;j++){
-	  vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(0);
-	  dready += m->ReadRegister( vme::CaenV792::Str1 ) & 0x1;
-	  if(dready==i+1) break;
-	}
-      }
-      if( dready==n ){
-#if USE_V775
-	gVme.ReadDmaBuf( 4*8*34 );
-#else
+      {
+	static const int n = gVme.GetNumOfModule<vme::CaenV792>();
 	gVme.ReadDmaBuf( 4*n*34 );
-#endif
-
 	//gVme.ReadDmaBuf( gVme.DmaBufLen() );
 	for( int i=0; i<gVme.DmaBufLen(); ){
 	  GEF_UINT32 buf = gVme.GetDmaBuf(i);
@@ -401,8 +406,6 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 				&data[module_header_start] );
 	  module_num++;
 	}
-      } else {
-	send_warning_message( gVme.GetNickName()+" : data is not ready" );
       }
 #else
       ////////// V792
@@ -482,7 +485,7 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 #if USE_RMME
 	vme::RMME* m = gVme.GetModule<vme::RMME>(0);
 	m->WriteRegister( vme::RMME::Pulse, 0x1 );
-#else
+#elif USE_RM
 	vme::RM* m = gVme.GetModule<vme::RM>(0);
 	m->WriteRegister( vme::RM::Pulse, 0x1 );
 #endif
