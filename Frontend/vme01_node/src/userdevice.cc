@@ -16,7 +16,7 @@
 #define DMA_V792  1 // if DMA_CHAIN 0
 
 #define USE_RM 0
-#define USE_RMME 0
+#define USE_RMME 1
 
 #define USE_V775 0
 
@@ -277,6 +277,7 @@ wait_device( NodeProp& nodeprop )
       }
 #endif
 
+#if 0
 #if DMA_CHAIN
       static const int n = gVme.GetNumOfModule<vme::CaenV792>();
       int dready = 0;
@@ -291,7 +292,7 @@ wait_device( NodeProp& nodeprop )
 	return 0;
       }
 #endif
-
+#endif
       // TimeOut
       std::cout << "wait_device() Time Out" << std::endl;
       //send_warning_message( gVme.GetNickName()+" : wait_device() Time Out" );
@@ -366,6 +367,22 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 #if DMA_CHAIN
       {
 	static const int n = gVme.GetNumOfModule<vme::CaenV792>();
+
+#if 1
+	int dready = 0;
+	for( int i=0; i<n; ++i ){
+	  for(int j=0;j<max_try;j++){
+	    vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(i);
+	    dready += m->ReadRegister( vme::CaenV792::Str1 ) & 0x1;
+	    if(dready==i+1) break;
+	  }
+	}
+	if( dready!=n ){
+	  len = 0;
+	  return -1;
+	}
+#endif
+
 	gVme.ReadDmaBuf( 4*n*34 );
 	//gVme.ReadDmaBuf( gVme.DmaBufLen() );
 	for( int i=0; i<gVme.DmaBufLen(); ){
