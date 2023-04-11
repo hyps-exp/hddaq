@@ -53,6 +53,7 @@ open_device( NodeProp& nodeprop )
 
   gVme.AddModule( new vme::CaenV792( 0x00110000 ) );
   gVme.AddModule( new vme::CaenV792( 0x00120000 ) );
+  gVme.AddModule( new vme::CaenV792( 0x00130000 ) );
   // gVme.AddModule( new vme::CaenV792( 0xad060000 ) );
   // gVme.AddModule( new vme::CaenV792( 0xad070000 ) );
 
@@ -69,13 +70,13 @@ open_device( NodeProp& nodeprop )
 
   ////////// V792
   {
-    GEF_UINT16 geo_addr[]  = { 0x2, 0x4 };
-    GEF_UINT16 chain_set[] = { 0x2, 0x1};
+    GEF_UINT16 geo_addr[]  = { 0x2, 0x4, 0x6 };
+    GEF_UINT16 chain_set[] = { 0x2, 0x3, 0x1 };
     // GEF_UINT16 fast_clear_window = 0x3f0; // 31.5 + 7 us
     GEF_UINT16 overflow_suppression = 1; // 0:enable 1:disable
     GEF_UINT16 zero_suppression     = 1; // 0:enable 1:disable
     GEF_UINT16 all_trigger          = 0; // 0:accepted 1:all
-    GEF_UINT16 iped[] = { 255, 255 }; // 0x0-0xff
+    GEF_UINT16 iped[] = { 255, 255, 255 }; // 0x0-0xff
     const int n = gVme.GetNumOfModule<vme::CaenV792>();
     for( int i=0; i<n; ++i ){
       vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(i);
@@ -366,7 +367,7 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	  int geo_addr = (buf>>27) & 0x1f;
 	  int ncount   = (buf>> 8) & 0x3f;
 	  switch( geo_addr ){
-	  case 0x2: case 0x4:
+	  case 0x2: case 0x4: case 0x6:
 	    vme_addr = 0x00100000 | (geo_addr<<15);
 	    break;
 	  // case 0xc: case 0xe: case 0x10:
