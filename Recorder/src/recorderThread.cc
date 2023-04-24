@@ -69,6 +69,7 @@
 #include "EventBuilder/EventBuilder.h"
 #include "Message/Message.h"
 #include "Message/GlobalMessageClient.h"
+#include "Recorder/recorderBookmarker.hh"
 #include "Recorder/recorderLogger.hh"
 
 using namespace  hddaq::unpacker;
@@ -84,7 +85,6 @@ RecorderThread::RecorderThread(std::string hostname, int port)
 {
   std::cerr << "Recorder Created" << std::endl;
 }
-
 
 RecorderThread::~RecorderThread()
 {
@@ -179,6 +179,7 @@ int RecorderThread::active_loop()
     }
     Logger logger(m_event_number,
 		  run_number, m_dir_name+"recorder.log");
+    Bookmarker bookmarker(run_number, m_dir_name);
 
     while (true) {
       while (true) {
@@ -244,6 +245,7 @@ int RecorderThread::active_loop()
       ofsp->write(reinterpret_cast<char *>(header), sizeof(header));
       ofsp->write(reinterpret_cast<char *>(&data[0]), recv_byte);
       logger += (sizeof(header) + recv_byte);
+      bookmarker += (sizeof(header) + recv_byte);
       //std::cerr << '.';
       m_event_number++;
     }

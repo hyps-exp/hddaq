@@ -92,7 +92,6 @@ int main(int argc, char* argv[])
 
   int rmode = REC_NORMAL;
 
-
   for (int i = 1 ; i < argc ; i++) {
     if (strcmp(argv[i], "--ebport") == 0) {
       port = eventbuilder_port;

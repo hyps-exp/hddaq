@@ -24,7 +24,7 @@ BLD_DIR  = build
 SRC_DIR  = src
 
 BIN_TGT  = Recorder
-BIN_OBJ  = recorder.o recorderThread.o recorderLogger.o watchdog.o
+BIN_OBJ  = recorder.o recorderBookmarker.o recorderThread.o recorderLogger.o watchdog.o
 LIB_TGT  =
 LIB_OBJ  =
 
