@@ -13,10 +13,11 @@ sleep 1
 #$HOME/HUL_Scaler/bin/set_nimio 192.168.10.62
 
 # enable mezzanine slot (0th value is dummy)
-en_slot=(0x0, 0x1, 0x3, 0x1)
+en_slot=(0x0, 0x1, 0x3, 0x1, 0x3)
 
 #start hulhrtdc
-for i in $(seq 1 3)
+for i in $(seq 1 4)
+#for i in $(seq 1 3)
 #for i in $(seq 2 2)
 #for i in $(seq 2 3)
 do

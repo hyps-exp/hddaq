@@ -419,7 +419,7 @@ init_device( NodeProp& nodeprop )
 
       fModule.WriteModule(DCT::kAddrResetEvb, 0x1, 1);
 
-      uint32_t en_blocks = HRTDC_MZN::DCT::kEnLeading | HRTDC_MZN::DCT::kEnTrailing;
+      uint32_t en_blocks = HRTDC_MZN::DCT::kEnLeading;
       if(en_slot_up){
 	WriteModuleIn2ndryFPGA(fModule, BBP::kUpper,
 		       HRTDC_MZN::DCT::kAddrEnBlocks, en_blocks, 1);
@@ -437,7 +437,8 @@ init_device( NodeProp& nodeprop )
       fModule.WriteModule(IOM::kAddrExtL2,  IOM::kReg_i_Nimin2, 1);
       fModule.WriteModule(IOM::kAddrExtClr, IOM::kReg_i_Nimin3, 1);
       //fModule.WriteModule(IOM::kAddrExtBusy, IOM::kReg_i_Nimin2, 1);
-      fModule.WriteModule(IOM::kAddrNimout1,  IOM::kReg_o_ModuleBusy, 1);
+      //fModule.WriteModule(IOM::kAddrNimout1,  IOM::kReg_o_ModuleBusy, 1);
+      fModule.WriteModule(IOM::kAddrNimout1,  IOM::kAddrExtL1, 1);
       fModule.WriteModule(IOM::kAddrNimout2,  IOM::kReg_o_clk10kHz, 1);
 
       // start DAQ

@@ -9,20 +9,21 @@ $bin_dir/message.sh > /dev/null 2> /dev/null &
 sleep 1
 
 # enable block register (0th value is dummy)
-en_block=(0x0, 0xb, 0x1, 0x3)
+en_block=(0xb 0x1 0x3 0x3 0x3 0x0)
+ip=(61 62 63 60)
 
-for i in $(seq 1 2)
-#for i in $(seq 2 2)
+#a=(1 2)
+#a=(1 2 5)
+#a=(1 2 5 0)
+#for i in ${a[@]}
+#for i in $(seq 0 2)
+for i in $(seq 0 3)
 do
-    nodeid=`expr $((0x600)) + $i`
-    nickname=hul01scr-`expr + $i`
-    dataport=`expr 8999 + $i`
-    sitcp_ip=192.168.10.`expr 60 + $i`
+    nodeid=`expr $((0x601)) + $i`
+    nickname=hul01scr-`expr 1 + $i`
+    dataport=`expr 9000 + $i`
+    sitcp_ip=192.168.10.${ip[$i]}
     master=--master
-
-    if [ $i -eq 3 ]; then
-	master=--slave
-    fi
 
     $bin_dir/frontend.sh \
 	$nickname \

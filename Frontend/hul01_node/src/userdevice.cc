@@ -33,6 +33,7 @@ namespace
   int  sock=0;
   bool flag_master = false;
   int reg_en_block=0xf;
+  bool flag_unixtime = false;
 
   //______________________________________________________________________________
   // local function
@@ -181,6 +182,8 @@ open_device( NodeProp& nodeprop )
     }
   }
 
+  flag_unixtime = (std::string(ip).find("192.168.10.63") != std::string::npos);
+
   //Connection check -----------------------------------------------
   while(0 > (sock = ConnectSocket(ip) )){
     std::ostringstream oss;
@@ -259,11 +262,11 @@ init_device( NodeProp& nodeprop )
       fModule.WriteModule(IOM::kAddrExtRsv2     , IOM::kReg_i_Nimin4, 1);
       //fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_RML1, 1);
       //fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_ModuleBusy, 1);
-      fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_RMRsv1, 1);
-      //fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_CrateBusy, 1);
+      //fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_RMRsv1, 1);
+      fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_CrateBusy, 1);
       fModule.WriteModule(IOM::kAddrNimout2     , IOM::kReg_o_RML1, 1);
       fModule.WriteModule(IOM::kAddrNimout3     , IOM::kReg_o_RMRsv1, 1);
-      fModule.WriteModule(IOM::kAddrNimout4     , IOM::kReg_o_RMClr, 1);
+      fModule.WriteModule(IOM::kAddrNimout4     , IOM::kReg_o_DaqGate, 1);
 
       // start DAQ
       fModule.WriteModule(DCT::kAddrDaqGate, 1, 1);
@@ -373,6 +376,19 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	send_fatal_message("exceed max_n_word");
 	std::exit(-1);
       }
+
+      if(flag_unixtime && len > 2){
+	using std::chrono::duration_cast;
+	using std::chrono::microseconds;
+	using std::chrono::system_clock;
+	auto curr_time = duration_cast<microseconds>
+	  (system_clock::now().time_since_epoch()).count();
+	{ auto block = data[len-2] & 0xf0000000;
+	  data[len-2] = (curr_time & 0xfffffff) | block; }
+	{ auto block = data[len-1] & 0xf0000000;
+	  data[len-1] = ((curr_time >> 28) & 0xfffffff) | block; }
+      }
+
 #if MAKE_TEXT
       using std::chrono::duration_cast;
       using std::chrono::microseconds;
