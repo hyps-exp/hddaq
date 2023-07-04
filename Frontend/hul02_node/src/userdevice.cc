@@ -201,13 +201,14 @@ open_device( NodeProp& nodeprop )
       iss.str( arg.substr(15) );
       int flag;
       iss >> flag;
-
+      
       if(flag){
-	enable_block = 0xf;
+    	enable_block = 0xf;
       }else{
-	enable_block = 0xff;
+    	enable_block = 0xff;
       }
-    }
+
+     }
 
     // J0 bus master flag
     if( arg.substr(0,8) == "--master" ){

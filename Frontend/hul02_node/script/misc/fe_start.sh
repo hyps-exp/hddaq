@@ -18,7 +18,7 @@ do
     min_window=0
 #    max_window=188
     max_window=225
-    only_leading=0
+    only_leading=1
     master=--slave
 
     $bin_dir/frontend.sh \
