@@ -705,7 +705,7 @@ if __name__ == '__main__':
     level=logging.INFO,
     format="%(message)s",
     # handlers=[RichHandler(show_time=False,
-    #                       show_path=False,                          
+    #                       show_path=False,
     #                       rich_tracebacks=True)],
   )
   '''
@@ -749,7 +749,7 @@ if __name__ == '__main__':
   #   sound_command = 'aplay ' + sound_file
   # else:
   #   sound_command = 'ssh eb0 aplay ' + sound_file
-  sound_command = 'aplay -Dsysdefault ' + sound_file
+  sound_command = 'sshpass -p beamtime ssh sks@k18epics aplay -Dhw:1,0 under_transition.wav'
   '''
   mainloop
   '''

@@ -12,7 +12,7 @@ def tcp_send(ip_address, port, line):
   except:
     logger.error(f'connection faild to {ip_address} : {port}')
     return
-  sock.send(line)
+  sock.send(line.encode())
   sock.close()
 
 #______________________________________________________________________________
