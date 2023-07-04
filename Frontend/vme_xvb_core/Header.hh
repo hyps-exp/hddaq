@@ -36,7 +36,7 @@ struct MasterHeader
   dtype32  m_data_size;
   dtype32  m_nblock;
 };
-const dtype32  MasterMagic      = 0x00564d45U;
+const dtype32     MasterMagic      = 0x00564d45U;
 const std::size_t MasterHeaderSize = sizeof(MasterHeader)/sizeof(dtype32);
 
 //____________________________________________________________________________
@@ -51,7 +51,7 @@ struct ModuleHeader
   dtype64 m_tv_sec;
   dtype64 m_tv_nsec;
 };
-const dtype64  ModuleMagic      = 0x766d65626f617264ULL;
+const dtype64     ModuleMagic      = 0x766d65626f617264ULL;
 const std::size_t ModuleHeaderSize = sizeof(ModuleHeader)/sizeof(dtype32);
 
 //____________________________________________________________________________

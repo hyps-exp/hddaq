@@ -3,7 +3,7 @@
 # Author: Shuhei Hayakawa
 
 #_______________________________________________________________________________
-TARGET	= vme09_frontend
+TARGET	= vme02_frontend
 
 CORE_DIR	= ../core
 VME_CORE_DIR	= ../vme_xvb_core

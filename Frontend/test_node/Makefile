@@ -3,7 +3,7 @@
 # Author: Shuhei Hayakawa
 
 #_______________________________________________________________________________
-TARGET	= vme09_frontend
+TARGET	= vme01_frontend
 
 CORE_DIR	= ../core
 VME_CORE_DIR	= ../vme_xvb_core
@@ -13,7 +13,7 @@ BLD_DIR 	= build
 
 CXX		= g++
 CXXFLAGS	= -O3 -Wall
-#CXXFLAGS	+= -DDebugPrint
+# CXXFLAGS	+= -DDebugPrint
 
 INCLUDES	= \
 	-I. -I$(CORE_DIR) -I$(VME_CORE_DIR) \

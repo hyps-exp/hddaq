@@ -1,11 +1,10 @@
 #!/bin/sh
 
-nickname=vme09
-nodeid=$((0x209))
-frontend=vme09_frontend
+nickname=vme02
+nodeid=$((0x1B9E))
+frontend=vme02_frontend
 
-bin_dir=$(cd $(dirname $0); pwd)/../bin
-#echo ${bin_dir}
+bin_dir=$(dirname `readlink -f $0`)/../bin
 
 if [ $$ -ne $(pgrep -fo $0) ]; then
     echo "$0 is already running."
