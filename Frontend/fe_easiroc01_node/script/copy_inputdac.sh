@@ -4,13 +4,19 @@ bin_dir=$(cd $(dirname $0); pwd -P)
 
 param_dir=$bin_dir/Input8bitDAC
 
+#-- Befor E70 experiment --#
 #temp_dir=$param_dir/inputdac_g30_temp19.0
 #temp_dir=$param_dir/inputdac_g30_temp20.0
 #temp_dir=$param_dir/inputdac_g30_temp21.0
 #temp_dir=$param_dir/inputdac_g30_temp22.0
 #temp_dir=$param_dir/inputdac_g30_temp23.0
-temp_dir=$param_dir/inputdac_g30_temp24.0
+#temp_dir=$param_dir/inputdac_g30_temp24.0
 #temp_dir=$param_dir/inputdac_g30_temp25.0
+#----------------------------------------------#
+
+#-- After E70 experiment --#
+#temp_dir=$param_dir/inputdac_e42final_20221129 ## Befor changing InputDAC for E70 setup. (E42 final status) see k18lognotebook #105 p.105??
+temp_dir=$param_dir/inputdac_e70_20221129
 
 log_file=$bin_dir/last_param.log
 echo >> $log_file

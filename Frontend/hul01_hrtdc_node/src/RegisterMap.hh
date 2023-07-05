@@ -7,9 +7,14 @@ namespace HUL{
 // ------------------------------------------------------------------------
 // HR-TDC BASE
 // ------------------------------------------------------------------------
-
+  
 namespace HRTDC_BASE{
-
+// ------------------------------------------------------------------------
+// Slot status
+// ------------------------------------------------------------------------
+  const bool kEnSlotUp   = true;
+  const bool kEnSlotDown = true;
+  
 //-------------------------------------------------------------------------
 // TRM Module
 //-------------------------------------------------------------------------
@@ -54,7 +59,9 @@ namespace DCT{
      kRegTestModeU  =0x1,
      kRegTestModeD  =0x2,
      kRegEnableU    =0x4,
-     kRegEnableD    =0x8
+     kRegEnableD    =0x8,
+     kRegFRstU      =0x10,
+     kRegFRstD      =0x20,
     };
 
   enum Status
@@ -98,7 +105,10 @@ namespace IOM{
      kReg_o_clk1MHz    = 0x9,
      kReg_o_clk100kHz  = 0xA,
      kReg_o_clk10kHz   = 0xB,
-     kReg_o_clk1kHz    = 0xC
+     kReg_o_clk1kHz    = 0xC,
+     kReg_o_TrigOutU   = 0xD,
+     kReg_o_TrigOutD   = 0xE,
+     kReg_o_TrigOutUD  = 0xF
     };
 
   enum InputSubbAddress
@@ -111,26 +121,26 @@ namespace IOM{
 };
 
 //-------------------------------------------------------------------------
-// MIF
+// BctBusBridge Primary
 //-------------------------------------------------------------------------
-namespace MIF{
+namespace BBP{
   enum BaseAddress
     {
-     kUp    = 0x30000000,
-     kDown  = 0x40000000
+     kUpper  = 0x30000000,
+     kLower  = 0x40000000
     };
-
+  
   enum LocalAddress
     {
-     kAddrConnect    = 0x00000000,
-     kAddrReg        = 0x00100000,
-     kAddrForceReset = 0x01000000 // W [0:0] force reset of MZN
-    };
+     kAddrTxd    = 0x00000000, // W, [31:0] write data to 2ndry FPGA
+     kAddrRxd    = 0x00100000, // R, [31:0] read data from 2ndry FPGA
+     kAddrExec   = 0x01000000  // W, Excecute Bus Bridge
+    };  
 };
 
 };
 
-
+  
 // ------------------------------------------------------------------------
 // Mezzanine HR-TDC
 // ------------------------------------------------------------------------
@@ -141,10 +151,10 @@ namespace HRTDC_MZN{
 namespace DCT{
   enum LocalAddress
     {
-     kAddrTestMode  = 0x000, // W/R [0:0] enable ddr test mode
-     kAddrExtraPath = 0x010, // W/R [0:0] enable clock caliblation
-     kAddrGate      = 0x020, // W/R [0:0] DAQ gate
-     kAddrEnBlocks  = 0x030  // W/R [1:0] 0: leading, 1: trailing
+     kAddrTestMode  = 0x0000, // W/R [0:0] enable ddr test mode
+     kAddrExtraPath = 0x0010, // W/R [0:0] enable clock caliblation
+     kAddrGate      = 0x0020, // W/R [0:0] DAQ gate
+     kAddrEnBlocks  = 0x0030  // W/R [1:0] 0: leading, 1: trailing
     };
 
   enum EnableBlocks
@@ -160,12 +170,13 @@ namespace DCT{
 namespace TDC{
   enum LocalAddress
     {
-     kAddrControll   = 0x110,  // W/R [2:0] Controll bits
-     kAddrReqSwitch  = 0x120,  // W,  Assert manual switch pulse
-     kAddrStatus     = 0x130,  // R,  [0:0] Read status
-     kAddrPtrOfs     = 0x140,  // W/R [10:0] Pointer offset
-     kAddrWinMax     = 0x150,  // W/R [10:0] Search window high
-     kAddrWinMin     = 0x160   // W/R [10:0] Search window low
+     kAddrControll   = 0x1010,  // W/R [2:0] Controll bits
+     kAddrReqSwitch  = 0x1020,  // W,  Assert manual switch pulse
+     kAddrStatus     = 0x1030,  // R,  [0:0] Read status
+     kAddrPtrOfs     = 0x1040,  // W/R [10:0] Pointer offset
+     kAddrWinMax     = 0x1050,  // W/R [10:0] Search window high
+     kAddrWinMin     = 0x1060,  // W/R [10:0] Search window low
+     kAddrTrigMask   = 0x1070   // W/R [31:0] Set trigger-out mask
     };
 
   enum ControllBits
@@ -187,18 +198,18 @@ namespace TDC{
 namespace SDS{
   enum LocalAddress
     {
-     kAddrSdsStatus      = 0xC00,  // R   [7:0]
-
-     kAddrXadcDrpMode    = 0xC10,  // W/R [0:0]
-     kAddrXadcDrpAddr    = 0xC20,  // W/R [6:0]
-     kAddrXadcDrpDin     = 0xC30,  // W/R [15:0]
-     kAddrXadcDrpDout    = 0xC40,  // R   [15:0]
-     kAddrXadcExecute    = 0xC50,  // W
-
-     kAddrSemCorCount    = 0xCA0,  // R   [15:0]
-     kAddrSemRstCorCount = 0xCB0,  // W
-     kAddrSemErrAddr     = 0xCC0,  // W   [39:0]
-     kAddrSemErrStrobe   = 0xCD0   // W
+     kAddrSdsStatus      = 0xC000,  // R   [7:0]
+     
+     kAddrXadcDrpMode    = 0xC010,  // W/R [0:0]
+     kAddrXadcDrpAddr    = 0xC020,  // W/R [6:0]
+     kAddrXadcDrpDin     = 0xC030,  // W/R [15:0]
+     kAddrXadcDrpDout    = 0xC040,  // R   [15:0]
+     kAddrXadcExecute    = 0xC050,  // W
+     
+     kAddrSemCorCount    = 0xC0A0,  // R   [15:0]
+     kAddrSemRstCorCount = 0xC0B0,  // W
+     kAddrSemErrAddr     = 0xC0C0,  // W   [39:0]
+     kAddrSemErrStrobe   = 0xC0D0   // W
     };
 
 };
@@ -209,9 +220,9 @@ namespace SDS{
 namespace BCT{
   enum LocalAddress
     {
-     kAddrReset   = 0xE00, // W, assert reset signal from BCT
-     kAddrVersion = 0xE10,// R, [31:0]
-     kAddrReConfig= 0xE20 // W, Reconfig FPGA by SPI
+     kAddrReset   = 0xE000, // W, assert reset signal from BCT
+     kAddrVersion = 0xE010,// R, [31:0]
+     kAddrReConfig= 0xE020 // W, Reconfig FPGA by SPI
     };
 };
 };

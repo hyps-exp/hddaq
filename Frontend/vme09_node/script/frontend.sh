@@ -2,7 +2,7 @@
 
 nickname=vme09
 nodeid=$((0x209))
-frontend=vme07_frontend
+frontend=vme09_frontend
 
 bin_dir=$(cd $(dirname $0); pwd)/../bin
 #echo ${bin_dir}

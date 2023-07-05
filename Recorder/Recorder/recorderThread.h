@@ -57,13 +57,13 @@ public:
   void setPortNo(int port);
   void setRecordMode(int);
   int getRecordMode();
-  
+
 protected:
   int active_loop();
   std::string makeFileName(int run_no);
   int checkCopperData(unsigned int*, int);
   int dump_data(unsigned int *, unsigned int *, int);
-  
+
 private:
   int m_port;
   std::string m_fname;

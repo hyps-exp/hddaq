@@ -3,6 +3,8 @@
 easiroc_start=0
 easiroc_end=9
 
+#ip address: see daq_info
+
 bin_dir=$(cd $(dirname $0); pwd -P)
 
 cd $bin_dir
