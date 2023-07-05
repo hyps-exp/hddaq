@@ -132,17 +132,38 @@ size_t RBCP::comSub_(uint8_t rw, uint32_t address, uint8_t dataLength,
   addr.sin_port = htons(port_);
   addr.sin_addr.s_addr = inet_addr(host_.c_str());
 
-  const uint8_t* header = RBCPHeader(rw, id_, dataLength, address).getBuf();
-  uint8_t dataToBeSent[256];
+  RBCPHeader rbcp_header(rw, id_, dataLength, address);
+  const uint8_t* header = rbcp_header.getBuf();
+  uint8_t dataToBeSent[256] = {};
   size_t commandPacketLength = RBCPHeader::SIZE + dataLength;
   ::memcpy(dataToBeSent, header, RBCPHeader::SIZE);
   ::memcpy(dataToBeSent + RBCPHeader::SIZE, dataToBeSendBuf, dataLength);
 
-  ssize_t sentDataLength = sendto(sock, dataToBeSent, commandPacketLength, 0,
+  ssize_t sentDataLength = sendto(sock, (char*)dataToBeSent, commandPacketLength, 0,
 				  (struct sockaddr*)&addr, sizeof(addr));
   if(static_cast<size_t>(sentDataLength) != commandPacketLength) {
     perror("sendto");
   }
+
+#if 0
+  {
+    int j=0;
+    for(int i=0, n=commandPacketLength; i<n; i++){
+      if(j==0) {
+	printf("\t[%.3x]:%.2x ",i,(uint8_t)dataToBeSent[i]);
+	j++;
+      }else if(j==3){
+	printf("%.2x\n",(uint8_t)dataToBeSent[i]);
+	j=0;
+      }else{
+	printf("%.2x ",(uint8_t)dataToBeSent[i]);
+	j++;
+      }
+    }
+    if(j!=3) printf("\n");
+    printf("\n");
+  }
+#endif
 
   fd_set rfds;
   FD_ZERO(&rfds);
