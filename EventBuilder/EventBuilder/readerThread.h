@@ -89,7 +89,7 @@ protected:
 			      int rest_byte);
 
 // private:
-  const char * m_host;
+  std::string m_host;
   int    m_port;
   int    m_node;
   int    m_ringbuf_len;

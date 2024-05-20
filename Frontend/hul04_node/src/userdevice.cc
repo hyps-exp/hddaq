@@ -1,5 +1,8 @@
+
 #include "userdevice.h"
 
+#include <bitset>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -13,28 +16,23 @@
 #include "network.hh"
 #include "rbcp.hh"
 
-bool    stand_alone = false;
-DaqMode g_daq_mode  = DM_NORMAL;
-std::string nick_name;
-#define DEBUG 0
+#define MAKE_TEXT 0
 
 namespace
 {
   using namespace HUL;
-  using namespace MHTDC;
+  using namespace Scaler;
   //maximum datasize by byte unit
-  static const int n_header      = 3;
-  static const int max_n_word    = n_header+2*16*128;
-  static const int max_data_size = sizeof(unsigned int)*max_n_word;
+  static const int header_len = 3;
+  static const int max_n_word = header_len + 32*4 + 10;
+  static const int max_data_size = 4*max_n_word;
+  DaqMode g_daq_mode = DM_NORMAL;
+  std::string nick_name;
 
   char ip[100];
-  unsigned int min_time_window;
-  unsigned int max_time_window;
-  unsigned int enable_block = 0xff;
-  bool flag_master = false;;
-  
   int  sock=0;
-
+  bool flag_master = false;
+  int reg_en_block=0xf;
 
   //______________________________________________________________________________
   // local function
@@ -43,7 +41,6 @@ namespace
   ConnectSocket( char *ip )
   {
     struct sockaddr_in SiTCP_ADDR;
-    //unsigned int port = tcp_port;
     unsigned int port = 24;
 
     int sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -107,14 +104,14 @@ namespace
     static const std::string& func_name(nick_name+" [::"+__func__+"()]");
 
     // data read ---------------------------------------------------------
-    static const unsigned int sizeHeader = n_header*sizeof(unsigned int);
+    static const unsigned int sizeHeader = header_len*sizeof(unsigned int);
     int ret = receive(sock, (char*)event_buffer, sizeHeader);
     if(ret < 0) return -1;
 
-    unsigned int n_word_data  = event_buffer[1] & 0x1fff;
+    unsigned int n_word_data  = event_buffer[1] & 0xfff;
     unsigned int sizeData     = n_word_data*sizeof(unsigned int);
 
-    if(event_buffer[0] != 0xffff30cc){
+    if(event_buffer[0] != 0xffff4ca1){
       std::ostringstream oss;
       oss << func_name << " Data broken : " << ip;
       send_fatal_message( oss.str() );
@@ -131,34 +128,19 @@ namespace
 
     if(n_word_data == 0) return sizeHeader;
 
-    ret = receive(sock, (char*)(event_buffer + n_header), sizeData);
+    ret = receive(sock, (char*)(event_buffer + header_len), sizeData);
 #if DEBUG
     for(unsigned int i = 0; i<n_word_data; ++i){
-      printf("%x ", event_buffer[n_header+i]);
+      printf("D%d : %x\n", i, event_buffer[header_len+i]);
     }
 #endif
 
-    if(ret < 0) return -1;  
+    if(ret < 0) return -1;
     return sizeHeader + sizeData;
-  }
 
-  //______________________________________________________________________________
-  void
-  set_tdc_window(unsigned int wmax, unsigned int wmin, FPGAModule& fModule)
-  {
-    static const unsigned int c_max       = 2047;
-    static const unsigned int ptr_diff_wr = 2;
-
-    unsigned int ptr_ofs = c_max - wmax + ptr_diff_wr;
-
-    fModule.WriteModule(TDC::kAddrPtrOfs,  ptr_ofs, 2);
-    fModule.WriteModule(TDC::kAddrWindowMax, wmax, 2);
-    fModule.WriteModule(TDC::kAddrWindowMin, wmin, 2);
   }
 
 }
-
-
 
 //______________________________________________________________________________
 int
@@ -172,7 +154,7 @@ void
 open_device( NodeProp& nodeprop )
 {
   nick_name = nodeprop.getNickName();
-  static const std::string& func_name(nick_name+" [::"+__func__+"()]");
+  const std::string& func_name(nick_name+" [::"+__func__+"()]");
 
   // update DAQ mode
   g_daq_mode = nodeprop.getDaqMode();
@@ -187,31 +169,15 @@ open_device( NodeProp& nodeprop )
       iss >> ip;
     }
 
-    if( arg.substr(0,11) == "--min-twin=" ){
-      iss.str( arg.substr(11) );
-      iss >> min_time_window;
-    }
-
-    if( arg.substr(0,11) == "--max-twin=" ){
-      iss.str( arg.substr(11) );
-      iss >> max_time_window;
-    }
-
-    if( arg.substr(0,15) == "--only-leading=" ){
-      iss.str( arg.substr(15) );
-      int flag;
-      iss >> flag;
-
-      if(flag){
-	enable_block = 0xf;
-      }else{
-	enable_block = 0xff;
-      }
-    }
-
-    // J0 bus master flag
-    if( arg.substr(0,8) == "--master" ){
+    // HRM flag
+    if( arg.substr(0, 8) == "--master"){
       flag_master = true;
+    }
+
+    // register enable block
+    if( arg.substr(0,11) == "--en-block=" ){
+      iss.str( arg.substr(11) );
+      iss >> std::hex >> reg_en_block;
     }
   }
 
@@ -223,19 +189,13 @@ open_device( NodeProp& nodeprop )
     std::cerr << oss.str() << std::endl;
   }
 
-  close(sock);
-  RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);  
+  RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);
   FPGAModule fModule(udp_rbcp);
+  fModule.WriteModule(BCT::kAddrReset,  1, 1);
+  ::sleep(1);
 
-  fModule.WriteModule(BCT::kAddrReset, 0, 1);
-  ::sleep(2);
+  close(sock);
 
-  if(flag_master){
-    fModule.WriteModule(TRM::kAddrSelectTrigger,
-			TRM::kRegL1Ext | TRM::kRegL2RM | TRM::kRegClrRM |
-			TRM::kRegEnL2  | TRM::kRegEnRM ,2);
-  }
-  
   return;
 }
 
@@ -243,7 +203,8 @@ open_device( NodeProp& nodeprop )
 void
 init_device( NodeProp& nodeprop )
 {
-  static const std::string& func_name(nick_name+" [::"+__func__+"()]");
+  const std::string& nick_name(nodeprop.getNickName());
+  const std::string& func_name(nick_name+" [::"+__func__+"()]");
 
   // update DAQ mode
   g_daq_mode = nodeprop.getDaqMode();
@@ -267,35 +228,40 @@ init_device( NodeProp& nodeprop )
       }
 
       // Start DAQ
-      RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);  
+      RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);
       FPGAModule fModule(udp_rbcp);
       {
 	std::ostringstream oss;
 	oss << func_name << " Firmware : " << std::hex << std::showbase
-	    << fModule.ReadModule(BCT::kAddrVersion, 4 );
+	    << fModule.ReadModule(BCT::kAddrVersion, 4);
 	send_normal_message( oss.str() );
       }
 
       if(flag_master){
 	fModule.WriteModule(TRM::kAddrSelectTrigger,
-			    TRM::kRegL1Ext | TRM::kRegL2RM | TRM::kRegClrRM |
-			    TRM::kRegEnL2  | TRM::kRegEnRM ,2);
+			    TRM::kRegL1RM//  | TRM::kRegL2RM | TRM::kRegClrRM |
+			    // TRM::kRegEnL2 
+			    | TRM::kRegEnRM, 2 );
       }else{
 	fModule.WriteModule(TRM::kAddrSelectTrigger,
-			    TRM::kRegL1Ext
-			    //| TRM::kRegL2J0 | TRM::kRegClrJ0 |
-			    //TRM::kRegEnL2  | TRM::kRegEnJ0
-			    ,2);
+			    TRM::kRegL1J0 | TRM::kRegL2J0 | TRM::kRegClrJ0 |
+			    TRM::kRegEnL2 | TRM::kRegEnJ0, 2);
       }
 
       fModule.WriteModule(DCT::kAddrResetEvb, 0x1, 1);
-      fModule.WriteModule(TDC::kAddrEnableBlock, enable_block, 1);
-      set_tdc_window(max_time_window, min_time_window, fModule);
 
-      fModule.WriteModule(IOM::kAddrNimout1, IOM::kReg_o_ModuleBusy ,1);
-      fModule.WriteModule(IOM::kAddrNimout2, IOM::kReg_o_CrateBusy ,1);
-      fModule.WriteModule(IOM::kAddrNimout3, IOM::kReg_o_clk10kHz ,1);
-      fModule.WriteModule(IOM::kAddrNimout4, IOM::kReg_o_RML1 ,1);
+      fModule.WriteModule(SCR::kAddrCounterReset, 0x0, 1);
+      fModule.WriteModule(SCR::kAddrEnableBlock, reg_en_block, 1);
+      fModule.WriteModule(SCR::kAddrEnableHdrst, 0xf, 1);
+
+      fModule.WriteModule(IOM::kAddrExtSpillGate, IOM::kReg_i_Nimin1, 1);
+      fModule.WriteModule(IOM::kAddrExtCCRst    , IOM::kReg_i_Nimin2, 1);
+      fModule.WriteModule(IOM::kAddrExtBusy     , IOM::kReg_i_Nimin3, 1);
+      fModule.WriteModule(IOM::kAddrExtRsv2     , IOM::kReg_i_Nimin4, 1);
+      fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_RML1, 1);
+      fModule.WriteModule(IOM::kAddrNimout2     , IOM::kReg_o_RML1, 1);
+      fModule.WriteModule(IOM::kAddrNimout3     , IOM::kReg_o_RMRsv1, 1);
+      fModule.WriteModule(IOM::kAddrNimout4     , IOM::kReg_o_RMClr, 1);
 
       // start DAQ
       fModule.WriteModule(DCT::kAddrDaqGate, 1, 1);
@@ -307,7 +273,7 @@ init_device( NodeProp& nodeprop )
     }
   default:
     return;
-}
+  }
 
 }
 
@@ -318,7 +284,7 @@ finalize_device( NodeProp& nodeprop )
   // const std::string& nick_name(nodeprop.getNickName());
   // const std::string& func_name(nick_name+" [::"+__func__+"()]");
 
-  RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);  
+  RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);
   FPGAModule fModule(udp_rbcp);
   fModule.WriteModule(DCT::kAddrDaqGate, 0, 1);
   ::sleep(1);
@@ -327,6 +293,19 @@ finalize_device( NodeProp& nodeprop )
 
   shutdown(sock, SHUT_RDWR);
   close(sock);
+
+#if MAKE_TEXT
+  std::stringstream ss;
+  ss << nodeprop.getRunNumber()+1 << "\t" << 0 << std::endl;
+  for(int i=0, n=32*std::bitset<4>(reg_en_block).count(); i<n; ++i){
+    ss << i << "\t" << 0 << std::endl;
+  }
+  static const std::string& nick_name(nodeprop.getNickName());
+  static const std::string& scaler_tmp("/home/axis/scaler_e42_2021may/" +
+  				       nick_name + ".txt");
+  std::ofstream ofs(scaler_tmp);
+  ofs << ss.str();
+#endif
 
   return;
 }
@@ -376,17 +355,42 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 {
   // const std::string& nick_name(nodeprop.getNickName());
   // const std::string& func_name(nick_name+" [::"+__func__+"()]");
+#if MAKE_TEXT
+  static const std::string& nick_name(nodeprop.getNickName());
+  // static const std::string& scaler_tmp("/misc/data3/E42SubData/scaler_2021may/" +
+  // 				       nick_name + ".txt");
+  static const std::string& scaler_tmp("/home/axis/scaler_e42_2021may/" +
+  				       nick_name + ".txt");
+  // static const std::string& scaler_tmp("/misc/raid/tmp/" +
+  // 				       nick_name + ".txt");
+#endif
   switch(g_daq_mode){
   case DM_NORMAL:
     {
       int ret_event_cycle = EventCycle(sock, data);
       len = ret_event_cycle == -1 ? -1 : ret_event_cycle/sizeof(unsigned int);
-      // if( len > 0 ){
-      // 	for(int i = 0; i<n_word; ++i){
-      // 	  printf("%x ", data[i]);
-      // 	  if(i%8==0) printf("\n");
-      // 	}
-      // }
+      if(len >= max_n_word){
+	send_fatal_message("exceed max_n_word");
+	std::exit(-1);
+      }
+#if MAKE_TEXT
+      using std::chrono::duration_cast;
+      using std::chrono::microseconds;
+      using std::chrono::system_clock;
+      auto curr_time = duration_cast<microseconds>
+      	(system_clock::now().time_since_epoch()).count();
+      static auto prev_time = curr_time;
+      if(len > header_len + 1 && curr_time - prev_time > 5000){
+	std::stringstream ss;
+	ss << nodeprop.getRunNumber() << "\t" << nodeprop.getEventNumber() << std::endl;
+	for(int i=header_len+1; i<len; ++i){
+	  ss << i-header_len-1 << "\t" << (data[i] & 0xfffffff) << std::endl;
+	}
+	std::ofstream ofs(scaler_tmp);
+	ofs << ss.str();
+	prev_time = curr_time;
+      }
+#endif
       return len;
     }
   case DM_DUMMY:

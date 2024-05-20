@@ -9,6 +9,7 @@
 #include "RegisterMap.hh"
 #include "RegisterMapCommon.hh"
 #include "UDPRBCP.hh"
+#include "MifFunc.hh"
 #include "errno.h"
 #include "network.hh"
 #include "rbcp.hh"
@@ -21,20 +22,21 @@ std::string nick_name;
 namespace
 {
   using namespace HUL;
-  using namespace MHTDC;
+  using namespace HRTDC_BASE;
   //maximum datasize by byte unit
   static const int n_header      = 3;
-  static const int max_n_word    = n_header+2*16*128;
+  static const int max_n_word    = n_header + 2 + 16*64 + 16*64;
   static const int max_data_size = sizeof(unsigned int)*max_n_word;
 
   char ip[100];
   unsigned int min_time_window;
   unsigned int max_time_window;
-  unsigned int enable_block = 0xff;
-  bool flag_master = false;;
-  
-  int  sock=0;
+  int          en_slot = 0x3;
+  bool         en_slot_up   = false;
+  bool         en_slot_down = false;
 
+  int  sock=0;
+  //rbcp_header rbcpHeader;
 
   //______________________________________________________________________________
   // local function
@@ -111,10 +113,10 @@ namespace
     int ret = receive(sock, (char*)event_buffer, sizeHeader);
     if(ret < 0) return -1;
 
-    unsigned int n_word_data  = event_buffer[1] & 0x1fff;
+    unsigned int n_word_data  = event_buffer[1] & 0x3ff;
     unsigned int sizeData     = n_word_data*sizeof(unsigned int);
 
-    if(event_buffer[0] != 0xffff30cc){
+    if(event_buffer[0] != 0xffff80eb){
       std::ostringstream oss;
       oss << func_name << " Data broken : " << ip;
       send_fatal_message( oss.str() );
@@ -126,7 +128,6 @@ namespace
     std::cout << "H1 " << event_buffer[0] << std::endl;
     std::cout << "H2 " << event_buffer[1] << std::endl;
     std::cout << "H3 " << event_buffer[2] << std::endl;
-    std::cout << "\n" << std::dec << std::endl;
 #endif
 
     if(n_word_data == 0) return sizeHeader;
@@ -134,26 +135,130 @@ namespace
     ret = receive(sock, (char*)(event_buffer + n_header), sizeData);
 #if DEBUG
     for(unsigned int i = 0; i<n_word_data; ++i){
-      printf("%x ", event_buffer[n_header+i]);
+      printf("D%d : %x\n", i, event_buffer[n_header+i]);
     }
+    std::cout << "\n" << std::dec << std::endl;
 #endif
 
-    if(ret < 0) return -1;  
+    if(ret < 0) return -1;
     return sizeHeader + sizeData;
   }
 
-  //______________________________________________________________________________
+
+  // SetTdcWindow ------------------------------------------------------------
   void
-  set_tdc_window(unsigned int wmax, unsigned int wmin, FPGAModule& fModule)
+  SetTdcWindow(unsigned int wmax, unsigned int wmin, FPGAModule& fModule, uint32_t addr_base)
   {
-    static const unsigned int c_max       = 2047;
-    static const unsigned int ptr_diff_wr = 2;
+    static const std::string& func_name(nick_name+" [::"+__func__+"()]");
+    static const unsigned int kCounterMax = 2047;
+    static const unsigned int kPtrDiffWr  = 2;
 
-    unsigned int ptr_ofs = c_max - wmax + ptr_diff_wr;
+    unsigned int ptr_ofs = kCounterMax - wmax + kPtrDiffWr;
+    std::ostringstream oss;
+    oss << func_name << " min: " << wmin << " max: " << wmax;
+    send_normal_message(oss.str());
 
-    fModule.WriteModule(TDC::kAddrPtrOfs,  ptr_ofs, 2);
-    fModule.WriteModule(TDC::kAddrWindowMax, wmax, 2);
-    fModule.WriteModule(TDC::kAddrWindowMin, wmin, 2);
+    WriteMIFModule(fModule, addr_base,
+		    HRTDC_MZN::TDC::kAddrPtrOfs, ptr_ofs, 2);
+    WriteMIFModule(fModule, addr_base,
+		    HRTDC_MZN::TDC::kAddrWinMax, wmax, 2);
+    WriteMIFModule(fModule, addr_base,
+		    HRTDC_MZN::TDC::kAddrWinMin, wmin, 2);
+
+  }
+
+  // DdrInitialize --------------------------------------------------------
+  void
+  DdrInitialize(FPGAModule& fModule)
+  {
+    unsigned int reg_enable_up   = en_slot_up   ? DCT::kRegEnableU : 0;
+    unsigned int reg_enable_down = en_slot_down ? DCT::kRegEnableD : 0;
+
+    std::cout << "#D : Do DDR initialize" << std::endl;
+    // MZN
+    if(en_slot_up){
+      WriteMIFModule(fModule, MIF::kUp,
+		     HRTDC_MZN::DCT::kAddrTestMode, 1, 1 );
+    }
+
+    if(en_slot_down){
+      WriteMIFModule(fModule, MIF::kDown,
+		     HRTDC_MZN::DCT::kAddrTestMode, 1, 1 );
+    }
+
+    unsigned int reg =
+      reg_enable_up   |
+      reg_enable_down |
+      DCT::kRegTestModeU |
+      DCT::kRegTestModeD;
+
+    // Base
+    fModule.WriteModule(DCT::kAddrCtrlReg, reg, 1);
+    fModule.WriteModule(DCT::kAddrInitDDR, 0, 1);
+
+    unsigned int ret = fModule.ReadModule(DCT::kAddrRcvStatus, 1);
+
+    if(en_slot_up){
+      if( ret & DCT::kRegBitAlignedU){
+	std::cout << "#D : DDR initialize succeeded (MZN-U)" << std::endl;
+      }else{
+	std::cout << "#E : Failed (MZN-U)" << std::endl;
+	exit(-1);
+      }
+    }// bit aligned ?
+
+    if(en_slot_down){
+      if( ret & DCT::kRegBitAlignedD){
+	std::cout << "#D : DDR initialize succeeded (MZN-D)" << std::endl;
+      }else{
+	std::cout << "#E : Failed (MZN-D)" << std::endl;
+	exit(-1);
+      }
+    }// bit aligned ?
+
+    // Set DAQ mode
+
+    if(en_slot_up){
+      WriteMIFModule(fModule, MIF::kUp,
+		     HRTDC_MZN::DCT::kAddrTestMode, 0, 1 );
+
+    }
+
+    if(en_slot_down){
+      WriteMIFModule(fModule, MIF::kDown,
+		     HRTDC_MZN::DCT::kAddrTestMode, 0, 1 );
+    }
+
+    reg = reg_enable_up | reg_enable_down;
+    fModule.WriteModule(DCT::kAddrCtrlReg, reg, 1);
+
+  }// ddr_initialize
+
+  // CalibLUT ---------------------------------------------------------------
+  void
+  CalibLUT(FPGAModule& fModule, uint32_t addr_base)
+  {
+    WriteMIFModule(fModule, addr_base,
+		    HRTDC_MZN::TDC::kAddrControll, 0, 1);
+
+    WriteMIFModule(fModule, addr_base,
+		   HRTDC_MZN::DCT::kAddrExtraPath, 1, 1);
+
+    while(!(ReadMIFModule(fModule, addr_base, HRTDC_MZN::TDC::kAddrStatus, 1) & HRTDC_MZN::TDC::kRegReadyLut)){
+      sleep(1);
+      std::cout << "#D waiting LUT ready" << std::endl;
+    }// while
+
+    if((int32_t)addr_base == MIF::kUp){
+      std::cout << "#D LUT is ready! (MIF-U)" << std::endl;
+    }else{
+      std::cout << "#D LUT is ready! (MIF-D)" << std::endl;
+    }
+
+    WriteMIFModule(fModule, addr_base,
+		   HRTDC_MZN::DCT::kAddrExtraPath, 0, 1);
+    WriteMIFModule(fModule, addr_base,
+		    HRTDC_MZN::TDC::kAddrReqSwitch, 1, 1);
   }
 
 }
@@ -197,21 +302,11 @@ open_device( NodeProp& nodeprop )
       iss >> max_time_window;
     }
 
-    if( arg.substr(0,15) == "--only-leading=" ){
-      iss.str( arg.substr(15) );
-      int flag;
-      iss >> flag;
-
-      if(flag){
-	enable_block = 0xf;
-      }else{
-	enable_block = 0xff;
-      }
-    }
-
-    // J0 bus master flag
-    if( arg.substr(0,8) == "--master" ){
-      flag_master = true;
+    if( arg.substr(0,10) == "--en-slot=" ){
+      iss.str( arg.substr(10) );
+      iss >> std::hex >> en_slot;
+      if( en_slot      & 0x1 ) en_slot_up   = true;
+      if( (en_slot>>1) & 0x1 ) en_slot_down = true;
     }
   }
 
@@ -224,18 +319,34 @@ open_device( NodeProp& nodeprop )
   }
 
   close(sock);
-  RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);  
+
+  RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);
   FPGAModule fModule(udp_rbcp);
-
   fModule.WriteModule(BCT::kAddrReset, 0, 1);
-  ::sleep(2);
+  ::sleep(1);
 
-  if(flag_master){
-    fModule.WriteModule(TRM::kAddrSelectTrigger,
-			TRM::kRegL1Ext | TRM::kRegL2RM | TRM::kRegClrRM |
-			TRM::kRegEnL2  | TRM::kRegEnRM ,2);
+  if(en_slot_up)   fModule.WriteModule(MIF::kAddrForceReset, 1 ,1);
+  if(en_slot_down) fModule.WriteModule(MIF::kAddrForceReset, 1 ,1);
+  ::sleep(1);
+  if(en_slot_up)   fModule.WriteModule(MIF::kAddrForceReset, 0 ,1);
+  if(en_slot_down) fModule.WriteModule(MIF::kAddrForceReset, 0 ,1);
+
+  DdrInitialize(fModule);
+  if(en_slot_up)   CalibLUT(fModule, MIF::kUp);
+  if(en_slot_down) CalibLUT(fModule, MIF::kDown);
+
+  unsigned int tdc_ctrl = HRTDC_MZN::TDC::kRegAutosw;
+  if(en_slot_up){
+    WriteMIFModule(fModule, MIF::kUp,
+		    HRTDC_MZN::TDC::kAddrControll, tdc_ctrl, 1);
+
   }
-  
+
+  if(en_slot_down ){
+    WriteMIFModule(fModule, MIF::kDown,
+		    HRTDC_MZN::TDC::kAddrControll, tdc_ctrl, 1);
+  }
+
   return;
 }
 
@@ -267,37 +378,69 @@ init_device( NodeProp& nodeprop )
       }
 
       // Start DAQ
-      RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);  
+      RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);
       FPGAModule fModule(udp_rbcp);
       {
 	std::ostringstream oss;
-	oss << func_name << " Firmware : " << std::hex << std::showbase
-	    << fModule.ReadModule(BCT::kAddrVersion, 4 );
+	oss << func_name << " Firmware (BASE): " << std::hex << std::showbase
+	    << fModule.ReadModule(BCT::kAddrVersion, 4);
 	send_normal_message( oss.str() );
+
+	if(en_slot_up){
+	  std::ostringstream oss_mznu;
+	  oss_mznu << func_name << " Firmware (MZNU): " << std::hex << std::showbase
+		   << ReadMIFModule(fModule, MIF::kUp,
+				    HRTDC_MZN::BCT::kAddrVersion, 4 );
+	  send_normal_message( oss_mznu.str() );
+	}
+	if(en_slot_down){
+	  std::ostringstream oss_mznd;
+	  oss_mznd << func_name << " Firmware (MZND): " << std::hex << std::showbase
+		   << ReadMIFModule(fModule, MIF::kDown,
+				    HRTDC_MZN::BCT::kAddrVersion, 4 );
+	  send_normal_message( oss_mznd.str() );
+	}
       }
 
-      if(flag_master){
-	fModule.WriteModule(TRM::kAddrSelectTrigger,
-			    TRM::kRegL1Ext | TRM::kRegL2RM | TRM::kRegClrRM |
-			    TRM::kRegEnL2  | TRM::kRegEnRM ,2);
-      }else{
-	fModule.WriteModule(TRM::kAddrSelectTrigger,
-			    TRM::kRegL1Ext
-			    //| TRM::kRegL2J0 | TRM::kRegClrJ0 |
-			    //TRM::kRegEnL2  | TRM::kRegEnJ0
-			    ,2);
-      }
+      fModule.WriteModule(TRM::kAddrSelectTrigger,
+			  TRM::kRegL1Ext
+			  // | TRM::kRegL2J0 | TRM::kRegClrJ0
+			  // | TRM::kRegEnL2
+			  // | TRM::kRegEnJ0
+			  ,
+			  2);
 
       fModule.WriteModule(DCT::kAddrResetEvb, 0x1, 1);
-      fModule.WriteModule(TDC::kAddrEnableBlock, enable_block, 1);
-      set_tdc_window(max_time_window, min_time_window, fModule);
 
-      fModule.WriteModule(IOM::kAddrNimout1, IOM::kReg_o_ModuleBusy ,1);
-      fModule.WriteModule(IOM::kAddrNimout2, IOM::kReg_o_CrateBusy ,1);
-      fModule.WriteModule(IOM::kAddrNimout3, IOM::kReg_o_clk10kHz ,1);
-      fModule.WriteModule(IOM::kAddrNimout4, IOM::kReg_o_RML1 ,1);
+      uint32_t en_blocks = HRTDC_MZN::DCT::kEnLeading | HRTDC_MZN::DCT::kEnTrailing;
+      if(en_slot_up){
+	WriteMIFModule(fModule, MIF::kUp,
+		       HRTDC_MZN::DCT::kAddrEnBlocks, en_blocks, 1);
+      }
+
+      if(en_slot_down ){
+	WriteMIFModule(fModule, MIF::kDown,
+		       HRTDC_MZN::DCT::kAddrEnBlocks, en_blocks, 1);
+      }
+
+      if(en_slot_up)   SetTdcWindow(max_time_window, min_time_window, fModule, MIF::kUp);
+      if(en_slot_down) SetTdcWindow(max_time_window, min_time_window, fModule, MIF::kDown);
+
+      fModule.WriteModule(IOM::kAddrExtL1,  IOM::kReg_i_Nimin1, 1);
+      //fModule.WriteModule(IOM::kAddrExtL2,  IOM::kReg_i_Nimin2, 1);
+      //fModule.WriteModule(IOM::kAddrExtClr, IOM::kReg_i_Nimin3, 1);
 
       // start DAQ
+      if(en_slot_up){
+	WriteMIFModule(fModule, MIF::kUp,
+		       HRTDC_MZN::DCT::kAddrGate, 1, 1);
+      }
+
+      if(en_slot_down ){
+	WriteMIFModule(fModule, MIF::kDown,
+		       HRTDC_MZN::DCT::kAddrGate, 1, 1);
+      }
+
       fModule.WriteModule(DCT::kAddrDaqGate, 1, 1);
       return;
     }
@@ -318,9 +461,19 @@ finalize_device( NodeProp& nodeprop )
   // const std::string& nick_name(nodeprop.getNickName());
   // const std::string& func_name(nick_name+" [::"+__func__+"()]");
 
-  RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);  
+  RBCP::UDPRBCP udp_rbcp(ip, RBCP::gUdpPort, RBCP::UDPRBCP::kInteractive);
   FPGAModule fModule(udp_rbcp);
   fModule.WriteModule(DCT::kAddrDaqGate, 0, 1);
+  if(en_slot_up){
+    WriteMIFModule(fModule, MIF::kUp,
+		   HRTDC_MZN::DCT::kAddrGate, 0, 1);
+  }
+
+  if(en_slot_down){
+    WriteMIFModule(fModule, MIF::kDown,
+		   HRTDC_MZN::DCT::kAddrGate, 0, 1);
+  }
+
   ::sleep(1);
   unsigned int data[max_n_word];
   while(-1 != EventCycle(sock, data));

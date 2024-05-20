@@ -12,7 +12,6 @@
 #include <vector>
 
 #include "CAENComm.h"
-#include "CAENDigitizer.h"
 
 #include "PrintHelper.hh"
 

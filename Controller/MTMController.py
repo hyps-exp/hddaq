@@ -17,15 +17,17 @@ def set_port(port):
 
 #______________________________________________________________________________
 def trig_on():
-  command = chr(0x0)+chr(0x0)+chr(0x0)+chr(0x82)
-  # command = chr(0x1)+chr(0x0)+chr(0x0)+chr(0x82)
-  SocketTools.tcp_send(g_host, g_port, command)
+  os.system('ssh vme02 /home/axis/vmetools/XVB601/TrigOn/bin/trigon')
+  # command = chr(0x0)+chr(0x0)+chr(0x0)+chr(0x82)
+  # # command = chr(0x1)+chr(0x0)+chr(0x0)+chr(0x82)
+  # SocketTools.tcp_send(g_host, g_port, command)
 
 #______________________________________________________________________________
 def trig_off():
-  command = chr(0x1)+chr(0x0)+chr(0x0)+chr(0x82)
-  # command = chr(0x0)+chr(0x0)+chr(0x0)+chr(0x82)
-  SocketTools.tcp_send(g_host, g_port, command)
+  os.system('ssh vme02 /home/axis/vmetools/XVB601/TrigOn/bin/trigoff')
+  # command = chr(0x1)+chr(0x0)+chr(0x0)+chr(0x82)
+  # # command = chr(0x0)+chr(0x0)+chr(0x0)+chr(0x82)
+  # SocketTools.tcp_send(g_host, g_port, command)
 
 #______________________________________________________________________________
 def get_trig_state():
