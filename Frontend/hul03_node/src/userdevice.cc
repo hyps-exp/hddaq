@@ -283,8 +283,8 @@ init_device( NodeProp& nodeprop )
       }else{
 	fModule.WriteModule(TRM::kAddrSelectTrigger,
 			    TRM::kRegL1Ext
-			    //| TRM::kRegL2J0 | TRM::kRegClrJ0 |
-			    //TRM::kRegEnL2  | TRM::kRegEnJ0
+			    | TRM::kRegL2J0 | TRM::kRegClrJ0 |
+			    TRM::kRegEnL2  | TRM::kRegEnJ0
 			    ,2);
       }
 
