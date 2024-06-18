@@ -12,7 +12,7 @@
 #include <sys/time.h>
 #include <iostream>
 
-#define DMA_CHAIN 1
+#define DMA_CHAIN 0
 #define DMA_V792  1 // if DMA_CHAIN 0
 
 #define USE_RM 0
@@ -51,9 +51,9 @@ open_device( NodeProp& nodeprop )
 {
   gVme.SetNickName( nodeprop.getNickName() );
 
-  gVme.AddModule( new vme::CaenV792( 0x00110000 ) );
-  gVme.AddModule( new vme::CaenV792( 0x00120000 ) );
-  gVme.AddModule( new vme::CaenV792( 0x00130000 ) );
+  gVme.AddModule( new vme::CaenV792( 0xad020000 ) );
+  //  gVme.AddModule( new vme::CaenV792( 0x00120000 ) );
+  //  gVme.AddModule( new vme::CaenV792( 0x00130000 ) );
   // gVme.AddModule( new vme::CaenV792( 0xad060000 ) );
   // gVme.AddModule( new vme::CaenV792( 0xad070000 ) );
 
@@ -264,7 +264,7 @@ wait_device( NodeProp& nodeprop )
       }
 #endif
 
-#if DMA_CHAIN
+      //#if DMA_CHAIN
       static const int n = gVme.GetNumOfModule<vme::CaenV792>();
       int dready = 0;
       for( int i=0; i<n; ++i ){
@@ -277,7 +277,7 @@ wait_device( NodeProp& nodeprop )
       if( dready==n ){
 	return 0;
       }
-#endif
+      //#endif
 
       // TimeOut
       std::cout << "wait_device() Time Out" << std::endl;
@@ -368,7 +368,7 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	  int ncount   = (buf>> 8) & 0x3f;
 	  switch( geo_addr ){
 	  case 0x2: case 0x4: case 0x6:
-	    vme_addr = 0x00100000 | (geo_addr<<15);
+	    vme_addr = 0xad000000 | (geo_addr<<15);
 	    break;
 	  // case 0xc: case 0xe: case 0x10:
 	  //   vme_addr = 0xBD000000 | ( (geo_addr-0x8)<<15 );

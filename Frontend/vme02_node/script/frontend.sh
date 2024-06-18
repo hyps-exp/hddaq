@@ -1,7 +1,7 @@
 #!/bin/sh
 
 nickname=vme02
-nodeid=$((0x202))
+nodeid=9052
 frontend=vme02_frontend
 
 bin_dir=$(dirname `readlink -f $0`)/../bin
