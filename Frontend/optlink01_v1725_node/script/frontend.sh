@@ -2,8 +2,8 @@
 
 nickname=optlink01_v1725
 #nodeid=$((0x1B9F))
-nodeid=1539
-dataport=9003
+nodeid=1540
+dataport=9100
 frontend=optlink01_v1725_frontend
 
 bin_dir=$(dirname `readlink -f $0`)/../bin

@@ -127,16 +127,13 @@ CaenV1725::SetDefaultConfig( void )
     NSampAhe[j] = 4;
     ZleTrigThr[j] = 1000;
     ZleThr[j] = 1000;
-    BLineMode[j] = 0;
+    //BLineMode[j] = 0;  // Dynamically calculated baseline
+    BLineMode[j] = 1;  // Fixed baseline   
     BLineDefValue[j] = 0x2000;
     BLineNoise[j] = 4;
-    DCoffset[j] = 0;
+    DCoffset[j] = 0x7fff;
     // NoThreshold 1 : no ZLE
-    NoThreshold[j] = 0;
-    TP_Enable[j] = 0;
-    TP_Polarity[j] = 1;
-    TP_Rate[j] = 0;
-    TP_Scale[j] = 0;
+    NoThreshold[j] = 1;
   }
 
 }
@@ -284,7 +281,15 @@ CaenV1725::ProgramRegister( void )
   ret |= CAEN_DGTZ_SetRecordLength(m_handle, RecordLength);
   // max BLT events
   ret |= CAEN_DGTZ_SetMaxNumEventsBLT(m_handle, 1023);
-    
+
+  // Front Panel IO control
+  ret |= CAEN_DGTZ_ReadRegister(m_handle, 0x811C, &regval);
+  // Trig Out port --> Busy out
+  regval = regval | 0x000d0000;
+  regval = regval & 0xffefffff;
+  ret |= CAEN_DGTZ_WriteRegister(m_handle, 0x811C, regval);
+
+  
   if (0) {
     /*
     // sets whether the LVDS quartets are input or output (bits [5:2]): 1st quartet is input, other outputs here
@@ -412,6 +417,16 @@ CaenV1725::StartRunMode( void )
 
 }
 //______________________________________________________________________________
+                                                                               
+void
+CaenV1725::StopRunMode( void )
+{
+  // Stop run mode
+  CAEN_DGTZ_SWStopAcquisition(m_handle);
+
+}
+//______________________________________________________________________________
+
 uint32_t
 CaenV1725::ReadData( void )
 {

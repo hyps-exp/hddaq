@@ -157,6 +157,7 @@ public:
   int                 ProgramRegister( void );
   int                 MallocReadoutBuffer( void );
   void                StartRunMode( void );
+  void                StopRunMode( void );  
   uint32_t            ReadData( void );
   int                 GetEventIndex( void ) { return eventIndex; };
   void                SetEventIndex( int index ) { eventIndex=index; };

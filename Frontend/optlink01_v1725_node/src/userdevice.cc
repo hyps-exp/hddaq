@@ -52,9 +52,13 @@ open_device( NodeProp& nodeprop )
 
   ////////// V1725
   {
-    //uint32_t record_length = 1024;
+
+   // Record Length                                                            
+    // Number of samples in the waveform according to the formula Ns = N * 4,
+    //where Ns is the record length and N is the register value.
+    // For example, write N = 6 to acquire 24 samples.   
     uint32_t record_length[] = 
-      {256};
+      {128};
 
     //uint32_t record_length = 130;
     bool enable_channel[][opt::CaenV1725::NofCh] = 
@@ -70,10 +74,8 @@ open_device( NodeProp& nodeprop )
 	//{0, 0, 0, 0, 0, 0, 0, 0,
 	//0, 0, 0, 0, 0, 0, 0, 0}
 	// offset 0x7fff --> 1V <--> -1 V
-	//{0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff,
-	//0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff}
-	{0x0fff, 0x7fff, 0x0fff, 0x0fff, 0x0fff, 0x0fff, 0x0fff, 0x0fff,
-	0x0fff, 0x0fff, 0x0fff, 0x0fff, 0x0fff, 0x0fff, 0x0fff, 0x0fff}
+	{0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff,
+	0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff}
       };
 
     // No ZLE mode
@@ -81,22 +83,32 @@ open_device( NodeProp& nodeprop )
     // 1 : w/o ZLE mode    
     int NoZLEmode[][opt::CaenV1725::NofCh] = 
       {
-	{0, 1, 0, 0, 0, 0, 0, 0,
+	{0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0}
       };
 
+    // pre trigger
+    // Number of pre trigger samples according to the formula Ns = N * 4,
+    // where Ns is the pre trigger and N is the register value.
+    // NOTE: maximum value is 240.    
     uint32_t preTrigger[][opt::CaenV1725::NofCh] =
       {
-       {100, 100, 100, 100, 100, 100, 100, 100,
-	100, 100, 100, 100, 100, 100, 100, 100 }
+       {10, 10, 10, 10, 10, 10, 10, 10,
+	10, 10, 10, 10, 10, 10, 10, 10 }
       };
 
+    // Samples Look Back
+    // Number of samples according to the formula N_LBCK = N * 2,
+    // where N is the register value.    
     uint32_t preSample[][opt::CaenV1725::NofCh] =
       {
        {10, 10, 10, 10, 10, 10, 10, 10,
 	10, 10, 10, 10, 10, 10, 10, 10 }
       };
 
+    // Samples Look Forward
+    // Number of samples according to the formula N_LFW = N * 2,
+    // where N is the register value.      
     uint32_t postSample[][opt::CaenV1725::NofCh] =
       {
        {10, 10, 10, 10, 10, 10, 10, 10,
@@ -105,16 +117,14 @@ open_device( NodeProp& nodeprop )
 
     uint32_t baseline[][opt::CaenV1725::NofCh] =
       {
-       {15770, 15820, 15630, 15700, 15810, 15860, 15870, 15950,
-	15840, 15870, 15930, 15880, 15700, 15730, 15820, 15980 }
+	{8145, 8145, 8145, 8145, 8145, 8145, 8145, 8110,
+        8145, 8145, 8145, 8145, 8210, 8210, 8185, 8207 }
       };
 
     uint16_t ZLE_threshold[][opt::CaenV1725::NofCh] =
       {
-	{50, 50, 50, 50, 50, 50, 50, 50,
-	50, 50, 50, 50, 50, 50, 50, 50 }
-	//{1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-	//1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000 }
+	{20, 20, 20, 20, 20, 20, 20, 20,
+	20, 20, 20, 20, 20, 20, 20, 20 }
       };
 
 
@@ -139,8 +149,6 @@ open_device( NodeProp& nodeprop )
 	  m->SetPreSamples( ch, preSample[i][ch]);
 	  m->SetPostSamples( ch, postSample[i][ch]);
 	  m->SetBLineDefValue( ch, baseline[i][ch]);
-	  //m->SetDataThreshold( ch, baseline[i][ch]-ZLE_threshold[i][ch] );
-	  //m->SetTriggerThreshold( ch, baseline[i][ch]-ZLE_threshold[i][ch] );
 	  m->SetDataThreshold( ch, ZLE_threshold[i][ch] );
 	  m->SetTriggerThreshold( ch, ZLE_threshold[i][ch] );	  
 	}
@@ -177,8 +185,8 @@ init_device( NodeProp& nodeprop )
 	  m->ProgramRegister();
 	  m->MallocReadoutBuffer();
 	  m->ClearData();
-	  m->StartRunMode();
 	  m->SetEventIndex(-1);
+	  m->StartRunMode();
 	}
 
       }// V1725
@@ -198,6 +206,13 @@ init_device( NodeProp& nodeprop )
 void
 finalize_device( NodeProp& nodeprop )
 {
+  const int n = gOpt.GetNumOfModule<opt::CaenV1725>();
+
+  for( int i=0; i<n; ++i ){
+    opt::CaenV1725* m = gOpt.GetModule<opt::CaenV1725>(i);
+    m->StopRunMode();
+  }
+
   gOpt.Close();
   return;
 }
