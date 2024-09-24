@@ -16,15 +16,13 @@ sleep 1
 en_slot=(0x0, 0x3, 0x3, 0x1, 0x3)
 
 #start hulhrtdc
-for i in $(seq 1 1)
-#for i in $(seq 1 3)
-#for i in $(seq 2 2)
-#for i in $(seq 2 3)
+for i in $(seq 0 1) # for debug
+# for i in $(seq 0 1)
 do
-    nodeid=`expr 9030 + $i`
-    nickname=hul01hr-`expr + $i`
-    dataport=`expr 9030 + $i`
-    sitcp_ip=192.168.11.`expr 130 + $i`
+    nodeid=`expr 2101 + $i`
+    nickname=hul01hr-`expr 1 + $i`
+    dataport=`expr 9101 + $i`
+    sitcp_ip=192.168.11.`expr 101 + $i`
     min_window=10
     max_window=100
 

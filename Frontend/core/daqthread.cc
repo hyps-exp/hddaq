@@ -74,12 +74,15 @@ int DaqThread::run()
     std::cout << "#D server accepted" << std::endl;
 
     int n_loop = 200;
+	std::cout << "before nodeprop" << std::endl;
     for( ;n_loop>0; n_loop-- ){
       std::cout << "#D check nodeprop" << std::endl;
       if( m_nodeprop.getUpdate() ){
 	m_nodeprop.setUpdate(false);
+	std::cout << "before break" << std::endl;
 	break;
       }
+	std::cout << "before sleep" << std::endl;
       ::usleep(10000);
     }
     if( n_loop==0 ){
