@@ -3,7 +3,7 @@
 # Author: Shuhei Hayakawa
 
 #_______________________________________________________________________________
-TARGET	= veasiroc01_frontend
+TARGET	= veasiroc04_frontend
 
 CORE_DIR	= ../core
 EASI_CORE_DIR	= ../veasiroc_core
