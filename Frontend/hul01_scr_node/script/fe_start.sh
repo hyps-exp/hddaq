@@ -11,13 +11,14 @@ sleep 1
 # enable block register (0th value is dummy)
 en_block=(0xb 0x3 0x3 0x3 0x3 0x0)
 
-for i in $(seq 0 1) # for debug
+for i in $(seq 1 1) # for debug
+# for i in $(seq 201 201) # for debug
 # for i in $(seq 0 1)
 do
-    nodeid=`expr 3001 + $i`
-    nickname=hul01_scr-`expr 1 + $i`
-    dataport=`expr 9201 + $i`
-    sitcp_ip=192.168.11.`expr 201 + $i`
+    nodeid=`expr 2200 + $i`
+    nickname=hul01_scr-$i
+    dataport=`expr 9200 + $i`
+    sitcp_ip=192.168.11.`expr 200 + $i`
     master=--master
     # master=--slave
     # if [ $i -eq 200 ]; then

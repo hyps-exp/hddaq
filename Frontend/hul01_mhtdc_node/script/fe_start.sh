@@ -14,22 +14,20 @@ $bin_dir/message.sh  > /dev/null 2> /dev/null &
 
 sleep 1
 
-for i in $(seq 0 0)$(seq 2 3) # for debug
-# for i in $(seq 0 3) # for DC0
-# for i in $(seq 0 3) $(seq 20 29) # for DC0-3
+# for i in $(seq 11 13) $(seq 31 40) # for SDC0, SDC1-3
+for i in $(seq 11 14) # for SDC0
+# for i in $(seq 31 40) # for SDC1-3
 do
-   # if [ $i -eq 1 ]; then
-   # 	continue
-   # fi
-    nodeid=`expr 2011 + $i`
-    nickname=hul01_dc-`expr 1 + $i`
-    dataport=`expr 9011 + $i`
-    sitcp_ip=192.168.11.`expr 11 + $i`
+    nodeid=`expr 2000 + $i`
+    nickname=hul01_dc-$i
+    dataport=`expr 9000 + $i`
+    sitcp_ip=192.168.11.$i
     min_window=6
     max_window=150
+    # max_window=600
     only_leading=0
     master=--slave
-    if [ $i -eq 20 ]; then
+    if [ $i -eq 31 ]; then
 	master=--master
     fi
 
