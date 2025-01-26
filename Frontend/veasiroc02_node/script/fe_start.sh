@@ -14,11 +14,10 @@ adc=on
 tdc=on
 
 for i in $(seq 19 22) $(seq 35 38) $(seq 54 58) $(seq 75 80)
-do
-  if [ $i -eq 18 ]; then continue; fi
 
+do
     nodeid=`expr 4000 + $i`
-    nickname=veasiroc-$i
+    nickname=veasiroc02-$i
     dataport=`expr 9000 + $i`
     sitcp_ip=192.168.11.$i
     module_num=$i

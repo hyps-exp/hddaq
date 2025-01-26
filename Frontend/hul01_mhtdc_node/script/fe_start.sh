@@ -14,9 +14,10 @@ $bin_dir/message.sh  > /dev/null 2> /dev/null &
 
 sleep 1
 
-# for i in $(seq 11 13) $(seq 31 40) # for SDC0, SDC1-3
-for i in $(seq 11 14) # for SDC0
+for i in $(seq 11 14) $(seq 31 41) # for SDC0, SDC1-3
+# for i in $(seq 11 14) # for SDC0
 # for i in $(seq 31 40) # for SDC1-3
+# for i in $(seq 31 31) # for SDC1-3
 do
     nodeid=`expr 2000 + $i`
     nickname=hul01_dc-$i

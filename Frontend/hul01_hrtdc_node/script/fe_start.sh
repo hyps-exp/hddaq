@@ -17,7 +17,7 @@ en_slot=(0x0, 0x3, 0x3, 0x1, 0x3)
 
 #start hulhrtdc
 # for i in $(seq 0 1) # for debug
-for i in $(seq 1 1) # for debug
+for i in $(seq 1 2) # for debug
 # for i in $(seq 0 1)
 do
     nodeid=`expr 2100 + $i`

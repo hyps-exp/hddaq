@@ -1,8 +1,8 @@
 #!/bin/sh
 
-nickname=vme02
-nodeid=3002
-frontend=vme02_frontend
+nickname=optlink01
+nodeid=5001
+frontend=optlink01_frontend
 
 bin_dir=$(dirname `readlink -f $0`)/../bin
 

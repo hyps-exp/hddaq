@@ -383,8 +383,8 @@ class Controller(Frame):
       f.write(starttime)
   #____________________________________________________________________________
   def beep_sound(self):
-    pass
-    # os.system(sound_command)
+    os.system(sound_command)
+
   #____________________________________________________________________________
   def switch_disk(self):
     self.is_switching = True
@@ -750,7 +750,7 @@ if __name__ == '__main__':
   #   sound_command = 'aplay ' + sound_file
   # else:
   #   sound_command = 'ssh eb0 aplay ' + sound_file
-  sound_command = 'sshpass -p beamtime ssh sks@k18epics aplay -Dhw:1,0 under_transition.wav'
+  sound_command = 'ssh sks@db-hyps aplay under_transition.wav'
   '''
   mainloop
   '''

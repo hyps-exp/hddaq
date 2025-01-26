@@ -1,6 +1,8 @@
 #ifndef MYTCP_H_INCLUDED
 #define MYTCP_H_INCLUDED
 
+#include <string>
+
 #include "kolsocket.h"
 
 // 08-Jun-2007
@@ -90,13 +92,13 @@ namespace kol
   {
   public:
     TcpClient();
-    TcpClient(const char* host, int port);
-    TcpClient(const Socket& s, const char* host, int port);
+    TcpClient(const std::string& host, int port);
+    TcpClient(const Socket& s, const std::string& host, int port);
     virtual ~TcpClient();
-    void Start(const char* host, int port);
+    void Start(const std::string& host, int port);
 
 //  private:
-//    void Start(const char* host, int port);
+//    void Start(const std::string& host, int port);
   };
 
   class TcpServer : public TcpBuffer

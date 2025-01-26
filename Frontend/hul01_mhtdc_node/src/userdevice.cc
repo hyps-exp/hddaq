@@ -312,7 +312,7 @@ init_device( NodeProp& nodeprop )
       std::cout << "NimIn1 done" << std::endl;
       // fModule.WriteModule(IOM::kAddrNimin2, IOM::kReg_i_CrateBusy ,1);
       // fModule.WriteModule(IOM::kAddrNimin3, IOM::kReg_i_RML2 ,1);
-      // fModule.WriteModule(IOM::kAddrNimin4, IOM::kReg_i_RML1 ,1);
+      fModule.WriteModule(IOM::kAddrExtRsv2, IOM::kReg_i_Nimin4 ,1);
 
       fModule.WriteModule(IOM::kAddrNimout1, IOM::kReg_o_ModuleBusy ,1);
       std::cout << "NimOut1 done" << std::endl;

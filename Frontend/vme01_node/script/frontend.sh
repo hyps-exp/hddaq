@@ -1,8 +1,8 @@
 #!/bin/sh
 
-nickname=vme02
-nodeid=3002
-frontend=vme02_frontend
+nickname=vme01
+nodeid=3001
+frontend=vme01_frontend
 
 bin_dir=$(dirname `readlink -f $0`)/../bin
 
@@ -14,6 +14,8 @@ fi
 while true
 do
     echo -e "\n\n"${frontend}
-    ${bin_dir}/${frontend} --nickname=${nickname} --nodeid=${nodeid}
+    ${bin_dir}/${frontend} \
+	--nickname=${nickname} \
+	--nodeid=${nodeid}
     sleep 1
 done

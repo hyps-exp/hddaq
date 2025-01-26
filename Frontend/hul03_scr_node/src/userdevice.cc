@@ -1,4 +1,3 @@
-
 #include "userdevice.h"
 
 #include <bitset>
@@ -258,17 +257,15 @@ init_device( NodeProp& nodeprop )
 
       fModule.WriteModule(IOM::kAddrExtSpillGate, IOM::kReg_i_Nimin1, 1);
       fModule.WriteModule(IOM::kAddrExtCCRst    , IOM::kReg_i_Nimin2, 1);
+      // fModule.WriteModule(IOM::kAddrExtL1    , IOM::kReg_i_Nimin2, 1);
       fModule.WriteModule(IOM::kAddrExtBusy     , IOM::kReg_i_Nimin3, 1);
       fModule.WriteModule(IOM::kAddrExtRsv2     , IOM::kReg_i_Nimin4, 1);
-      //fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_RML1, 1);
-      //fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_ModuleBusy, 1);
-      //fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_RMRsv1, 1);
-      // fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_CrateBusy, 1);
-      // fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_RMClr, 1);
+
       fModule.WriteModule(IOM::kAddrNimout1     , IOM::kReg_o_clk1MHz, 1);
       fModule.WriteModule(IOM::kAddrNimout2     , IOM::kReg_o_RMRsv1, 1);
-      fModule.WriteModule(IOM::kAddrNimout3     , IOM::kReg_o_RML1, 1);
-      fModule.WriteModule(IOM::kAddrNimout4     , IOM::kReg_o_CrateBusy, 1);
+      // fModule.WriteModule(IOM::kAddrNimout3     , IOM::kReg_o_RML1, 1);
+      fModule.WriteModule(IOM::kAddrNimout3     , IOM::kReg_o_ModuleBusy, 1);
+      fModule.WriteModule(IOM::kAddrNimout4     , IOM::kReg_o_RML2, 1);
 
 
       // start DAQ
