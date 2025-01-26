@@ -1,2 +1,129 @@
 #node-name	port	ringbuf_size(byte)	ringbuf_len
 #localhost	9000 	8192			10
+
+#----- MH-TDC -----#
+fe-hul01	9011 	163840			1000
+fe-hul01	9012 	163840			1000
+fe-hul01	9013 	163840			1000
+fe-hul01	9014 	163840			1000
+fe-hul01	9031 	81920			1000
+fe-hul01	9032 	81920			1000
+fe-hul01	9033 	81920			1000
+fe-hul01	9034 	81920			1000
+fe-hul01	9035 	81920			1000
+fe-hul01	9036 	81920			1000
+fe-hul01	9037 	81920			1000
+fe-hul01	9038 	81920			1000
+fe-hul01	9039 	81920			1000
+fe-hul01	9040 	81920			1000
+fe-hul01	9041 	81920			1000
+
+
+#----- HR-TDC -----#
+fe-hul01	9101 	81920			1000
+fe-hul01	9102 	81920			1000
+
+
+#----- Scaler -----#
+# fe-hul01	9201 	8192			1000
+fe-hul01	9202 	8192			1000
+fe-veasiroc05	9203 	81920			1000
+
+
+#----- QDC -----#
+vme01		9000	8192			1000
+
+
+#----- BGO FADC -----#
+vme02		9000	81920			1000
+fe-optlink01	9000	163840			1000
+
+#----- VME-EASIROC -----#
+#--- VME CRATE-1 ---#
+fe-veasiroc01	9016 	81920			1000
+fe-veasiroc01	9017 	81920			1000
+fe-veasiroc01	9031 	81920			1000
+fe-veasiroc01	9032 	81920			1000
+fe-veasiroc01	9033 	81920			1000
+fe-veasiroc01	9034 	81920			1000
+fe-veasiroc01	9049 	81920			1000
+fe-veasiroc01	9050 	81920			1000
+fe-veasiroc01	9051	81920			1000
+fe-veasiroc01	9052	81920			1000
+fe-veasiroc01	9053	81920			1000
+fe-veasiroc01	9069	81920			1000
+fe-veasiroc01	9070	81920			1000
+fe-veasiroc01	9071	81920			1000
+fe-veasiroc01	9072	81920			1000
+fe-veasiroc01	9073	81920			1000
+fe-veasiroc01	9074	81920			1000
+fe-veasiroc01	9095	81920			1000
+
+#--- VME CRATE-2 ---#
+fe-veasiroc02	9019	81920			1000
+fe-veasiroc02	9020	81920			1000
+fe-veasiroc02	9021	81920			1000
+fe-veasiroc02	9022	81920			1000
+fe-veasiroc02	9035	81920			1000
+fe-veasiroc02	9036	81920			1000
+fe-veasiroc02	9037	81920			1000
+fe-veasiroc02	9038	81920			1000
+fe-veasiroc02	9054	81920			1000
+fe-veasiroc02	9055	81920			1000
+fe-veasiroc02	9056	81920			1000
+fe-veasiroc02	9057	81920			1000
+fe-veasiroc02	9058	81920			1000
+fe-veasiroc02	9075	81920			1000
+fe-veasiroc02	9076	81920			1000
+fe-veasiroc02	9077	81920			1000
+fe-veasiroc02	9078	81920			1000
+fe-veasiroc02	9079	81920			1000
+fe-veasiroc02	9080	81920			1000
+
+#--- VME CRATE-3 ---#
+fe-veasiroc03	9023	81920			1000
+fe-veasiroc03	9024	81920			1000
+fe-veasiroc03	9025	81920			1000
+fe-veasiroc03	9026	81920			1000
+fe-veasiroc03	9039	81920			1000
+fe-veasiroc03	9040	81920			1000
+fe-veasiroc03	9041	81920			1000
+fe-veasiroc03	9042	81920			1000
+fe-veasiroc03	9043	81920			1000
+fe-veasiroc03	9059	81920			1000
+fe-veasiroc03	9060	81920			1000
+fe-veasiroc03	9061	81920			1000
+fe-veasiroc03	9062	81920			1000
+fe-veasiroc03	9063	81920			1000
+fe-veasiroc03	9081	81920			1000
+fe-veasiroc03	9082	81920			1000
+fe-veasiroc03	9083	81920			1000
+fe-veasiroc03	9084	81920			1000
+fe-veasiroc03	9085	81920			1000
+
+#--- VME CRATE-4 ---#
+fe-veasiroc04	9027	81920			1000
+fe-veasiroc04	9028	81920			1000
+fe-veasiroc04	9029	81920			1000
+fe-veasiroc04	9030	81920			1000
+fe-veasiroc04	9044	81920			1000
+fe-veasiroc04	9045	81920			1000
+fe-veasiroc04	9046	81920			1000
+fe-veasiroc04	9047	81920			1000
+fe-veasiroc04	9048	81920			1000
+fe-veasiroc04	9064	81920			1000
+fe-veasiroc04	9065	81920			1000
+fe-veasiroc04	9066	81920			1000
+fe-veasiroc04	9067	81920			1000
+fe-veasiroc04	9068	81920			1000
+fe-veasiroc04	9086	81920			1000
+fe-veasiroc04	9087	81920			1000
+fe-veasiroc04	9088	81920			1000
+fe-veasiroc04	9089	81920			1000
+
+# --- VME CRATE-5 ---#
+fe-veasiroc05	9090	81920			1000
+fe-veasiroc05	9091	81920			1000
+fe-veasiroc05	9092	81920			1000
+fe-veasiroc05	9093	81920			1000
+fe-veasiroc05	9094	81920			1000

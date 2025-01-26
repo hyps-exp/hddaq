@@ -1,3 +1,14 @@
 #node-name	port
 
 localhost	8881
+fe-hul01	8881
+# fe-hul02	8881
+vme01		8881
+vme02		8881
+fe-veasiroc01	8881
+fe-veasiroc02	8881
+fe-veasiroc03	8881
+fe-veasiroc04	8881
+fe-veasiroc05	8881
+fe-optlink01	8881
+# fe-rayraw	8881
