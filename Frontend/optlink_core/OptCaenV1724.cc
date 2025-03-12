@@ -29,7 +29,12 @@ CaenV1724::~CaenV1724( void )
 CAENComm_ErrorCode
 CaenV1724::Open( void )
 {
-  return CAENComm_OpenDevice(CAENComm_OpticalLink, m_link_num, m_conet_node, 0, &m_handle);
+#if CAEN_COMM_VERSION_NUMBER < 10600
+    return CAENComm_OpenDevice(CAENComm_OpticalLink, m_link_num, m_conet_node, 0, &m_handle);
+#else
+    int arg = LinkNum();
+    return CAENComm_OpenDevice2(CAENComm_OpticalLink, static_cast<const void*>(&arg), m_conet_node, 0, &m_handle);
+#endif
 }
 
 //______________________________________________________________________________
