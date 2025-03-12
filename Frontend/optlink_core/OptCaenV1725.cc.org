@@ -34,8 +34,12 @@ CAENComm_ErrorCode
 CaenV1725::Open( void )
 {
   CAEN_DGTZ_ErrorCode ret = CAEN_DGTZ_OpenDigitizer(CAEN_DGTZ_USB_A4818, m_link_num, m_conet_node, 0, &m_handle);
-  if (ret != CAEN_DGTZ_Success)
+  if (ret != CAEN_DGTZ_Success) {
+    std::cout << "["+ClassName()+"::"+__func__+"()] " << std::endl;
+    std::cout << "OpenDigitizer error "  << std::endl;
+
     return CAENComm_CommError;
+  }
   
   if (CAEN_DGTZ_GetInfo(m_handle, &BoardInfo) == CAEN_DGTZ_Success) {
     std::cout << "["+ClassName()+"::"+__func__+"()] " << std::endl;
@@ -69,9 +73,16 @@ CaenV1725::Close( void )
 
   CAEN_DGTZ_ErrorCode ret = CAEN_DGTZ_CloseDigitizer( m_handle );
 
-  if (ret == CAEN_DGTZ_Success)
-    return CAENComm_Success;
+  if (ret == CAEN_DGTZ_Success) {
+    std::cout << "["+ClassName()+"::"+__func__+"()] " << std::endl;
+    std::cout << "Close Digitizer successfully "  << std::endl;
 
+    return CAENComm_Success;
+  }
+
+  std::cout << "["+ClassName()+"::"+__func__+"()] " << std::endl;
+  std::cout << "Close Digitizer error "  << std::endl;
+  
   return CAENComm_CommError;
 }
 
@@ -117,9 +128,9 @@ CaenV1725::SetDefaultConfig( void )
     ZleTrigThr[j] = 1000;
     ZleThr[j] = 1000;
     //BLineMode[j] = 0;  // Dynamically calculated baseline
-    BLineMode[j] = 1;  // Fixed baseline
+    BLineMode[j] = 1;  // Fixed baseline   
     BLineDefValue[j] = 0x2000;
-    BLineNoise[j] = 5;
+    BLineNoise[j] = 4;
     DCoffset[j] = 0x7fff;
     // NoThreshold 1 : no ZLE
     NoThreshold[j] = 1;
@@ -134,30 +145,6 @@ CaenV1725::SetChannelEnable( uint16_t mask)
   return true;
 }
 
-//______________________________________________________________________________
-bool
-CaenV1725::SetEnableZLE( int ch)
-{
-  if (ch >=0 && ch < NofCh) {
-    NoThreshold[ch] = 0;
-    return true;
-  }
-
-  return false;
-}
-
-//______________________________________________________________________________
-bool
-CaenV1725::SetDisableZLE( int ch)
-{
-  if (ch >=0 && ch < NofCh) {
-    NoThreshold[ch] = 1;
-    return true;
-  }
-
-  return false;
-}
-  
 
 //______________________________________________________________________________
 void
@@ -171,6 +158,17 @@ CaenV1725::SetDCOffset( int ch, int offset)
 {
   if (ch >=0 && ch < NofCh) {
     DCoffset[ch] = offset;
+    return true;
+  }
+
+  return false;
+}
+//______________________________________________________________________________
+bool
+CaenV1725::SetNoZLEMode( int ch, int value)
+{
+  if (ch >=0 && ch < NofCh) {
+    NoThreshold[ch] = value;
     return true;
   }
 
@@ -283,15 +281,15 @@ CaenV1725::ProgramRegister( void )
   ret |= CAEN_DGTZ_SetRecordLength(m_handle, RecordLength);
   // max BLT events
   ret |= CAEN_DGTZ_SetMaxNumEventsBLT(m_handle, 1023);
-    
+
   // Front Panel IO control
   ret |= CAEN_DGTZ_ReadRegister(m_handle, 0x811C, &regval);
   // Trig Out port --> Busy out
   regval = regval | 0x000d0000;
-  regval = regval & 0xffefffff;  
+  regval = regval & 0xffefffff;
   ret |= CAEN_DGTZ_WriteRegister(m_handle, 0x811C, regval);
 
-
+  
   if (0) {
     /*
     // sets whether the LVDS quartets are input or output (bits [5:2]): 1st quartet is input, other outputs here
@@ -419,6 +417,7 @@ CaenV1725::StartRunMode( void )
 
 }
 //______________________________________________________________________________
+                                                                               
 void
 CaenV1725::StopRunMode( void )
 {
@@ -427,6 +426,7 @@ CaenV1725::StopRunMode( void )
 
 }
 //______________________________________________________________________________
+
 uint32_t
 CaenV1725::ReadData( void )
 {

@@ -145,10 +145,9 @@ public:
   CAENComm_ErrorCode  Open( void );
   void                SetDefaultConfig( void );
   bool                SetChannelEnable( uint16_t mask);
-  bool                SetEnableZLE( int ch);
-  bool                SetDisableZLE( int ch);
   void                SetRecordLength( uint32_t len );
   bool                SetDCOffset( int ch, int offset);
+  bool                SetNoZLEMode( int ch, int value);
   bool                SetPreTriggerSamples( int channel, uint32_t samples );
   bool                SetPreSamples( int channel, uint32_t samples );
   bool                SetPostSamples( int channel, uint32_t samples );
