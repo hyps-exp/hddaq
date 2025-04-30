@@ -35,17 +35,19 @@ private:
 public:
   enum Register
     {
-      GeoAddr   = 0x1002U, // R/W [4:0]
-      ChainAddr = 0x1004U, // R/W [7:0]
-      BitSet1   = 0x1006U, // R/W [7,4:3]
-      BitClr1   = 0x1008U, // R/W [7,4:3]
-      Str1      = 0x100eU, // R/- [8:0]
-      ChainCtrl = 0x101aU, // R/W [1:0]
-      FCLRWin   = 0x102eU, // R/W [9:0]
-      BitSet2   = 0x1032U, // R/W [14:0]
-      BitClr2   = 0x1034U, // -/W [14:0]
-      EvReset   = 0x1040U, // -/W [0]
-      Iped      = 0x1060U  // R/W [7:0]
+      FWRevision = 0x1000U, // R/- [15:0] // Added by R.Kurata, 2025/03/31
+      GeoAddr    = 0x1002U, // R/W [4:0]
+      ChainAddr  = 0x1004U, // R/W [7:0]
+      BitSet1    = 0x1006U, // R/W [7,4:3]
+      BitClr1    = 0x1008U, // R/W [7,4:3]
+      Str1       = 0x100eU, // R/- [8:0]
+      ChainCtrl  = 0x101aU, // R/W [1:0]
+      Status2    = 0x1022U, // R/- [7:0] // Added by R.Kurata, 2025/04/01
+      FCLRWin    = 0x102eU, // R/W [9:0]
+      BitSet2    = 0x1032U, // R/W [14:0]
+      BitClr2    = 0x1034U, // -/W [14:0]
+      EvReset    = 0x1040U, // -/W [0]
+      Iped       = 0x1060U  // R/W [7:0]
     };
 
   static const GEF_UINT32 GetMapSize( void ) { return MapSize; }

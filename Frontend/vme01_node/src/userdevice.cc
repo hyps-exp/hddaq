@@ -15,12 +15,19 @@
 #define DMA_CHAIN 0
 #define DMA_V792  1 // if DMA_CHAIN 0
 
+// software counter to ignore V792 local event tag slip (2025.04.11, R.Kurata)
+#define SOFTWARE_COUNTER 1
+
 #define USE_RM 0
 #define USE_RMME 1
 
 #define USE_V775 0
 
 #define DebugPrint 0
+
+#define RED "\033[31m"
+#define RESET "\033[0m"
+
 
 namespace
 {
@@ -29,6 +36,9 @@ namespace
   const int max_try       = 100;         //maximum count to check data ready
   const int max_data_size = 4*1024*1024; //maximum datasize by byte unit
   DaqMode g_daq_mode = DM_NORMAL;
+
+  // software counter for event tag slip (2025.04.11, R.Kurata)
+  int local_counter = 0;
 
   template <typename T>
   std::string
@@ -56,6 +66,7 @@ open_device( NodeProp& nodeprop )
   gVme.AddModule( new vme::CaenV792( 0xad010000 ) );
   gVme.AddModule( new vme::CaenV792( 0xad020000 ) );
   gVme.AddModule( new vme::CaenV792( 0xad030000 ) );
+  //  gVme.AddModule( new vme::CaenV792( 0xad040000 ) );
   //  gVme.AddModule( new vme::CaenV792( 0x00120000 ) );
   //  gVme.AddModule( new vme::CaenV792( 0x00130000 ) );
   // gVme.AddModule( new vme::CaenV792( 0xad060000 ) );
@@ -64,22 +75,20 @@ open_device( NodeProp& nodeprop )
 
 #if USE_RMME
   gVme.AddModule( new vme::RMME( 0xffff0000 ) );
-  std::cout << "open) Add RMME Done" << std::endl;
 #elif USE_RM
   gVme.AddModule( new vme::RM( 0xffff0000 ) );
 #endif
 
   gVme.SetDmaAddress( 0xaa000000 );
-  std::cout << "open) Set DMA address Done" << std::endl;
 
   gVme.Open();
-  std::cout << "open) gVme.Open() Done" << std::endl;
 
   ////////// V792
   {
     GEF_UINT16 geo_addr[]  = { 0x2, 0x4, 0x6 };
     GEF_UINT16 chain_set[] = { 0x2, 0x3, 0x1 };
     // GEF_UINT16 fast_clear_window = 0x3f0; // 31.5 + 7 us
+    GEF_UINT16 fast_clear_window = 0x100; // 31.5 + 7 us
     GEF_UINT16 overflow_suppression = 1; // 0:enable 1:disable
     GEF_UINT16 zero_suppression     = 1; // 0:enable 1:disable
     GEF_UINT16 all_trigger          = 0; // 0:accepted 1:all
@@ -87,12 +96,26 @@ open_device( NodeProp& nodeprop )
     const int n = gVme.GetNumOfModule<vme::CaenV792>();
     for( int i=0; i<n; ++i ){
       vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(i);
+
+      //      GEF_UINT16 firmware = m->ReadRegister( vme::CaenV792::FWRevision );
+      //      std::ostringstream oss1;
+      //      oss1 << "FW: " << std::hex << firmware;
+      //      send_normal_message(oss1.str());
+
+      //      std::ostringstream oss;
+      //      oss << "FW version: Rev. "
+      //	  << (firmware & 0xf000)
+      //	  << (firmware & 0x0f00) << "."
+      //	  << (firmware & 0x00f0)
+      //	  << (firmware & 0x000f);
+      //      send_normal_message(oss.str());
+
       m->WriteRegister( vme::CaenV792::GeoAddr,   geo_addr[i]  );
       m->WriteRegister( vme::CaenV792::BitSet1,   0x80         );
       m->WriteRegister( vme::CaenV792::BitClr1,   0x80         );
       m->WriteRegister( vme::CaenV792::ChainAddr, 0xaa         );
       m->WriteRegister( vme::CaenV792::ChainCtrl, chain_set[i] );
-      // m->WriteRegister( vme::CaenV792::FCLRWin, fast_clear_window );
+      m->WriteRegister( vme::CaenV792::FCLRWin, fast_clear_window );
       m->WriteRegister( vme::CaenV792::BitSet2,
 			( overflow_suppression & 0x1 ) <<  3 |
 			( zero_suppression     & 0x1 ) <<  4 |
@@ -146,7 +169,7 @@ open_device( NodeProp& nodeprop )
     m->WriteRegister( vme::RMME::Control, reg );
 
     //    m->WriteRegister( vme::RMME::Pulse, 0x1 );
-    m->WriteRegister( vme::RMME::FifoDepth, 0x1d);
+    m->WriteRegister( vme::RMME::FifoDepth, 0x20); // 0x1d->0x20, R.Kurata(2025.03.31)
 #ifdef DebugPrint
     m->Print();
 #endif
@@ -209,6 +232,7 @@ init_device( NodeProp& nodeprop )
       m->WriteRegister( vme::RM::Pulse, 0x1 );
       m->WriteRegister( vme::RM::Level, 0x2 );
 #endif
+      local_counter = 0;
       sleep(5);
       return;
     }
@@ -261,10 +285,34 @@ wait_device( NodeProp& nodeprop )
       ////////// Polling
 #if USE_RMME
       int reg = 0;
+      bool RM_is_ready =false;
       vme::RMME* m = gVme.GetModule<vme::RMME>(0);
       for( int i=0; i<max_polling; ++i ){
 	reg = m->ReadRegister( vme::RMME::WriteCount );
-	if( (reg & 0x3ff) != 0 ) return 0; // FIFO is not empty
+	if( (reg & 0x3ff) != 0 ){
+	  RM_is_ready = true; // FIFO is not empty
+	  break;
+	}
+
+#if 0
+	// R.Kurata, 2025/04/01
+	if( (reg & 0x3ff) != 0 ){
+	  std::cout << "RMME Write count: " << (reg & 0x3ff) << std::endl;
+	  int n_mod = gVme.GetNumOfModule<vme::CaenV792>();
+	  for(int i=0; i<n_mod; ++i){
+	    vme::CaenV792* mm = gVme.GetModule<vme::CaenV792>(i);
+	    int full = mm->ReadRegister(vme::CaenV792::Status2);
+	    if(full){
+	      std::cout << "!!! Mod #" << i << " : Buffer Full !!!" << std::endl;
+	    }else{
+	      std::cout << "Mod #" << i << " : Not buffer Full" << std::endl;
+	    }
+	  }
+	  return 0; // FIFO is not empty
+	}
+	// R.Kurata, 2025/04/01
+#endif
+
       }
 #elif USE_RM
       int reg = 0;
@@ -276,6 +324,10 @@ wait_device( NodeProp& nodeprop )
 	  return 0;
 	}
       }
+#endif
+
+#if USE_RMME
+      if ( !RM_is_ready ) return -1;
 #endif
 
       //#if DMA_CHAIN
@@ -316,7 +368,6 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
   return  0: Send data to EV
 */
 {
-  std::cout << "\033[32m" << "read_device Start" << "\033[0m" << std::endl;
   g_daq_mode = nodeprop.getDaqMode();
   switch(g_daq_mode){
   case DM_NORMAL:
@@ -367,12 +418,29 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 
 #if DMA_CHAIN
       {
+	int ndata_RM = ndata;
 	static const int n = gVme.GetNumOfModule<vme::CaenV792>();
 	gVme.ReadDmaBuf( 4*n*34 );
+	int dready = 0;
+        for( int i=0; i<n; ++i ){
+	  vme::CaenV792* mm = gVme.GetModule<vme::CaenV792>(i);
+          for(int j=0;j<max_try;j++){
+            dready += mm->ReadRegister( vme::CaenV792::Str1 ) & 0x1;
+            if(dready==i+1) break;
+          }
+	}
+	if(dready != n)
+	  {
+	    std::ostringstream oss;
+	    oss << "DATA is NOT ready in DMA CHAIN";
+	    send_fatal_message( oss.str() );
+	    std::exit( EXIT_FAILURE );
+	  }
+
 	//gVme.ReadDmaBuf( gVme.DmaBufLen() );
 	for( int i=0; i<gVme.DmaBufLen(); ){
 	  GEF_UINT32 buf = gVme.GetDmaBuf(i);
-	  printf("buf= %08x\n", buf);
+	  //n	  printf("buf= %08x\n", buf);
 	  if( buf==0x0 || buf==0xffffffff )
 	    break;
 
@@ -402,12 +470,36 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	  data[ndata++] = buf; i++;
 	  for( int j=0; j<ncount+1; ++j ){
 	    data[ndata++] = gVme.GetDmaBuf(i++);
+
+#if SOFTWARE_COUNTER
+	    int data_type = (data[ndata-1] >> 24) & 0x7;
+	    switch( data_type )
+	      {
+	      case 4: // footer
+		{
+		  int geo = (data[ndata-1] >> 27) & 0x1f;
+		  int count_792 = data[ndata-1] & 0xffffff;
+		  std::cout << "Geo:" << geo << ", EVNT: " << count_792 << std::endl;
+		  data[ndata-1] = (data[ndata-1] & 0xff000000 ) | ( local_counter & 0xffffff );
+		  break;
+		}		
+	      default: // data or header
+		std::cout << "Data" << data[ndata-1] << std::endl;
+		break;
+	      }
+#endif // SOFTWARE_COUNTER
+
 	  }
 	  vme::SetModuleHeader( vme_addr,
 				ndata - module_header_start,
 				&data[module_header_start] );
 	  module_num++;
 	}
+	if(ndata - ndata_RM == 0){
+	  return -1;
+	}else{
+	  std::cout << "ndata: " << ndata << std::endl;
+}
       }
 #else
       ////////// V792
@@ -424,16 +516,44 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	    if(dready==1) break;
 	  }
 	  if(dready==1){
-# if DMA_V792
+#if DMA_V792
 	    gVme.ReadDmaBuf( m->AddrParam(), 4*data_len );
 	    for(int j=0;j<data_len;j++){
 	      data[ndata++] = gVme.GetDmaBuf(j);
+
+#if SOFTWARE_COUNTER
+	    int data_type = (data[ndata-1] >> 24) & 0x7;
+	    switch( data_type )
+	      {
+	      case 4: // footer
+		{
+		  int geo = (data[ndata-1] >> 27) & 0x1f;
+		  int count_792 = data[ndata-1] & 0xffffff;
+
+		  if(local_counter < 10){
+		    std::cout << "Geo:" << geo << ", EVNT: " << count_792 << std::endl;
+		    std::cout << "-------------------------------" << std::endl;
+		  }
+		  
+		  data[ndata-1] = (data[ndata-1] & 0xff000000 ) | ( local_counter & 0xffffff );
+		  break;
+		}
+	      default: // data or header
+		//		if(local_counter < 10)
+		//		std::cout << "Data: " << data[ndata-1] << std::endl;
+		break;
+	      }
+	    //	      if(j==33){
+	    //data[ndata-1] = (data[ndata-1] & 0xff000000 ) | ( local_counter & 0xffffff );
+	    //}
+#endif // SOFTWARE_COUNTER
+
 	    }
-# else
+#else
 	    for(int j=0;j<data_len;j++){
 	      data[ndata++] = m->DataBuf();
 	    }
-# endif
+#endif
 	  }else{
 	    send_warning_message( user_message( m, "data is not ready" ) );
 	  }
@@ -496,6 +616,11 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	m->WriteRegister( vme::RM::Pulse, 0x1 );
 #endif
       }
+
+#if SOFTWARE_COUNTER
+      local_counter++;
+#endif
+
       return 0;
     }
   case DM_DUMMY:
