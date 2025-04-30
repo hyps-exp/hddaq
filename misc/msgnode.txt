@@ -11,4 +11,6 @@ fe-veasiroc03	8881
 fe-veasiroc04	8881
 fe-veasiroc05	8881
 fe-optlink01	8881
+fe-optlink02	8881
+fe-optlink03	8881
 # fe-rayraw	8881

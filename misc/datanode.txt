@@ -1,6 +1,10 @@
 #node-name	port	ringbuf_size(byte)	ringbuf_len
 #localhost	9000 	8192			10
 
+#----- V1725 test -----#
+fe-optlink02    9000    81920                   1000
+fe-optlink03    9000    81920                   1000
+
 #----- MH-TDC -----#
 fe-hul01	9011 	163840			1000
 fe-hul01	9012 	163840			1000
@@ -17,6 +21,7 @@ fe-hul01	9038 	81920			1000
 fe-hul01	9039 	81920			1000
 fe-hul01	9040 	81920			1000
 fe-hul01	9041 	81920			1000
+fe-veasiroc05	9051 	81920			1000
 
 
 #----- HR-TDC -----#
@@ -37,6 +42,7 @@ vme01		9000	8192			1000
 #----- BGO FADC -----#
 vme02		9000	81920			1000
 fe-optlink01	9000	163840			1000
+
 
 #----- VME-EASIROC -----#
 #--- VME CRATE-1 ---#
