@@ -49,7 +49,7 @@ open_device( NodeProp& nodeprop )
   //gOpt.AddModule( new opt::CaenV1725( link_num=1, conet_node=1, 0xADE20000 ) );
 
   gOpt.Open();
-
+  
   ////////// V1725
   {
     // Record Length
@@ -60,7 +60,6 @@ open_device( NodeProp& nodeprop )
     uint32_t record_length[] = 
       {128};
 
-    //uint32_t record_length = 130;
     bool enable_channel[][opt::CaenV1725::NofCh] = 
       {
 	{true, true, false, false, false, false, false, false,
@@ -78,7 +77,7 @@ open_device( NodeProp& nodeprop )
     // Channel DC offset
     int dc_offset[][opt::CaenV1725::NofCh] = 
       {
-	{0x000f, 0x000f, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff,
+	{0x1fff, 0x1fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff,
 	 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff}
       };
     
@@ -88,7 +87,7 @@ open_device( NodeProp& nodeprop )
     // NOTE: maximum value is 240.
     uint32_t preTrigger[][opt::CaenV1725::NofCh] =
       {
-       {10, 10, 10, 10, 10, 10, 10, 10,
+       {123, 123, 10, 10, 10, 10, 10, 10,
 	10, 10, 10, 10, 10, 10, 10, 10 }
       };
 
@@ -97,7 +96,7 @@ open_device( NodeProp& nodeprop )
     // where N is the register value.
     uint32_t preSample[][opt::CaenV1725::NofCh] =
       {
-       {10, 10, 10, 10, 10, 10, 10, 10,
+       {20, 20, 10, 10, 10, 10, 10, 10,
 	10, 10, 10, 10, 10, 10, 10, 10 }
       };
 
@@ -113,7 +112,7 @@ open_device( NodeProp& nodeprop )
     
     uint32_t baseline[][opt::CaenV1725::NofCh] =
       {
-       {16000, 16000, 8145, 8145, 8145, 8145, 8145, 8110,
+       {15500, 15300, 8145, 8145, 8145, 8145, 8145, 8110,
 	8145, 8145, 8145, 8145, 8210, 8210, 8185, 8207 }
       };
 
@@ -158,6 +157,7 @@ open_device( NodeProp& nodeprop )
 	}
       }
       m->ProgramRegister();
+
       //m->MallocReadoutBuffer();
       //m->StartRunMode();
     }// for(i)

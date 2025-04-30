@@ -25,7 +25,7 @@ do
     dataport=`expr 9100 + $i`
     sitcp_ip=192.168.11.`expr 100 + $i`
     min_window=10
-    max_window=100
+    max_window=120
 
     $bin_dir/frontend_hrtdc.sh \
 	$nickname \
