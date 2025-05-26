@@ -14,6 +14,7 @@ adc=on
 tdc=on
 
 for i in $(seq 19 22) $(seq 35 38) $(seq 54 58) $(seq 75 80)
+# for i in $(seq 20 22) $(seq 35 38) $(seq 55 58) $(seq 75 80) # for Hold timing check, exclude 19, 54
 
 do
     nodeid=`expr 4000 + $i`

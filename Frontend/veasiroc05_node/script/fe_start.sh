@@ -15,6 +15,7 @@ adc_off=off
 tdc=on
 
 for i in $(seq 90 94)
+# for i in $(seq 90 91) $(seq 93 93) #for Hold timing check, exclude 92
 
 do
     nodeid=`expr 4000 + $i`

@@ -15,7 +15,6 @@ adc_off=off
 tdc=on
 
 for i in $(seq 16 17) $(seq 31 34) $(seq 49 53) $(seq 69 74) $(seq 95 95)
-# for i in $(seq 16 17) $(seq 31 34) $(seq 49 53) $(seq 69 72) $(seq 74 74) $(seq 95 95)
 
 do
     nodeid=`expr 4000 + $i`
