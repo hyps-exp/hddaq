@@ -62,6 +62,7 @@ open_device( NodeProp& nodeprop )
 
     bool enable_channel[][opt::CaenV1725::NofCh] = 
       {
+	// {true, true, true, true, true, true, true, true,
 	{true, true, false, false, false, false, false, false,
 	 false, false, false, false, false, false, false, false}
       };
@@ -77,7 +78,7 @@ open_device( NodeProp& nodeprop )
     // Channel DC offset
     int dc_offset[][opt::CaenV1725::NofCh] = 
       {
-	{0x1fff, 0x1fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff,
+	{0x1fff, 0x1fff, 0x1fff, 0x1fff, 0x1fff, 0x1fff, 0x1fff, 0x1fff,
 	 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff, 0x7fff}
       };
     
@@ -87,7 +88,7 @@ open_device( NodeProp& nodeprop )
     // NOTE: maximum value is 240.
     uint32_t preTrigger[][opt::CaenV1725::NofCh] =
       {
-       {123, 123, 10, 10, 10, 10, 10, 10,
+       {123, 123, 123, 123, 123, 123, 123, 123,
 	10, 10, 10, 10, 10, 10, 10, 10 }
       };
 
@@ -96,7 +97,7 @@ open_device( NodeProp& nodeprop )
     // where N is the register value.
     uint32_t preSample[][opt::CaenV1725::NofCh] =
       {
-       {20, 20, 10, 10, 10, 10, 10, 10,
+       {20, 20, 20, 20, 20, 20, 20, 20,
 	10, 10, 10, 10, 10, 10, 10, 10 }
       };
 
@@ -112,8 +113,8 @@ open_device( NodeProp& nodeprop )
     
     uint32_t baseline[][opt::CaenV1725::NofCh] =
       {
-       {15500, 15300, 8145, 8145, 8145, 8145, 8145, 8110,
-	8145, 8145, 8145, 8145, 8210, 8210, 8185, 8207 }
+       {15500, 15300, 15300, 15300, 15300, 15300, 15300, 15300,
+ 	8145, 8145, 8145, 8145, 8210, 8210, 8185, 8207 }
       };
 
     // Number of LSB counts for the ZLE Threshold,
