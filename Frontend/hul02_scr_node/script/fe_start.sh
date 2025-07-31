@@ -15,7 +15,7 @@ en_block=(0xb 0x3 0xf 0x3 0x3 0x0)
 for i in $(seq 2 2)
 do
     nodeid=`expr 2200 + $i`
-    nickname=hul01_scr-$i
+    nickname=hul02_scr-`expr 200 + $i`
     dataport=`expr 9200 + $i`
     sitcp_ip=192.168.11.`expr 200 + $i`
     master=--master

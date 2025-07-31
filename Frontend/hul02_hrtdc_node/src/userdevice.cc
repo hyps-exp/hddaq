@@ -341,17 +341,21 @@ open_device( NodeProp& nodeprop )
   if(en_slot_up)   CalibLUT(fModule, BBP::kUpper);
   if(en_slot_down) CalibLUT(fModule, BBP::kLower);
 
+  std::cout << "#K CalibULT done" << std::endl;
+
   unsigned int tdc_ctrl = HRTDC_MZN::TDC::kRegAutosw;
   if(en_slot_up){
     WriteModuleIn2ndryFPGA(fModule, BBP::kUpper,
 		    HRTDC_MZN::TDC::kAddrControll, tdc_ctrl, 1);
 
   }
+  std::cout << "#K Write Up FPGA done" << std::endl;
 
   if(en_slot_down ){
     WriteModuleIn2ndryFPGA(fModule, BBP::kLower,
 		    HRTDC_MZN::TDC::kAddrControll, tdc_ctrl, 1);
   }
+  std::cout << "#K Write Down FPGA done" << std::endl;
 
   return;
 }
@@ -361,15 +365,18 @@ void
 init_device( NodeProp& nodeprop )
 {
   static const std::string& func_name(nick_name+" [::"+__func__+"()]");
+  std::cout << "#K init_device start" << std::endl;
 
   // update DAQ mode
   g_daq_mode = nodeprop.getDaqMode();
+  std::cout << "#K getDaqMode done" << std::endl;
 
   //  event_num = 0;
 
   switch(g_daq_mode){
   case DM_NORMAL:
     {
+      std::cout << "#K getDaqMode == DM_NORMAL" << std::endl;
       while(0 > (sock = ConnectSocket(ip) )){
 	std::ostringstream oss;
 	oss << func_name << " Connection fail : " << ip;

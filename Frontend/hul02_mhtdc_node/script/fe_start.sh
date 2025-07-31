@@ -14,10 +14,11 @@ $bin_dir/message.sh  > /dev/null 2> /dev/null &
 
 sleep 1
 
-for i in $(seq 31 41) # for SDC1-3
+# for i in $(seq 11 11) # for debug
+for i in $(seq 11 14) # for SDC0
 do
     nodeid=`expr 2000 + $i`
-    nickname=hul01_dc-$i
+    nickname=hul02_dc-$i
     dataport=`expr 9000 + $i`
     sitcp_ip=192.168.11.$i
     min_window=6
@@ -25,9 +26,6 @@ do
     # max_window=600
     only_leading=0
     master=--slave
-    if [ $i -eq 31 ]; then
-	master=--master
-    fi
 
     $bin_dir/frontend.sh \
 	$nickname \

@@ -3,7 +3,7 @@
 # Author: Shuhei Hayakawa
 
 #_______________________________________________________________________________
-TARGET	= hul01_frontend_hrtdc
+TARGET	= hul02_frontend
 
 CORE_DIR	= ../core
 HUL_CORE_DIR	= ../hul_core
@@ -12,7 +12,7 @@ BIN_DIR		= bin
 BLD_DIR 	= build
 
 CXX		= g++
-CXXFLAGS	= -O2 -Wall --std=c++1y
+CXXFLAGS	= -O2 -Wall --std=c++11
 
 INCLUDES	= \
 	-I. -I$(CORE_DIR) -I$(HUL_CORE_DIR) -I$(SRC_DIR) \
