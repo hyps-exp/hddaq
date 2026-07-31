@@ -105,7 +105,7 @@ open_device( NodeProp& nodeprop )
 	  read = m->ReadRegister(vme::CaenV1724::ChStatus + ch*vme::CaenV1724::IReg);
 	  usleep(10);
 	}while((read & 0x4) != 0x0);
-      }// for(i)
+      }// for(ch)
 
       // Zero suppression
       m->WriteRegister( vme::CaenV1724::BoardConf,   0x20010 );
@@ -119,7 +119,7 @@ open_device( NodeProp& nodeprop )
 			  (n_lfwd[i])       |
 			  (n_lbk[i]) << 16  );
 
-      }// for(i)
+      }// for(ch)
 
       m->WriteRegister( vme::CaenV1724::MemoryAfullLv,   0x3ef  );
       usleep(10*1000);
@@ -134,12 +134,17 @@ open_device( NodeProp& nodeprop )
       do{
 	dready = m->ReadRegister( vme::CaenV1724::AcqStatus);
       }while(!(dready & 0x100));
-      std::cout << "#D : Vme v1724 no" << i << " is ready for acquisition" << std::endl;
+
+      {
+	std::ostringstream oss;
+	oss << "Vme V1724 No." << i << "(/" << n << " is ready for acquisition";
+	send_normal_message(oss.str());
+      }
 
 #ifdef DebugPrint
       m->Print();
 #endif
-    }
+    } // for(i)
   }
 
   {
@@ -148,7 +153,6 @@ open_device( NodeProp& nodeprop )
     reg = reg | vme::RMME::regFifoReset | vme::RMME::regInputReset | vme::RMME::regSerialReset;
     m->WriteRegister( vme::RMME::Control, reg );
 
-    //#if SOFTWARE_COUNTER
 #if 0
     // Local counter by software
     serial = m->ReadRegister( vme::RMME::Serial );
@@ -202,7 +206,6 @@ init_device( NodeProp& nodeprop )
       //      m->WriteRegister( vme::RMME::Pulse, 0x1 );
       m->WriteRegister( vme::RMME::Level, 0x2 );
 
-      //#if SOFTWARE_COUNTER
 #if 0
       // Local counter by software
     serial = m->ReadRegister( vme::RMME::Serial );
@@ -292,7 +295,7 @@ wait_device( NodeProp& nodeprop )
       }
 
       // TimeOut
-      std::cout << "wait_device() Time Out" << std::endl;
+      //      std::cout << "wait_device() Time Out" << std::endl;
       //send_warning_message( gVme.GetNickName()+" : wait_device() Time Out" );
       return -1;
     }
@@ -344,6 +347,7 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 
 	  if( (serial & mask_strange_bit) == (local_cnt & mask_strange_bit) ){
 	    data[ndata++] = local_cnt;
+	    /*
 	      std::cout << "----------------" << std::endl;
 	      std::cout << "[" << __func__ << "]Serial         : " << std::dec << serial << std::endl;
 	      std::cout << "[" << __func__ << "]Software       : " << std::dec << local_cnt << std::endl;
@@ -351,7 +355,7 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	      std::cout << "[" << __func__ << "]Serial count   (masked): " << (serial & mask_strange_bit) << std::endl;
 	      std::cout << "[" << __func__ << "]Software count (masked): " << (local_cnt & mask_strange_bit) << std::endl;
 	      std::cout << "----------------" << std::endl;
-
+	    */
 	  }else{
 	    is_slip_local_cnt = true;
 
@@ -361,6 +365,7 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	    
 
 	    while(is_slip_local_cnt){
+	      /*
 	      std::cout << "----------------" << std::endl;
 	      std::cout << RED << "#E [" << __func__ << "]: Local count of RMME slipped" << RESET << std::endl;
 	      std::cout << "----------------" << std::endl;
@@ -371,6 +376,7 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	      std::cout << "[" << __func__ << "]Software count (masked): " << (local_cnt & mask_strange_bit) << std::endl;
 	      std::cout << "----------------" << std::endl;
 	      sleep(3);
+	      */
 	    }
 	    	  
 	  }

@@ -744,13 +744,15 @@ if __name__ == '__main__':
   play sound comman while under stansition state
   usage:  os.system(sound_command)
   '''
-  sound_file = (os.path.abspath(os.path.dirname(__file__))
-                + '/sound/under_transition.wav')
+  # sound_file = (os.path.abspath(os.path.dirname(__file__))
+  #               + '/sound/under_transition.wav')
   # if 'eb0' in os.uname()[1]:
   #   sound_command = 'aplay ' + sound_file
   # else:
   #   sound_command = 'ssh eb0 aplay ' + sound_file
-  sound_command = 'ssh sks@db-hyps aplay under_transition.wav'
+  # sound_command = 'ssh sks@db-hyps aplay under_transition.wav'
+  sound_file = '/home/sks/sound/under_transition.wav'
+  sound_command = 'ssh sks@db-hyps aplay ' + sound_file + ' && ssh sks@monitor-hyps.rcnp.osaka-u.ac.jp aplay ' + sound_file
   '''
   mainloop
   '''

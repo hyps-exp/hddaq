@@ -67,10 +67,6 @@ open_device( NodeProp& nodeprop )
   gVme.AddModule( new vme::CaenV792( 0xad020000 ) );
   gVme.AddModule( new vme::CaenV792( 0xad030000 ) );
   gVme.AddModule( new vme::CaenV792( 0xad040000 ) );
-  //  gVme.AddModule( new vme::CaenV792( 0x00120000 ) );
-  //  gVme.AddModule( new vme::CaenV792( 0x00130000 ) );
-  // gVme.AddModule( new vme::CaenV792( 0xad060000 ) );
-  // gVme.AddModule( new vme::CaenV792( 0xad070000 ) );
 
 
 #if USE_RMME
@@ -86,7 +82,7 @@ open_device( NodeProp& nodeprop )
   ////////// V792
   {
     GEF_UINT16 geo_addr[]  = { 0x2, 0x4, 0x6, 0x8 };
-    GEF_UINT16 chain_set[] = { 0x2, 0x3, 0x4, 0x1 };
+    GEF_UINT16 chain_set[] = { 0x2, 0x3, 0x3, 0x1 };
     // GEF_UINT16 fast_clear_window = 0x3f0; // 31.5 + 7 us
     GEF_UINT16 fast_clear_window = 0x100; // 31.5 + 7 us
     GEF_UINT16 overflow_suppression = 1; // 0:enable 1:disable
@@ -98,10 +94,6 @@ open_device( NodeProp& nodeprop )
       vme::CaenV792* m = gVme.GetModule<vme::CaenV792>(i);
 
       //      GEF_UINT16 firmware = m->ReadRegister( vme::CaenV792::FWRevision );
-      //      std::ostringstream oss1;
-      //      oss1 << "FW: " << std::hex << firmware;
-      //      send_normal_message(oss1.str());
-
       //      std::ostringstream oss;
       //      oss << "FW version: Rev. "
       //	  << (firmware & 0xf000)
@@ -122,6 +114,7 @@ open_device( NodeProp& nodeprop )
 			( all_trigger          & 0x1 ) << 14 );
       m->WriteRegister( vme::CaenV792::BitClr2, ( !all_trigger  & 0x1 ) << 14 );
       m->WriteRegister( vme::CaenV792::Iped, iped[i] );
+
 #ifdef DebugPrint
       m->Print();
 #endif
@@ -420,29 +413,54 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
       {
 	int ndata_RM = ndata;
 	static const int n = gVme.GetNumOfModule<vme::CaenV792>();
-	gVme.ReadDmaBuf( 4*n*34 );
+	//	gVme.ReadDmaBuf( 4*n*34 );
 	int dready = 0;
         for( int i=0; i<n; ++i ){
 	  vme::CaenV792* mm = gVme.GetModule<vme::CaenV792>(i);
           for(int j=0;j<max_try;j++){
             dready += mm->ReadRegister( vme::CaenV792::Str1 ) & 0x1;
-            if(dready==i+1) break;
+	    //            if(dready==i+1) break;
+            if(dready==i+1) {
+	      //	      std::ostringstream oss;
+	      //	      oss << "V792[" << i << "] is dready";
+	      //	      send_normal_message( oss.str() );
+	      break;
+	    }
           }
 	}
 	if(dready != n)
 	  {
-	    std::ostringstream oss;
-	    oss << "DATA is NOT ready in DMA CHAIN";
-	    send_fatal_message( oss.str() );
-	    std::exit( EXIT_FAILURE );
+	    //	    std::ostringstream oss;
+	    //	    oss << "DATA is NOT ready in DMA CHAIN";
+	    //	    send_fatal_message( oss.str() );
+	    //	    std::exit( EXIT_FAILURE );
+
+	    //	    std::ostringstream oss;
+	    //	    oss << "V792 are NOT dready!" << std::endl;
+	    //	    send_normal_message(oss.str());
+	    len = 0;
+	    return -1;
 	  }
 
+	{
+	  //	  std::ostringstream oss;
+	  //	  oss << "All V792s are dready!" << std::endl;
+	  //	  send_normal_message(oss.str());
+	}
+
 	//gVme.ReadDmaBuf( gVme.DmaBufLen() );
+	gVme.ReadDmaBuf( 4*n*34 );
 	for( int i=0; i<gVme.DmaBufLen(); ){
 	  GEF_UINT32 buf = gVme.GetDmaBuf(i);
-	  //n	  printf("buf= %08x\n", buf);
-	  if( buf==0x0 || buf==0xffffffff )
+	  //	  printf("buf= %08x\n", buf);
+	  //	  if( buf==0x0 || buf==0xffffffff )
+	  //	    break;
+	  if( buf==0x0 || buf==0xffffffff ) {
+	    //	    std::ostringstream oss;
+	    //	    oss << "Invalid Data Detected!!!";
+	    //	    send_normal_message(oss.str());
 	    break;
+	  }
 
 	  GEF_UINT64 vme_addr;
 	  int module_header_start = ndata;
@@ -450,9 +468,23 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	  // header
 	  int geo_addr = (buf>>27) & 0x1f;
 	  int ncount   = (buf>> 8) & 0x3f;
+	  {
+	    //	    std::ostringstream oss;
+	    //	    oss << "GeoAddr: " << geo_addr << std::endl;
+	    //	    send_normal_message(oss.str());
+	  }
+
 	  switch( geo_addr ){
-	  case 0x2: case 0x4: case 0x6:
+	  case 0x2: case 0x4: case 0x6: case 0x8:
 	    vme_addr = 0xad000000 | (geo_addr<<15);
+	    //	    {
+	    //	      std::ostringstream oss;
+	    //	      oss << "[Header Info] vme_addr: " << std::hex << vme_addr << std::dec 
+	    //		  << "[Geo: " << geo_addr 
+	    //		  << "], NCNT: " << ncount 
+	    //		  << std::endl;
+	    //	      send_normal_message(oss.str());
+	    //	    }
 	    break;
 	  // case 0xc: case 0xe: case 0x10:
 	  //   vme_addr = 0xBD000000 | ( (geo_addr-0x8)<<15 );
@@ -465,11 +497,16 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	      send_fatal_message( oss.str() );
 	      std::exit( EXIT_FAILURE );
 	    }
-	  }
+	  } // switch
 
 	  data[ndata++] = buf; i++;
 	  for( int j=0; j<ncount+1; ++j ){
 	    data[ndata++] = gVme.GetDmaBuf(i++);
+	    //	    {
+	    //	      std::ostringstream oss;
+	    //	      oss << "Data[" << j << "] is read";
+	    //	      send_normal_message(oss.str());
+	    //	    }
 
 #if SOFTWARE_COUNTER
 	    int data_type = (data[ndata-1] >> 24) & 0x7;
@@ -479,27 +516,52 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 		{
 		  int geo = (data[ndata-1] >> 27) & 0x1f;
 		  int count_792 = data[ndata-1] & 0xffffff;
-		  std::cout << "Geo:" << geo << ", EVNT: " << count_792 << std::endl;
+		  //		  {
+		  //		    std::ostringstream oss;
+		  //		    oss << "[Footer Info] Geo: " << geo << ", EVNT: " << count_792 << std::endl;
+		  //		    send_normal_message(oss.str());
+		  //		  }
 		  data[ndata-1] = (data[ndata-1] & 0xff000000 ) | ( local_counter & 0xffffff );
 		  break;
 		}		
 	      default: // data or header
-		std::cout << "Data" << data[ndata-1] << std::endl;
+		  {
+		    int ch_num = (data[ndata-1] >> 16) & 0x1f;
+		    std::ostringstream oss;
+		    oss << "Data type: " << data_type << ", ch: " << ch_num << std::endl;
+		    send_normal_message(oss.str());
+		  }
+
 		break;
-	      }
+	      } // switch
 #endif // SOFTWARE_COUNTER
 
-	  }
+	  } // for(j)
 	  vme::SetModuleHeader( vme_addr,
 				ndata - module_header_start,
 				&data[module_header_start] );
 	  module_num++;
-	}
+	} // for(i)
+
+	//	{	  
+	//	  std::ostringstream oss;
+	//	  oss << "ndata: " << ndata << ", ndata_RM: " << ndata_RM << ", DataContent: " << std::hex << data[ndata-1];
+	//	  send_normal_message(oss.str());
+	//	}
+	  
+#if 0
 	if(ndata - ndata_RM == 0){
+	  {	  
+	    std::ostringstream oss;
+	    oss << "Data Size not Matched! DataContent: " << std::hex << data[ndata-1];
+	    send_normal_message(oss.str());
+	  }
+
 	  return -1;
 	}else{
-	  std::cout << "ndata: " << ndata << std::endl;
-}
+	  //	  std::cout << "ndata: " << ndata << std::endl;
+	}
+#endif
       }
 #else
       ////////// V792
@@ -527,12 +589,12 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	      {
 	      case 4: // footer
 		{
-		  int geo = (data[ndata-1] >> 27) & 0x1f;
-		  int count_792 = data[ndata-1] & 0xffffff;
+		  //		  int geo = (data[ndata-1] >> 27) & 0x1f;
+		  //		  int count_792 = data[ndata-1] & 0xffffff;
 
 		  if(local_counter < 10){
-		    std::cout << "Geo:" << geo << ", EVNT: " << count_792 << std::endl;
-		    std::cout << "-------------------------------" << std::endl;
+		    //		    std::cout << "Geo:" << geo << ", EVNT: " << count_792 << std::endl;
+		    //		    std::cout << "-------------------------------" << std::endl;
 		  }
 		  
 		  data[ndata-1] = (data[ndata-1] & 0xff000000 ) | ( local_counter & 0xffffff );
@@ -553,7 +615,7 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	    for(int j=0;j<data_len;j++){
 	      data[ndata++] = m->DataBuf();
 	    }
-#endif
+#endif // DMA_V792
 	  }else{
 	    send_warning_message( user_message( m, "data is not ready" ) );
 	  }
@@ -597,14 +659,19 @@ read_device( NodeProp& nodeprop, unsigned int* data, int& len )
 	  module_num++;
 	}
       }
-#endif
-#endif
+#endif // USE_V775
+#endif // DMA_CHAIN
       if (module_num == 0)
 	{
 	  len = 0;
 	  return -1;
 	}
       vme::SetMasterHeader( ndata, module_num, &data[0] );
+      //      {	  
+      //	std::ostringstream oss;
+      //	oss << "End of read_device, ndata: " << ndata;
+      //	send_normal_message(oss.str());
+      //      }
 
       len = ndata;
       {

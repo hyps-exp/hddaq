@@ -21,7 +21,8 @@ do
     nickname=hul02_dc-$i
     dataport=`expr 9000 + $i`
     sitcp_ip=192.168.11.$i
-    min_window=6
+    # min_window=6
+    min_window=1
     max_window=150
     # max_window=600
     only_leading=0
