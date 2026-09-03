@@ -1,17 +1,17 @@
 #!/bin/sh
 
-pkill -f "/bin/sh.*frontend_hrtdc.sh"
+pkill -f "/bin/sh.*frontend_rayraw.sh"
 if [ $? = 0 ]; then
-    echo "# frontend_hrtdc.sh : killed"
+    echo "# frontend_rayraw.sh : killed"
 else
-    echo "# frontend_hrtdc.sh : no process"
+    echo "# frontend_rayraw.sh : no process"
 fi
 
-pkill -f "frontend_hrtdc($| )"
+pkill -f "frontend_rayraw($| )"
 if [ $? = 0 ]; then
-    echo "# frontend_hrtdc    : killed"
+    echo "# frontend_rayraw    : killed"
 else
-    echo "# frontend_hrtdc    : no process"
+    echo "# frontend_rayraw    : no process"
 fi
 
 pkill -f "/bin/sh.*message.sh"
