@@ -129,8 +129,12 @@ fe-veasiroc04	9088	81920			1000
 fe-veasiroc04	9089	81920			1000
 
 # --- VME CRATE-5 ---#
-# fe-veasiroc05	9090	81920			1000
+fe-veasiroc05	9090	81920			1000
 fe-veasiroc05	9091	81920			1000
-# fe-veasiroc05	9092	81920			1000
-# fe-veasiroc05	9093	81920			1000
+fe-veasiroc05	9092	81920			1000
+fe-veasiroc05	9093	81920			1000
 fe-veasiroc05	9094	81920			1000
+
+# # --- RAYRAW ---#
+# fe-rayraw	9011	81920			1000
+# fe-rayraw	9012	81920			1000
