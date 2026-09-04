@@ -35,9 +35,11 @@ do
     # min_window=115
     # max_window=165
     # min_window=100
-    min_window=100
-    # max_window=600
-    max_window=200
+    # min_window=100
+    # # max_window=600
+    # max_window=200
+    min_window=5
+    max_window=105
 
     $bin_dir/frontend_rayraw.sh \
 	$nickname \
