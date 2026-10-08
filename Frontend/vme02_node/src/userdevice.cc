@@ -75,7 +75,9 @@ open_device( NodeProp& nodeprop )
     // Zero suppression Threshold
     GEF_UINT32 zs_threshold[][vme::CaenV1724::NofCh] = 
       {
-	{/*15736*/15800, 15772, 15880, 15990, 15960, 15960, 15840, 15900}
+	//{/*15736*/15800, 15772, 15880, 15990, 15960, 15960, 15840, 15900}
+	// From 2026/10/4
+	{15900, 15950, 16080, 16150, 16060, 16100, 15980, 15960}
       };
     GEF_UINT32 zs_threshold_weight = 0; // 0:fine, 1:coarse.       30bit shift to left
     GEF_UINT32 zs_operation_logic  = 1; // 0:positive, 1:negative. 31bit shift to left

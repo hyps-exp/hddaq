@@ -113,7 +113,7 @@ open_device( NodeProp& nodeprop )
     
     uint32_t baseline[][opt::CaenV1725::NofCh] =
       {
-       {15500, 15300, 15300, 15300, 15300, 15300, 15300, 15300,
+       {15940, 15760, 15300, 15300, 15300, 15300, 15300, 15300,
  	8145, 8145, 8145, 8145, 8210, 8210, 8185, 8207 }
       };
 
@@ -123,7 +123,7 @@ open_device( NodeProp& nodeprop )
     // The threshold is referred to the baseline level.
     uint16_t ZLE_threshold[][opt::CaenV1725::NofCh] =
       {
-       {20, 20, 20, 20, 20, 20, 20, 20,
+       {30, 30, 20, 20, 20, 20, 20, 20,
 	20, 20, 20, 20, 20, 20, 20, 20 }
       };
 
